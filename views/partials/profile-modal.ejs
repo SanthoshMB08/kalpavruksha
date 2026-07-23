@@ -1,0 +1,20 @@
+<div style="text-align:center; margin-bottom:16px;">
+  <img src="/uploads/profiles/<%= profile.image_name %>" alt="<%= profile.full_name %>"
+       style="width:140px; height:140px; object-fit:cover; border-radius:50%; border:4px solid var(--gold-500); margin-top:6px;">
+  <h2 style="margin-top:14px;"><%= profile.full_name %>, <%= profile.age %></h2>
+</div>
+<table class="data-table">
+  <tr><td><strong>Caste</strong></td><td><%= profile.caste %></td></tr>
+  <tr><td><strong>Sub-caste</strong></td><td><%= profile.subcaste %></td></tr>
+  <tr><td><strong>Language</strong></td><td><%= profile.language %></td></tr>
+  <tr><td><strong>Occupation</strong></td><td><%= profile.occupation %></td></tr>
+  <tr><td><strong>Annual Salary</strong></td><td>₹<%= Number(profile.annual_salary).toLocaleString('en-IN') %></td></tr>
+</table>
+<div style="display:flex; gap:10px; margin-top:20px;">
+  <form action="/profile/<%= profile.id %>/save" method="POST" style="flex:1;">
+    <button type="submit" class="btn btn-outline-gold btn-block" style="border-color:var(--maroon-800); color:var(--maroon-800);">Save Profile</button>
+  </form>
+  <form action="/profile/<%= profile.id %>/express-interest" method="POST" style="flex:1;">
+    <button type="submit" class="btn btn-gold btn-block">Express Interest</button>
+  </form>
+</div>

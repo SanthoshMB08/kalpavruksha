@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <div class="auth-wrap" style="min-height:100vh; background:var(--charcoal-900); background-image: radial-gradient(circle at 80% 20%, rgba(234,179,8,0.1), transparent 55%);">
+    <div class="auth-card" style="border-top-color: var(--maroon-800);">
+      <h1>Super Admin</h1>
+      <div class="subtitle">Command Central &mdash; Restricted Access</div>
+      <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+      <form class="auth-form" action="/portal/super-secure-login" method="POST">
+        <div class="field">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" required autofocus>
+        </div>
+        <div class="field">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-maroon btn-block">Login</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

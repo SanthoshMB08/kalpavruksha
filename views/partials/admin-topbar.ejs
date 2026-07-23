@@ -1,0 +1,16 @@
+<div class="admin-topbar">
+  <div class="brand">🪔 Kalpavruksha Kalyana <span style="font-size:0.9rem; color:var(--gold-300); font-family:var(--font-body);">— <%= portalLabel %></span></div>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <span style="font-size:0.85rem; color:var(--gold-300);"><%= currentUser.name %></span>
+    <% if (currentUser.role === 'admin' || currentUser.role === 'superadmin') { %>
+      <% if (typeof showViewToggle !== 'undefined' && showViewToggle) { %>
+        <form action="/portal/admin-dashboard/toggle-view" method="POST" style="display:inline;">
+          <button type="submit" class="view-toggle">
+            Switch to <%= currentUser.viewMode === 'admin' ? 'User' : 'Admin' %> View
+          </button>
+        </form>
+      <% } %>
+    <% } %>
+    <a href="<%= logoutUrl %>" class="btn btn-outline-gold btn-sm">Logout</a>
+  </div>
+</div>

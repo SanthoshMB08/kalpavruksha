@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <% const portalLabel = 'Admin Portal'; const logoutUrl = '/portal/admin-logout'; const showViewToggle = true; %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-body">
+    <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to all profiles</a>
+
+    <div class="panel" style="margin-top:16px; display:flex; gap:24px;">
+      <img src="/uploads/profiles/<%= profile.image_name %>" style="width:160px; height:160px; object-fit:cover; border-radius:var(--radius-lg); border:3px solid var(--gold-500);">
+      <div>
+        <h2><%= profile.full_name %>, <%= profile.age %></h2>
+        <p style="color:#8a7156;"><%= profile.occupation %> &middot; <%= profile.city %>, <%= profile.state %></p>
+        <% if (profile.jathaka_pdf_name) { %>
+          <a href="/uploads/jathaka/<%= profile.jathaka_pdf_name %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800); margin-top:10px; display:inline-block;">View Jathaka PDF</a>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Personal Details</h3>
+      <table class="data-table">
+        <tr><td><strong>Religion</strong></td><td><%= profile.religion %></td></tr>
+        <tr><td><strong>Caste / Sub-caste</strong></td><td><%= profile.caste %> / <%= profile.subcaste %></td></tr>
+        <tr><td><strong>Date of Birth</strong></td><td><%= profile.date_of_birth %> <% if (profile.time_of_birth) { %>(<%= profile.time_of_birth %>)<% } %></td></tr>
+        <tr><td><strong>Rashi / Nakshatra</strong></td><td><%= profile.rashi %> / <%= profile.nakshatra %></td></tr>
+        <tr><td><strong>Language</strong></td><td><%= profile.language %></td></tr>
+        <tr><td><strong>Annual Salary</strong></td><td>₹<%= Number(profile.annual_salary).toLocaleString('en-IN') %></td></tr>
+        <tr><td><strong>Phone</strong></td><td><%= profile.phone_number %></td></tr>
+        <tr><td><strong>Address</strong></td><td><%= profile.address %></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Family Details</h3>
+      <table class="data-table">
+        <tr><td><strong>Father</strong></td><td><%= profile.father_name %> &mdash; <%= profile.father_occupation %> (₹<%= Number(profile.father_salary).toLocaleString('en-IN') %>)</td></tr>
+        <tr><td><strong>Mother</strong></td><td><%= profile.mother_name %> &mdash; <%= profile.mother_occupation %> (₹<%= Number(profile.mother_salary).toLocaleString('en-IN') %>)</td></tr>
+        <tr><td><strong>Siblings</strong></td><td><%= profile.total_siblings %> total (<%= profile.male_siblings %> male, <%= profile.female_siblings %> female)</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Assets &amp; Liabilities</h3>
+      <p><strong>Assets:</strong> <%= profile.assets %></p>
+      <% if (profile.loans) { %><p><strong>Loans:</strong> <%= profile.loans %></p><% } %>
+    </div>
+  </div>
+</body>
+</html>

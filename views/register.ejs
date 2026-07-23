@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>Create Your Profile</h1>
+      <div class="subtitle">Join a community built on trust and tradition</div>
+
+      <% if (errors && errors.length) { %>
+        <div class="error-box">
+          <% errors.forEach(function(e) { %><div><%= e %></div><% }) %>
+        </div>
+      <% } %>
+
+      <form class="auth-form" action="/register" method="POST" id="registerForm">
+        <div class="field">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" value="<%= old.name || '' %>" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Mobile Number</label>
+          <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" value="<%= old.username || '' %>" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" id="password" required>
+          <ul class="pw-checklist" id="pwChecklist">
+            <li data-rule="length">❌ At least 8 characters</li>
+            <li data-rule="upper">❌ One uppercase letter</li>
+            <li data-rule="lower">❌ One lowercase letter</li>
+            <li data-rule="number">❌ One number</li>
+          </ul>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" name="terms" id="terms">
+          I agree to the <a href="#" style="color:var(--maroon-800); text-decoration:underline;">Terms &amp; Conditions</a>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" name="privacy" id="privacy">
+          I agree to the <a href="#" style="color:var(--maroon-800); text-decoration:underline;">Privacy Policy</a>
+        </label>
+
+        <button type="submit" class="btn btn-gold btn-block" id="submitBtn" disabled>Register</button>
+      </form>
+
+      <div class="auth-footer-link">Already have an account? <a href="/login" style="color:var(--maroon-800); font-weight:700;">Login</a></div>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    const pw = document.getElementById('password');
+    const terms = document.getElementById('terms');
+    const privacy = document.getElementById('privacy');
+    const submitBtn = document.getElementById('submitBtn');
+    const checklist = document.getElementById('pwChecklist');
+
+    function evaluate() {
+      const val = pw.value;
+      const rules = {
+        length: val.length >= 8,
+        upper: /[A-Z]/.test(val),
+        lower: /[a-z]/.test(val),
+        number: /[0-9]/.test(val)
+      };
+      let allMet = true;
+      checklist.querySelectorAll('li').forEach(function (li) {
+        const rule = li.getAttribute('data-rule');
+        const met = rules[rule];
+        if (!met) allMet = false;
+        li.classList.toggle('met', met);
+        li.textContent = (met ? '✓ ' : '❌ ') + li.textContent.replace(/^(✓|❌)\s*/, '');
+      });
+      submitBtn.disabled = !(allMet && terms.checked && privacy.checked);
+    }
+
+    pw.addEventListener('input', evaluate);
+    terms.addEventListener('change', evaluate);
+    privacy.addEventListener('change', evaluate);
+  </script>
+</body>
+</html>

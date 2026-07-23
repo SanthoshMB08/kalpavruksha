@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <div class="auth-wrap" style="min-height:100vh; background:var(--maroon-800); background-image: radial-gradient(circle at 20% 20%, rgba(234,179,8,0.08), transparent 55%);">
+    <div class="auth-card">
+      <h1>Admin Portal</h1>
+      <div class="subtitle">Kalpavruksha Kalyana &mdash; Staff Access</div>
+      <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+      <form class="auth-form" action="/portal/admin-login" method="POST">
+        <div class="field">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" required autofocus>
+        </div>
+        <div class="field">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-maroon btn-block">Login</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <% const portalLabel = 'Admin Portal'; const logoutUrl = '/portal/admin-logout'; const showViewToggle = true; %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-body">
+    <%- include('../partials/flash') %>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="value"><%= pending.length %></div><div class="label">Pending Approvals</div></div>
+      <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
+      <div class="stat-card"><div class="value"><%= recentInterests.length %></div><div class="label">Recent Interests</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>⏳ Pending Approvals</h3>
+      <% if (pending.length === 0) { %>
+        <div class="empty-state">No pending registrations right now.</div>
+      <% } else { %>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Mobile</th><th>Username</th><th>Registered</th><th>Action</th></tr></thead>
+          <tbody>
+            <% pending.forEach(function(u) { %>
+              <tr>
+                <td><%= u.name %></td>
+                <td><%= u.mobile_number %></td>
+                <td><%= u.username %></td>
+                <td><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
+                <td style="display:flex; gap:8px;">
+                  <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
+                    <button class="btn btn-gold btn-sm" type="submit">Approve Profile</button>
+                  </form>
+                  <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
+                    <button class="btn btn-danger btn-sm" type="submit">Deny Profile</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+
+    <div class="panel">
+      <h3>🔔 Active Activity Stream</h3>
+      <% if (recentInterests.length === 0) { %>
+        <div class="empty-state">No interests expressed yet.</div>
+      <% } else { %>
+        <% recentInterests.forEach(function(i) { %>
+          <div class="alert-box">
+            <strong><%= i.user_name %></strong> is interested in <strong><%= i.profile_name %></strong>
+            (Call: <%= i.profile_phone %>) &mdash; <%= new Date(i.created_at).toLocaleString('en-IN') %>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <div class="panel">
+      <h3>👤 Direct User Creation <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(bypasses approval, activates instantly)</span></h3>
+      <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST">
+        <div class="field">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Mobile Number</label>
+          <input type="text" name="mobile_number" pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" required minlength="8">
+        </div>
+        <div class="field full">
+          <button type="submit" class="btn btn-maroon">Create &amp; Activate User</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>📇 Profiles</h3>
+      <p style="color:#8a7156; font-size:0.88rem; margin-bottom:14px;">Manage matrimony profiles shown to members.</p>
+      <div style="display:flex; gap:12px;">
+        <a href="/portal/admin-dashboard/profiles" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);">View All Profiles</a>
+        <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold">+ Upload New Profile</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

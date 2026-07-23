@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="marquee-bar">
+    <div class="marquee-track">
+      <span>✦ Matrimony service exclusively for Lingayats ✦</span>
+      <span>✦ Matrimony service exclusively for Lingayats ✦</span>
+      <span>✦ Matrimony service exclusively for Lingayats ✦</span>
+      <span>✦ Matrimony service exclusively for Lingayats ✦</span>
+    </div>
+  </div>
+
+  <div style="max-width:1200px; margin:0 auto;">
+
+    <section class="hero">
+      <div>
+        <h1>Rooted in tradition,<br><em>blossoming into forever.</em></h1>
+        <p>Kalpavruksha Kalyana connects Lingayat families in search of a life partner who shares their faith, values, and heritage &mdash; every profile verified, every match made with care.</p>
+        <div style="display:flex; gap:14px;">
+          <a href="/register" class="btn btn-gold">Register Now</a>
+          <a href="/login" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);">Already a member? Login</a>
+        </div>
+        <div style="margin-top:26px; font-size:0.85rem; color:#8a7156;"><%= totalProfiles %>+ verified profiles and counting</div>
+      </div>
+      <div class="hero-frame">
+        <img src="assets/image_8ead9b73.png?q=80&w=800&auto=format&fit=crop" alt="Traditional Indian couple in wedding attire">
+      </div>
+    </section>
+
+    <section class="split-grid" id="about">
+      <div class="ads-corner">
+        <div class="eyebrow">Sponsored</div>
+        <h3>Auspicious Ads Corner</h3>
+        <% if (sidebarAds && sidebarAds.length) { %>
+          <% sidebarAds.forEach(function(ad) { %>
+            <div class="ad-slot">
+              <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
+                <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+              </a>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="ad-slot-empty">Advertisement space reserved for our sponsors.</div>
+        <% } %>
+      </div>
+
+      <div class="about-copy">
+        <h2>A community built on trust</h2>
+        <p>Every family who joins Kalpavruksha Kalyana goes through a simple verification process before their profile becomes visible to other members. This keeps the community genuine, respectful, and focused on serious, faith-aligned alliances.</p>
+        <p>Our team personally reviews each registration, confirms the details shared, and only then opens the door to matchmaking &mdash; so every connection you make here starts from a place of trust.</p>
+        <div class="verify-steps">
+          <div class="verify-step">
+            <div class="num">1</div>
+            <strong>Register</strong>
+            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Share your basic details securely.</p>
+          </div>
+          <div class="verify-step">
+            <div class="num">2</div>
+            <strong>Verify</strong>
+            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Our team reviews and approves your profile.</p>
+          </div>
+          <div class="verify-step">
+            <div class="num">3</div>
+            <strong>Connect</strong>
+            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Search, save, and express interest freely.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stories-section" id="stories">
+      <div class="kalasha-divider">✦ Success Stories ✦</div>
+      <div class="stories-grid">
+        <div class="story-card">
+          <div class="couple-names">Shivaraj &amp; Basavi</div>
+          <p>"We found each other within two months of registering. Our families connected instantly over shared values."</p>
+        </div>
+        <div class="story-card">
+          <div class="couple-names">Mallikarjun &amp; Girija</div>
+          <p>"The verification process gave both our families confidence right from the first conversation."</p>
+        </div>
+        <div class="story-card">
+          <div class="couple-names">Basavaraj &amp; Veena</div>
+          <p>"A simple, respectful platform that understood exactly what our community was looking for."</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+      <h2>Get in touch</h2>
+      <p style="color:#f5d576; opacity:0.85;">Have a question about registration or verification? Send us a note.</p>
+      <form class="contact-form" action="/contact" method="POST">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" name="name" required>
+        </div>
+        <div class="field">
+          <label>Mobile Number</label>
+          <input type="text" name="mobile" required>
+        </div>
+        <textarea name="message" rows="4" placeholder="Your message" required></textarea>
+        <div>
+          <button type="submit" class="btn btn-gold">Send Message</button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

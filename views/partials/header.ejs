@@ -1,0 +1,21 @@
+<header class="navbar">
+  <a href="/" class="brand"><span class="glyph">🪔</span> Kalpavruksha Kalyana</a>
+  <nav>
+    <a href="/#about">About</a>
+    <a href="/#stories">Success Stories</a>
+    <a href="/#contact">Contact</a>
+    <% if (currentUser && currentUser.role === 'user') { %>
+      <a href="/dashboard">Find Matches</a>
+      <a href="/saved-profiles">Saved</a>
+    <% } %>
+  </nav>
+  <div class="nav-actions">
+    <% if (currentUser) { %>
+      <span style="color:#f5d576; font-size:0.85rem;">Hello, <%= currentUser.name %></span>
+      <a href="/logout" class="btn btn-outline-gold btn-sm">Logout</a>
+    <% } else { %>
+      <a href="/login" class="btn btn-outline-gold">Login</a>
+      <a href="/register" class="btn btn-gold">Register Now</a>
+    <% } %>
+  </div>
+</header>

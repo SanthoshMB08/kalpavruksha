@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <% const portalLabel = 'Admin Portal'; const logoutUrl = '/portal/admin-logout'; const showViewToggle = true; %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-body">
+    <%- include('../partials/flash') %>
+    <a href="javascript:history.back()" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back </a>
+    <div class="panel">
+      <h3>📇 All Profiles (<%= profiles.length %>)</h3>
+      <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
+      <table class="data-table">
+        <thead><tr><th>Photo</th><th>Name</th><th>Caste</th><th>Age</th><th>City</th><th>Uploaded</th><th>Actions</th></tr></thead>
+        <tbody>
+          <% profiles.forEach(function(p) { %>
+            <tr>
+              <td><img src="/uploads/profiles/<%= p.image_name %>" style="width:44px; height:44px; border-radius:8px; object-fit:cover;"></td>
+              <td><%= p.full_name %></td>
+              <td><%= p.caste %></td>
+              <td><%= p.age %></td>
+              <td><%= p.city %></td>
+              <td><%= new Date(p.created_at).toLocaleDateString('en-IN') %></td>
+              <td style="display:flex; gap:8px;">
+                <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
+                <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Remove this profile?');">
+                  <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

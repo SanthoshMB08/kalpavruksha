@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="dashboard-layout">
+    <aside class="filter-sidebar">
+      <h3>Refine Your Search</h3>
+      <form id="filterForm" method="GET" action="/dashboard">
+
+        <div class="filter-group">
+          <label>Religion</label>
+          <input type="text" name="religion" id="religionInput" autocomplete="off"
+                 value="<%= filters.religion || '' %>" placeholder="Type to search...">
+          <div class="filter-dropdown-list" id="religionList">
+            <% religions.forEach(function(r) { %><div data-target="religionInput" data-value="<%= r %>"><%= r %></div><% }) %>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Caste</label>
+          <input type="text" name="caste" id="casteInput" autocomplete="off"
+                 value="<%= filters.caste || '' %>" placeholder="Type to search...">
+          <div class="filter-dropdown-list" id="casteList">
+            <% castes.forEach(function(c) { %><div data-target="casteInput" data-value="<%= c %>"><%= c %></div><% }) %>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Sub-caste</label>
+          <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+        </div>
+
+        <div class="filter-group">
+          <label>Language</label>
+          <input type="text" name="language" id="languageInput" autocomplete="off"
+                 value="<%= filters.language || '' %>" placeholder="Type to search...">
+          <div class="filter-dropdown-list" id="languageList">
+            <% languages.forEach(function(l) { %><div data-target="languageInput" data-value="<%= l %>"><%= l %></div><% }) %>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Looking For</label>
+          <select name="gender">
+            <option value="">Any</option>
+            <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Groom</option>
+            <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Bride</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-block">Search</button>
+        <a href="/dashboard" class="btn btn-outline-gold btn-block" style="border-color:var(--maroon-800); color:var(--maroon-800); margin-top:10px;">Clear Filters</a>
+      </form>
+    </aside>
+
+    <main class="match-feed">
+      <div class="match-feed-header">
+        <h2>Your Matches</h2>
+        <span style="color:#8a7156; font-size:0.85rem;"><%= profiles.length %> profile(s) found</span>
+      </div>
+
+      <% if (profiles.length === 0) { %>
+        <div class="empty-state">
+          <div style="font-size:2rem;">🔍</div>
+          <p>No matches found for these filters. Try widening your search.</p>
+        </div>
+      <% } else { %>
+        <div class="profile-grid">
+          <% profiles.forEach(function(p) { %>
+            <div class="profile-card">
+              <div class="photo">
+                <img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>">
+              </div>
+              <div class="info">
+                <h4><%= p.full_name %>, <%= p.age %></h4>
+                <div class="meta">
+                  <div><strong>Caste:</strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
+                  <div><strong>Language:</strong> <%= p.language %></div>
+                  <div><strong>Occupation:</strong> <%= p.occupation %></div>
+                  <div><strong>Salary:</strong> ₹<%= Number(p.annual_salary).toLocaleString('en-IN') %>/yr</div>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" onclick="openProfileModal(<%= p.id %>)">View Details</button>
+                <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;">
+                  <button type="submit" class="btn btn-gold" style="width:100%;">Express Interest</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box" id="modalBox">
+      <div class="modal-close"><button onclick="closeProfileModal()">&times;</button></div>
+      <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    // Type-to-filter scroll-down dropdowns for Religion / Caste / Language
+    function wireDropdown(inputId, listId) {
+      const input = document.getElementById(inputId);
+      const list = document.getElementById(listId);
+      if (!input || !list) return;
+
+      input.addEventListener('focus', () => list.classList.add('open'));
+      input.addEventListener('input', () => {
+        const q = input.value.toLowerCase();
+        list.querySelectorAll('div').forEach((item) => {
+          item.style.display = item.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+        });
+        list.classList.add('open');
+      });
+      list.querySelectorAll('div').forEach((item) => {
+        item.addEventListener('click', () => {
+          input.value = item.getAttribute('data-value');
+          list.classList.remove('open');
+        });
+      });
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) list.classList.remove('open');
+      });
+    }
+    wireDropdown('religionInput', 'religionList');
+    wireDropdown('casteInput', 'casteList');
+    wireDropdown('languageInput', 'languageList');
+
+    // Profile details modal — fetched without disturbing scroll position on the grid
+    function openProfileModal(id) {
+      const overlay = document.getElementById('modalOverlay');
+      const content = document.getElementById('modalContent');
+      content.innerHTML = 'Loading...';
+      overlay.classList.add('open');
+      fetch('/profile/' + id + '/modal')
+        .then((r) => r.text())
+        .then((html) => { content.innerHTML = html; })
+        .catch(() => { content.innerHTML = '<p>Could not load profile.</p>'; });
+    }
+    function closeProfileModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+      if (e.target === this) closeProfileModal();
+    });
+  </script>
+</body>
+</html>

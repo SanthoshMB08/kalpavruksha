@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+  
+</head>
+
+<body>
+  <% const portalLabel = 'Admin Portal'; const logoutUrl = '/portal/admin-logout'; const showViewToggle = true; %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-body">
+    <%- include('../partials/flash') %>
+
+ <a href="javascript:history.back()" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back </a>
+    <div class="panel">
+      <h3>📤 Upload New Profile</h3>
+      <form class="form-grid" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data">
+
+        <div class="field full"><label class="form-label">Profile Photo</label>
+          <input type="file" name="profile_image" accept="image/*" required></div>
+
+        <div class="field"><label class="form-label">Full Name</label><input type="text" name="full_name" required></div>
+        <div class="field"><label class="form-label">Gender</label>
+          <select name="gender" required>
+            <option value="male">Male (Groom)</option>
+            <option value="female">Female (Bride)</option>
+          </select>
+        </div>
+
+        <div class="field"><label class="form-label">Religion</label><input type="text" name="religion" value="Lingayat" required></div>
+        <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" required></div>
+        <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" required></div>
+        <div class="field"><label class="form-label">Language</label><input type="text" name="language" required></div>
+
+        <div class="field"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" required></div>
+        <div class="field"><label class="form-label">Time of Birth</label><input type="time" name="time_of_birth"></div>
+
+        <div class="field"><label class="form-label">Occupation</label><input type="text" name="occupation" required></div>
+        <div class="field"><label class="form-label">Annual Salary (₹)</label><input type="number" step="0.01" name="annual_salary" required></div>
+
+        <div class="field"><label class="form-label">Phone Number</label><input type="text" name="phone_number" required></div>
+        <div class="field"><label class="form-label">City</label><input type="text" name="city" required></div>
+        <div class="field"><label class="form-label">State</label><input type="text" name="state" value="Karnataka" required></div>
+
+        <div class="field full"><label class="form-label">Address</label><textarea name="address" rows="2" required></textarea></div>
+
+        <div class="field"><label class="form-label">Father's Name</label><input type="text" name="father_name" required></div>
+        <div class="field"><label class="form-label">Father's Occupation</label><input type="text" name="father_occupation" required></div>
+        <div class="field"><label class="form-label">Father's Salary (₹)</label><input type="number" step="0.01" name="father_salary" required></div>
+
+        <div class="field"><label class="form-label">Mother's Name</label><input type="text" name="mother_name" required></div>
+        <div class="field"><label class="form-label">Mother's Occupation</label><input type="text" name="mother_occupation" required></div>
+        <div class="field"><label class="form-label">Mother's Salary (₹)</label><input type="number" step="0.01" name="mother_salary" required></div>
+
+        <div class="field"><label class="form-label">Total Siblings</label><input type="number" name="total_siblings" value="0" min="0"></div>
+        <div class="field"><label class="form-label">Male Siblings</label><input type="number" name="male_siblings" value="0" min="0"></div>
+        <div class="field"><label class="form-label">Female Siblings</label><input type="number" name="female_siblings" value="0" min="0"></div>
+
+        <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required></textarea></div>
+        <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"></textarea></div>
+
+       <div class="field">
+  <label class="form-label">Rashi</label>
+  <select name="rashi" id="rashi" required>
+    <option value="">Select Rashi</option>
+    <option value="Mesha">Mesha (Aries)</option>
+    <option value="Vrishabha">Vrishabha (Taurus)</option>
+    <option value="Mithuna">Mithuna (Gemini)</option>
+    <option value="Karka">Karka (Cancer)</option>
+    <option value="Simha">Simha (Leo)</option>
+    <option value="Kanya">Kanya (Virgo)</option>
+    <option value="Tula">Tula (Libra)</option>
+    <option value="Vrischika">Vrischika (Scorpio)</option>
+    <option value="Dhanu">Dhanu (Sagittarius)</option>
+    <option value="Makara">Makara (Capricorn)</option>
+    <option value="Kumbha">Kumbha (Aquarius)</option>
+    <option value="Meena">Meena (Pisces)</option>
+  </select>
+</div>
+     <div class="field">
+  <label class="form-label">Nakshatra</label>
+  <select name="nakshatra" id="nakshatra" required>
+    <option value="">Select Rashi First</option>
+  </select>
+</div>
+        <div class="field full"><label class="form-label">Jathaka PDF (optional)</label>
+          <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+
+        <div class="field full">
+          <button type="submit" class="btn btn-gold">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+const rashiNakshatras = {
+  Mesha: ["Ashwini", "Bharani", "Krittika"],
+  Vrishabha: ["Krittika", "Rohini", "Mrigashira"],
+  Mithuna: ["Mrigashira", "Ardra", "Punarvasu"],
+  Karka: ["Punarvasu", "Pushya", "Ashlesha"],
+  Simha: ["Magha", "Purva Phalguni", "Uttara Phalguni"],
+  Kanya: ["Uttara Phalguni", "Hasta", "Chitra"],
+  Tula: ["Chitra", "Swati", "Vishakha"],
+  Vrischika: ["Vishakha", "Anuradha", "Jyeshtha"],
+  Dhanu: ["Mula", "Purva Ashadha", "Uttara Ashadha"],
+  Makara: ["Uttara Ashadha", "Shravana", "Dhanishta"],
+  Kumbha: ["Dhanishta", "Shatabhisha", "Purva Bhadrapada"],
+  Meena: ["Purva Bhadrapada", "Uttara Bhadrapada", "Revati"]
+};
+
+const rashiSelect = document.getElementById("rashi");
+const nakshatraSelect = document.getElementById("nakshatra");
+
+rashiSelect.addEventListener("change", function () {
+    const selectedRashi = this.value;
+
+    // Clear old options
+    nakshatraSelect.innerHTML = '<option value="">Select Nakshatra</option>';
+
+    if (!selectedRashi) return;
+
+    // Add new options
+    rashiNakshatras[selectedRashi].forEach(function (nakshatra) {
+        const option = document.createElement("option");
+        option.value = nakshatra;
+        option.textContent = nakshatra;
+        nakshatraSelect.appendChild(option);
+    });
+});
+</script>
+</body>
+</html>

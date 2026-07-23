@@ -1,0 +1,6 @@
+<% if (successMsg && successMsg.length) { %>
+  <div class="success-box"><% successMsg.forEach(function(m) { %><%= m %><% }) %></div>
+<% } %>
+<% if (errorMsg && errorMsg.length) { %>
+  <div class="error-box"><% errorMsg.forEach(function(m) { %><%= m %><% }) %></div>
+<% } %>
