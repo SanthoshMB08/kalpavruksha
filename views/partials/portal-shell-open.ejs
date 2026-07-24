@@ -1,0 +1,47 @@
+<%
+/* Expected locals: portal ('admin'|'superadmin'), active (nav key), title, logoutUrl, showViewToggle */
+%>
+<div class="admin-shell">
+  <input type="checkbox" id="portalSidebarToggle" class="portal-sidebar-toggle-checkbox">
+
+  <aside class="portal-sidebar">
+    <div class="portal-sidebar-brand">
+      🪔 Kalpavruksha Kalyana
+      <span><%= portal === 'superadmin' ? 'Super Admin Portal' : 'Admin Portal' %></span>
+    </div>
+    <nav class="portal-nav">
+      <% if (portal === 'superadmin') { %>
+        <a href="/portal/super-secure-dashboard" class="<%= active === 'overview' ? 'active' : '' %>">📊 Overview</a>
+        <a href="/portal/super-secure-dashboard/admins" class="<%= active === 'admins' ? 'active' : '' %>">🛡️ Sub-Admins</a>
+        <a href="/portal/super-secure-dashboard/ads" class="<%= active === 'ads' ? 'active' : '' %>">💰 Advertisements</a>
+        <a href="/portal/super-secure-dashboard/stories" class="<%= active === 'stories' ? 'active' : '' %>">💍 Success Stories</a>
+      <% } else { %>
+        <a href="/portal/admin-dashboard" class="<%= active === 'overview' ? 'active' : '' %>">📊 Overview</a>
+        <a href="/portal/admin-dashboard/users" class="<%= active === 'users' ? 'active' : '' %>">👤 User Approvals</a>
+        <a href="/portal/admin-dashboard/profiles" class="<%= active === 'profiles' ? 'active' : '' %>">📇 Profiles</a>
+        <a href="/portal/admin-dashboard/stories" class="<%= active === 'stories' ? 'active' : '' %>">💍 Success Stories</a>
+      <% } %>
+    </nav>
+    <div class="portal-sidebar-footer">
+      <% if (portal === 'superadmin') { %>
+        <a href="/portal/admin-dashboard" class="btn btn-outline-gold btn-sm btn-block" style="margin-bottom:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Open Admin Tools</a>
+      <% } %>
+      <% if (typeof showViewToggle !== 'undefined' && showViewToggle) { %>
+        <form action="/portal/admin-dashboard/toggle-view" method="POST">
+          <button type="submit" class="view-toggle">Switch to <%= currentUser.viewMode === 'admin' ? 'User' : 'Admin' %> View</button>
+        </form>
+      <% } %>
+      <a href="<%= logoutUrl %>" class="btn btn-outline-gold btn-sm btn-block" style="margin-top:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Logout</a>
+    </div>
+  </aside>
+
+  <label for="portalSidebarToggle" class="portal-sidebar-overlay"></label>
+
+  <div class="portal-main">
+    <div class="portal-topbar">
+      <label for="portalSidebarToggle" class="portal-menu-btn" aria-label="Open menu">☰</label>
+      <div class="portal-topbar-title"><%= typeof title !== 'undefined' ? title : '' %></div>
+      <div class="portal-topbar-user"><%= currentUser.name %></div>
+    </div>
+    <div class="admin-body">
+      <%- include('flash') %>

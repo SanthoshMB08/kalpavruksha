@@ -368,17 +368,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 .modal-close button { background: none; border: none; font-size: 1.4rem; color: var(--maroon-800); cursor: pointer; }
 
 /* ---------------- Admin / Super admin dashboards ---------------- */
-.admin-shell { display: flex; min-height: 100vh; }
-.admin-topbar {
-  background: var(--maroon-800);
-  color: var(--cream-50);
-  padding: 14px 28px;
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 3px solid var(--gold-500);
-}
-.admin-topbar .brand { font-family: var(--font-display); font-size: 1.3rem; }
-.view-toggle { background: var(--gold-500); color: var(--maroon-900); border: none; border-radius: 999px; padding: 8px 18px; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
-.admin-body { padding: 28px 34px; background: var(--cream-100); min-height: calc(100vh - 60px); flex: 1; }
 .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; margin-bottom: 28px; }
 .stat-card { background: var(--cream-50); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-soft); border-left: 4px solid var(--gold-500); }
 .stat-card .value { font-family: var(--font-display); font-size: 2.1rem; color: var(--maroon-900); }
@@ -458,46 +447,81 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 }
 
 /* ==========================================================================
-   Admin / Super Admin — sidebar shell layout
+   Admin / Super Admin portal shell (sidebar + pages, checkbox-driven toggle)
    ========================================================================== */
-.sidebar-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--cream-50);
-  font-size: 1.4rem;
-  cursor: pointer;
-}
-.view-toggle-short { display: none; }
+.admin-shell { display: flex; min-height: 100vh; position: relative; }
+.view-toggle { background: var(--gold-500); color: var(--maroon-900); border: none; border-radius: 999px; padding: 10px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; width: 100%; }
 
-.admin-shell { display: flex; align-items: stretch; min-height: calc(100vh - 60px); background: var(--cream-100); }
-.admin-sidebar {
-  width: 240px;
+.portal-sidebar-toggle-checkbox { display: none; }
+
+.portal-sidebar {
+  width: 258px;
   flex-shrink: 0;
   background: var(--maroon-900);
-  padding: 22px 14px;
-  min-height: calc(100vh - 60px);
+  background-image: radial-gradient(circle at 20% 0%, rgba(234,179,8,0.08), transparent 60%);
+  color: var(--cream-100);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 120;
+  border-right: 3px solid var(--gold-500);
 }
-.admin-sidebar nav { display: flex; flex-direction: column; gap: 4px; }
-.sidebar-link {
+.portal-sidebar-brand {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--cream-50);
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid rgba(245,213,118,0.18);
+}
+.portal-sidebar-brand span { display: block; font-family: var(--font-body); font-size: 0.78rem; color: var(--gold-300); margin-top: 4px; }
+.portal-nav { display: flex; flex-direction: column; padding: 14px 10px; gap: 2px; flex: 1; }
+.portal-nav a {
+  color: var(--gold-300);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 14px;
-  border-radius: var(--radius-md);
-  color: var(--gold-300);
-  font-weight: 600;
-  font-size: 0.92rem;
-  transition: background .12s ease;
+  transition: background .15s ease, color .15s ease;
 }
-.sidebar-link:hover { background: rgba(245,213,118,0.08); }
-.sidebar-link.active { background: var(--gold-500); color: var(--maroon-900); }
-.sidebar-icon { font-size: 1.05rem; }
-.sidebar-footnote { margin-top: 26px; padding: 14px; font-size: 0.78rem; color: #cbb99a; line-height: 1.5; border-top: 1px solid rgba(245,213,118,0.15); }
-.sidebar-footnote a { color: var(--gold-300); font-weight: 700; }
-.sidebar-overlay { display: none; }
+.portal-nav a:hover { background: rgba(234,179,8,0.12); color: var(--cream-50); }
+.portal-nav a.active { background: var(--gold-500); color: var(--maroon-900); }
+.portal-sidebar-footer { padding: 16px; border-top: 1px solid rgba(245,213,118,0.18); }
 
-.admin-main { flex: 1; padding: 28px 34px; min-width: 0; }
+.portal-sidebar-overlay { display: none; }
+
+.portal-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.portal-topbar {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  background: var(--maroon-800);
+  color: var(--cream-50);
+  padding: 14px 18px;
+  border-bottom: 3px solid var(--gold-500);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.portal-menu-btn {
+  background: none;
+  border: 2px solid var(--gold-500);
+  color: var(--gold-300);
+  border-radius: 8px;
+  font-size: 1.15rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+.portal-topbar-title { font-family: var(--font-display); font-size: 1.1rem; flex: 1; }
+.portal-topbar-user { font-size: 0.8rem; color: var(--gold-300); }
+
+.admin-body { padding: 28px 34px; background: var(--cream-100); flex: 1; }
 
 .panel h3 { flex-wrap: wrap; gap: 6px; justify-content: space-between; }
 .panel-head-link { font-size: 0.78rem; font-weight: 400; margin-left: auto; }
@@ -519,33 +543,30 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 .table-scroll { overflow-x: auto; }
 .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-@media (max-width: 900px) {
-  .sidebar-toggle { display: block; }
-  .view-toggle-full { display: none; }
-  .view-toggle-short { display: inline; }
-  .topbar-username { display: none; }
-  .admin-topbar { padding: 12px 16px; }
-  .admin-shell { position: relative; }
-  .admin-sidebar {
+@media (max-width: 980px) {
+  .portal-sidebar {
     position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 200;
+    left: 0; top: 0;
     transform: translateX(-100%);
-    transition: transform .2s ease;
-    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+    transition: transform .25s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,0.35);
   }
-  .admin-sidebar.open { transform: translateX(0); }
-  .sidebar-overlay {
-    display: none;
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150;
+  .portal-sidebar-toggle-checkbox:checked ~ .portal-sidebar { transform: translateX(0); }
+  .portal-sidebar-toggle-checkbox:checked ~ .portal-sidebar-overlay {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(36,26,21,0.55);
+    z-index: 110;
   }
-  .sidebar-overlay.open { display: block; }
-  .admin-main { padding: 20px 16px; }
+  .portal-topbar { display: flex; }
+  .admin-body { padding: 18px 16px; }
   .data-table thead { display: none; }
   .data-table tr { display: block; border-bottom: 2px solid var(--gold-300); padding: 10px 0; }
   .data-table td { display: flex; justify-content: space-between; gap: 10px; border-bottom: none; padding: 6px 4px; text-align: right; }
   .data-table td::before { content: attr(data-label); font-weight: 700; color: var(--maroon-800); text-align: left; }
 }
+
+
 
 /* ==========================================================================
    Success story editor cards (admin & superadmin)
@@ -668,7 +689,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
   .profile-card .actions { flex-direction: column; }
   .stat-cards { grid-template-columns: 1fr 1fr; }
   .form-grid { grid-template-columns: 1fr; }
-  .admin-sidebar { width: 78vw; max-width: 280px; }
+  .portal-sidebar { width: 78vw; max-width: 280px; }
   .quick-link-grid { grid-template-columns: 1fr; }
 }
 

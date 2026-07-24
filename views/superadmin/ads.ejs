@@ -4,9 +4,6 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <% const portalLabel = 'Super Admin'; const logoutUrl = '/portal/super-secure-logout'; const showViewToggle = false; %>
-  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
-
   <% const placementLabels = {
        top_banner: 'Top Banner',
        sidebar: 'Home Sidebar',
@@ -14,12 +11,7 @@
        home_bottom: 'Home — Bottom Section',
        after_search: 'After Search Results'
      }; %>
-
-  <div class="admin-shell">
-    <%- include('../partials/admin-sidebar', { active }) %>
-
-    <main class="admin-main">
-      <%- include('../partials/flash') %>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout', showViewToggle: false }) %>
 
       <div class="panel">
         <h3>💰 Sponsorship Hub (Ad Manager)</h3>
@@ -66,7 +58,6 @@
           <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
         </form>
       </div>
-    </main>
-  </div>
+  <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

@@ -4,16 +4,10 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <% const portalLabel = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? 'Super Admin' : 'Admin Portal'; %>
-  <% const logoutUrl = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
-  <% const showViewToggle = !(typeof isSuperAdmin !== 'undefined' && isSuperAdmin); %>
-  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
-
-  <div class="admin-shell">
-    <%- include('../partials/admin-sidebar', { active }) %>
-
-    <main class="admin-main">
-      <%- include('../partials/flash') %>
+  <% const portal = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? 'superadmin' : 'admin'; %>
+  <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <% const showViewToggle = portal !== 'superadmin'; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl, showViewToggle }) %>
 
       <div class="panel">
         <h3>💕 Success Stories <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page</span></h3>
@@ -64,7 +58,6 @@
           <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
         </form>
       </div>
-    </main>
-  </div>
+  <%- include('../partials/portal-shell-close') %>
 </body>
 </html>
