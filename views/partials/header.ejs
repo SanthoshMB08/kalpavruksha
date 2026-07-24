@@ -1,6 +1,7 @@
 <header class="navbar">
   <a href="/" class="brand"><span class="glyph">🪔</span> Kalpavruksha Kalyana</a>
-  <nav>
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle navigation">&#9776;</button>
+  <nav id="navLinks">
     <a href="/#about">About</a>
     <a href="/#stories">Success Stories</a>
     <a href="/#contact">Contact</a>
@@ -8,8 +9,17 @@
       <a href="/dashboard">Find Matches</a>
       <a href="/saved-profiles">Saved</a>
     <% } %>
+    <div class="nav-actions nav-actions-mobile">
+      <% if (currentUser) { %>
+        <span style="color:#f5d576; font-size:0.85rem;">Hello, <%= currentUser.name %></span>
+        <a href="/logout" class="btn btn-outline-gold btn-sm">Logout</a>
+      <% } else { %>
+        <a href="/login" class="btn btn-outline-gold">Login</a>
+        <a href="/register" class="btn btn-gold">Register Now</a>
+      <% } %>
+    </div>
   </nav>
-  <div class="nav-actions">
+  <div class="nav-actions nav-actions-desktop">
     <% if (currentUser) { %>
       <span style="color:#f5d576; font-size:0.85rem;">Hello, <%= currentUser.name %></span>
       <a href="/logout" class="btn btn-outline-gold btn-sm">Logout</a>
@@ -19,3 +29,11 @@
     <% } %>
   </div>
 </header>
+<script>
+  (function () {
+    var toggle = document.getElementById('navToggle');
+    var links = document.getElementById('navLinks');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function () { links.classList.toggle('open'); });
+  })();
+</script>

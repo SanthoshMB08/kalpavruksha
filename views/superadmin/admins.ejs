@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <% const portalLabel = 'Super Admin'; const logoutUrl = '/portal/super-secure-logout'; const showViewToggle = false; %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { active }) %>
+
+    <main class="admin-main">
+      <%- include('../partials/flash') %>
+
+      <div class="panel">
+        <h3>🛡️ Sub-Admin Management</h3>
+        <div class="table-scroll">
+        <table class="data-table" style="margin-bottom:20px;">
+          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Action</th></tr></thead>
+          <tbody>
+            <% admins.forEach(function(a) { %>
+              <tr>
+                <td data-label="Name"><%= a.name %></td>
+                <td data-label="Username"><%= a.username %></td>
+                <td data-label="Mobile"><%= a.mobile_number %></td>
+                <td data-label="Since"><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
+                <td data-label="Action">
+                  <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
+                    <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
+          </tbody>
+        </table>
+        </div>
+
+        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Create New Sub-Admin</h4>
+        <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
+          <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" required></div>
+          <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" pattern="[0-9]{10}" maxlength="10" required></div>
+          <div class="field"><label class="form-label">Username</label><input type="text" name="username" required></div>
+          <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
+          <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
+        </form>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

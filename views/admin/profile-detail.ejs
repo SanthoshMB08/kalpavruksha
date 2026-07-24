@@ -7,7 +7,9 @@
   <% const portalLabel = 'Admin Portal'; const logoutUrl = '/portal/admin-logout'; const showViewToggle = true; %>
   <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
 
-  <div class="admin-body">
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { active }) %>
+    <main class="admin-main">
     <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to all profiles</a>
 
     <div class="panel" style="margin-top:16px; display:flex; gap:24px;">
@@ -49,6 +51,7 @@
       <p><strong>Assets:</strong> <%= profile.assets %></p>
       <% if (profile.loans) { %><p><strong>Loans:</strong> <%= profile.loans %></p><% } %>
     </div>
+    </main>
   </div>
 </body>
 </html>

@@ -1,0 +1,32 @@
+<%
+  // `active` and `currentUser.role` are passed in by the page that includes
+  // this partial. `navItems` is built here so both portals share one file.
+  var isSuper = currentUser.role === 'superadmin';
+  var base = isSuper ? '/portal/super-secure-dashboard' : '/portal/admin-dashboard';
+  var navItems = isSuper
+    ? [
+        { key: 'overview', label: 'Overview', href: base, icon: '&#128202;' },
+        { key: 'admins', label: 'Sub-Admins', href: base + '/admins', icon: '&#128737;' },
+        { key: 'ads', label: 'Advertisements', href: base + '/ads', icon: '&#128176;' },
+        { key: 'stories', label: 'Success Stories', href: base + '/stories', icon: '&#128149;' }
+      ]
+    : [
+        { key: 'overview', label: 'Overview', href: base, icon: '&#128202;' },
+        { key: 'users', label: 'User Approvals', href: base + '/users', icon: '&#128100;' },
+        { key: 'profiles', label: 'Profiles', href: base + '/profiles', icon: '&#128209;' },
+        { key: 'stories', label: 'Success Stories', href: base + '/stories', icon: '&#128149;' }
+      ];
+%>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="admin-sidebar" id="adminSidebar">
+  <nav>
+    <% navItems.forEach(function(item) { %>
+      <a href="<%= item.href %>" class="sidebar-link <%= active === item.key ? 'active' : '' %>">
+        <span class="sidebar-icon"><%- item.icon %></span> <%= item.label %>
+      </a>
+    <% }) %>
+  </nav>
+  <% if (isSuper) { %>
+    <div class="sidebar-footnote">Need to manage users or profiles? <a href="/portal/admin-dashboard">Open Admin Tools &rarr;</a></div>
+  <% } %>
+</aside>

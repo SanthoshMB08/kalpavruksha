@@ -14,6 +14,17 @@ const Advertisement = {
     return rows;
   },
 
+  // Returns { placementName: [ads...] } for every placement requested, so the
+  // home page can fill several ad slots (top banner, mid-page, footer, etc.)
+  // with a single round-trip.
+  async listActiveGroupedByPlacements(placements) {
+    const grouped = {};
+    for (const placement of placements) {
+      grouped[placement] = await Advertisement.listActiveByPlacement(placement);
+    }
+    return grouped;
+  },
+
   async create({ ad_title, image_name, placement, target_url }) {
     const [result] = await pool.query(
       `INSERT INTO advertisements (ad_title, image_name, placement, target_url, is_active)

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <% const portalLabel = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? 'Super Admin' : 'Admin Portal'; %>
+  <% const logoutUrl = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <% const showViewToggle = !(typeof isSuperAdmin !== 'undefined' && isSuperAdmin); %>
+  <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
+
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { active }) %>
+
+    <main class="admin-main">
+      <%- include('../partials/flash') %>
+
+      <div class="panel">
+        <h3>💕 Success Stories <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page</span></h3>
+        <% if (stories.length === 0) { %>
+          <div class="empty-state">No success stories yet — add the first one below.</div>
+        <% } else { %>
+          <div class="story-edit-list">
+            <% stories.forEach(function(s) { %>
+              <div class="story-edit-card">
+                <form action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST" class="form-grid">
+                  <div class="field">
+                    <label class="form-label">Couple Names</label>
+                    <input type="text" name="couple_names" value="<%= s.couple_names %>" required>
+                  </div>
+                  <div class="field">
+                    <label class="form-label">Display Order</label>
+                    <input type="number" name="display_order" value="<%= s.display_order %>" min="0">
+                  </div>
+                  <div class="field full">
+                    <label class="form-label">Story Text</label>
+                    <textarea name="story_text" rows="3" required><%= s.story_text %></textarea>
+                  </div>
+                  <div class="field full story-edit-actions">
+                    <button type="submit" class="btn btn-maroon btn-sm">Save Changes</button>
+                    <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= s.is_active ? 'Visible on home page' : 'Hidden' %></span>
+                  </div>
+                </form>
+                <div class="story-edit-toggle-row">
+                  <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST">
+                    <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
+                  </form>
+                  <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');">
+                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="panel">
+        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Add New Success Story</h4>
+        <form class="form-grid" action="<%= portalHome %>/stories" method="POST">
+          <div class="field"><label class="form-label">Couple Names</label><input type="text" name="couple_names" placeholder="e.g. Shivaraj &amp; Basavi" required></div>
+          <div class="field"><label class="form-label">Display Order</label><input type="number" name="display_order" value="0" min="0"></div>
+          <div class="field full"><label class="form-label">Story Text</label><textarea name="story_text" rows="3" placeholder="Share a short quote from the couple..." required></textarea></div>
+          <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
+        </form>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

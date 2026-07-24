@@ -41,6 +41,18 @@ const Profile = {
       clauses.push('gender = ?');
       params.push(filters.gender);
     }
+    if (filters.keyword) {
+      clauses.push('(full_name ILIKE ? OR occupation ILIKE ? OR city ILIKE ?)');
+      params.push(`%${filters.keyword}%`, `%${filters.keyword}%`, `%${filters.keyword}%`);
+    }
+    if (filters.minAge) {
+      clauses.push("DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) >= ?");
+      params.push(filters.minAge);
+    }
+    if (filters.maxAge) {
+      clauses.push("DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) <= ?");
+      params.push(filters.maxAge);
+    }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     const [rows] = await pool.query(

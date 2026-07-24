@@ -7,88 +7,30 @@
   <% const portalLabel = 'Super Admin'; const logoutUrl = '/portal/super-secure-logout'; const showViewToggle = false; %>
   <%- include('../partials/admin-topbar', { portalLabel, logoutUrl, showViewToggle }) %>
 
-  <div class="admin-body">
-    <%- include('../partials/flash') %>
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { active }) %>
 
-    <div class="stat-cards">
-      <div class="stat-card"><div class="value"><%= userCounts.total_users || 0 %></div><div class="label">Total Users</div></div>
-      <div class="stat-card"><div class="value"><%= userCounts.pending_users || 0 %></div><div class="label">Pending Users</div></div>
-      <div class="stat-card"><div class="value"><%= userCounts.approved_users || 0 %></div><div class="label">Approved Users</div></div>
-      <div class="stat-card"><div class="value"><%= userCounts.total_admins || 0 %></div><div class="label">Sub-Admins</div></div>
-      <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
-    </div>
+    <main class="admin-main">
+      <%- include('../partials/flash') %>
 
-    <div class="panel">
-      <h3>🛡️ Sub-Admin Management</h3>
-      <table class="data-table" style="margin-bottom:20px;">
-        <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Action</th></tr></thead>
-        <tbody>
-          <% admins.forEach(function(a) { %>
-            <tr>
-              <td><%= a.name %></td>
-              <td><%= a.username %></td>
-              <td><%= a.mobile_number %></td>
-              <td><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
-              <td>
-                <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
-                  <button class="btn btn-danger btn-sm" type="submit">Remove</button>
-                </form>
-              </td>
-            </tr>
-          <% }) %>
-          <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
-        </tbody>
-      </table>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="value"><%= userCounts.total_users || 0 %></div><div class="label">Total Users</div></div>
+        <div class="stat-card"><div class="value"><%= userCounts.pending_users || 0 %></div><div class="label">Pending Users</div></div>
+        <div class="stat-card"><div class="value"><%= userCounts.approved_users || 0 %></div><div class="label">Approved Users</div></div>
+        <div class="stat-card"><div class="value"><%= userCounts.total_admins || 0 %></div><div class="label">Sub-Admins</div></div>
+        <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
+      </div>
 
-      <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Create New Sub-Admin</h4>
-      <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
-        <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" required></div>
-        <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" pattern="[0-9]{10}" maxlength="10" required></div>
-        <div class="field"><label class="form-label">Username</label><input type="text" name="username" required></div>
-        <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
-        <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h3>💰 Sponsorship Hub (Ad Manager)</h3>
-      <table class="data-table" style="margin-bottom:20px;">
-        <thead><tr><th>Preview</th><th>Title</th><th>Placement</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          <% ads.forEach(function(ad) { %>
-            <tr>
-              <td><img src="/uploads/ads/<%= ad.image_name %>" style="width:60px; border-radius:6px;"></td>
-              <td><%= ad.ad_title %></td>
-              <td><%= ad.placement === 'top_banner' ? 'Top Banner' : 'Sidebar Grid' %></td>
-              <td><span class="badge <%= ad.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= ad.is_active ? 'Active' : 'Inactive' %></span></td>
-              <td style="display:flex; gap:8px;">
-                <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
-                  <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
-                </form>
-                <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
-                  <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                </form>
-              </td>
-            </tr>
-          <% }) %>
-          <% if (ads.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No advertisements uploaded yet.</td></tr><% } %>
-        </tbody>
-      </table>
-
-      <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Upload New Advertisement</h4>
-      <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data">
-        <div class="field"><label class="form-label">Ad Title</label><input type="text" name="ad_title" required></div>
-        <div class="field"><label class="form-label">Placement</label>
-          <select name="placement" required>
-            <option value="top_banner">Top Banner</option>
-            <option value="sidebar">Sidebar Grid</option>
-          </select>
+      <div class="panel quick-links">
+        <h3>Quick Links</h3>
+        <div class="quick-link-grid">
+          <a href="/portal/super-secure-dashboard/admins" class="quick-link-card">🛡️ Sub-Admins (<%= adminCount %>)</a>
+          <a href="/portal/super-secure-dashboard/ads" class="quick-link-card">💰 Advertisements (<%= adCount %>)</a>
+          <a href="/portal/super-secure-dashboard/stories" class="quick-link-card">💕 Success Stories (<%= storyCount %>)</a>
+          <a href="/portal/admin-dashboard" class="quick-link-card">📇 Admin Tools (Users &amp; Profiles)</a>
         </div>
-        <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
-        <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required></div>
-        <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
-      </form>
-    </div>
+      </div>
+    </main>
   </div>
 </body>
 </html>

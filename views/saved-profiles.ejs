@@ -5,15 +5,32 @@
 </head>
 <body>
   <%- include('partials/header') %>
-  <a href="javascript:history.back()" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back </a>
-
   <main class="match-feed" style="max-width:1100px; margin:0 auto; padding:36px 24px;">
-    <h2 style="margin-bottom:20px;">Saved Profiles</h2>
-    <% if (saved.length === 0) { %>
-      <div class="empty-state">You haven't saved any profiles yet.</div>
+    <a href="/dashboard" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to search</a>
+    <h2 style="margin:16px 0 4px;">My Profiles</h2>
+    <p style="color:#8a7156; font-size:0.85rem; margin-bottom:20px;">Profiles you've saved for later and profiles you've expressed interest in are kept separate.</p>
+
+    <div class="profile-tabs">
+      <a href="/saved-profiles?tab=saved" class="profile-tab <%= tab === 'saved' ? 'active' : '' %>">
+        &#128278; Saved (<%= saved.length %>)
+      </a>
+      <a href="/saved-profiles?tab=interested" class="profile-tab <%= tab === 'interested' ? 'active' : '' %>">
+        &#10084;&#65039; Interested (<%= interested.length %>)
+      </a>
+    </div>
+
+    <% var list = tab === 'interested' ? interested : saved; %>
+    <% if (list.length === 0) { %>
+      <div class="empty-state">
+        <% if (tab === 'interested') { %>
+          You haven't expressed interest in any profiles yet.
+        <% } else { %>
+          You haven't saved any profiles yet.
+        <% } %>
+      </div>
     <% } else { %>
       <div class="profile-grid">
-        <% saved.forEach(function(p) { %>
+        <% list.forEach(function(p) { %>
           <div class="profile-card">
             <div class="photo"><img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>"></div>
             <div class="info">
@@ -23,11 +40,40 @@
                 <div><strong>Occupation:</strong> <%= p.occupation %></div>
               </div>
             </div>
+            <div class="actions">
+              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); width:100%;" onclick="openProfileModal(<%= p.id %>)">View Details</button>
+            </div>
           </div>
         <% }) %>
       </div>
     <% } %>
   </main>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box" id="modalBox">
+      <div class="modal-close"><button onclick="closeProfileModal()">&times;</button></div>
+      <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    function openProfileModal(id) {
+      const overlay = document.getElementById('modalOverlay');
+      const content = document.getElementById('modalContent');
+      content.innerHTML = 'Loading...';
+      overlay.classList.add('open');
+      fetch('/profile/' + id + '/modal')
+        .then((r) => r.text())
+        .then((html) => { content.innerHTML = html; })
+        .catch(() => { content.innerHTML = '<p>Could not load profile.</p>'; });
+    }
+    function closeProfileModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+      if (e.target === this) closeProfileModal();
+    });
+  </script>
 
   <%- include('partials/footer') %>
 </body>

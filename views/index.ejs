@@ -75,21 +75,32 @@
 
     <section class="stories-section" id="stories">
       <div class="kalasha-divider">✦ Success Stories ✦</div>
-      <div class="stories-grid">
-        <div class="story-card">
-          <div class="couple-names">Shivaraj &amp; Basavi</div>
-          <p>"We found each other within two months of registering. Our families connected instantly over shared values."</p>
+      <% if (stories && stories.length) { %>
+        <div class="stories-grid">
+          <% stories.forEach(function(s) { %>
+            <div class="story-card">
+              <div class="couple-names"><%= s.couple_names %></div>
+              <p>"<%= s.story_text %>"</p>
+            </div>
+          <% }) %>
         </div>
-        <div class="story-card">
-          <div class="couple-names">Mallikarjun &amp; Girija</div>
-          <p>"The verification process gave both our families confidence right from the first conversation."</p>
-        </div>
-        <div class="story-card">
-          <div class="couple-names">Basavaraj &amp; Veena</div>
-          <p>"A simple, respectful platform that understood exactly what our community was looking for."</p>
-        </div>
-      </div>
+      <% } else { %>
+        <div class="empty-state">Success stories will appear here soon.</div>
+      <% } %>
     </section>
+
+    <% if (midAds && midAds.length) { %>
+      <section class="home-ad-banner">
+        <div class="eyebrow">Sponsored</div>
+        <div class="home-ad-banner-row">
+          <% midAds.forEach(function(ad) { %>
+            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
+              <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+            </a>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
 
     <section class="contact-section" id="contact">
       <h2>Get in touch</h2>
@@ -109,6 +120,19 @@
         </div>
       </form>
     </section>
+
+    <% if (bottomAds && bottomAds.length) { %>
+      <section class="home-ad-banner home-ad-banner-bottom">
+        <div class="eyebrow">Sponsored</div>
+        <div class="home-ad-banner-row">
+          <% bottomAds.forEach(function(ad) { %>
+            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
+              <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+            </a>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
 
   </div>
 

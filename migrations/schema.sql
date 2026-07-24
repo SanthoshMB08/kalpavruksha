@@ -53,11 +53,18 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 -- 3. INTERESTS
+-- is_saved and is_interested are independent flags: a member can save a
+-- profile for later AND separately express interest in it. Each shows up in
+-- its own tab on the "Saved Profiles" page.
 CREATE TABLE IF NOT EXISTS interests (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   profile_id BIGINT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  is_saved_only BOOLEAN NOT NULL DEFAULT FALSE,
+  is_saved_only BOOLEAN NOT NULL DEFAULT FALSE, -- retained for backward compatibility, no longer used by the app
+  is_saved BOOLEAN NOT NULL DEFAULT FALSE,
+  is_interested BOOLEAN NOT NULL DEFAULT FALSE,
+  saved_at TIMESTAMP NULL,
+  interested_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -66,9 +73,21 @@ CREATE TABLE IF NOT EXISTS advertisements (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   ad_title VARCHAR(100) NOT NULL,
   image_name VARCHAR(255) NOT NULL,
-  placement VARCHAR(20) NOT NULL CHECK (placement IN ('top_banner', 'sidebar')),
+  placement VARCHAR(20) NOT NULL CHECK (placement IN ('top_banner', 'sidebar', 'home_middle', 'home_bottom', 'after_search')),
   target_url VARCHAR(255) NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. SUCCESS STORIES (editable from the Admin / Super Admin portal, shown on
+-- the public home page instead of being hard-coded in the template)
+CREATE TABLE IF NOT EXISTS success_stories (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  couple_names VARCHAR(150) NOT NULL,
+  story_text TEXT NOT NULL,
+  display_order INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -77,6 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON profiles (created_at DESC)
 CREATE INDEX IF NOT EXISTS idx_interests_user ON interests (user_id);
 CREATE INDEX IF NOT EXISTS idx_interests_profile ON interests (profile_id);
 CREATE INDEX IF NOT EXISTS idx_advertisements_placement ON advertisements (placement, is_active);
+CREATE INDEX IF NOT EXISTS idx_success_stories_active ON success_stories (is_active, display_order);
 
 -- NOTE: the express-session table ("session") is created automatically by
 -- connect-pg-simple at app startup (createTableIfMissing: true), so it is

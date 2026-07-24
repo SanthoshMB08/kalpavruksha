@@ -6,96 +6,127 @@
 <body>
   <%- include('partials/header') %>
 
-  <div class="dashboard-layout">
-    <aside class="filter-sidebar">
-      <h3>Refine Your Search</h3>
-      <form id="filterForm" method="GET" action="/dashboard">
-
-        <div class="filter-group">
-          <label>Religion</label>
-          <input type="text" name="religion" id="religionInput" autocomplete="off"
-                 value="<%= filters.religion || '' %>" placeholder="Type to search...">
-          <div class="filter-dropdown-list" id="religionList">
-            <% religions.forEach(function(r) { %><div data-target="religionInput" data-value="<%= r %>"><%= r %></div><% }) %>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label>Caste</label>
-          <input type="text" name="caste" id="casteInput" autocomplete="off"
-                 value="<%= filters.caste || '' %>" placeholder="Type to search...">
-          <div class="filter-dropdown-list" id="casteList">
-            <% castes.forEach(function(c) { %><div data-target="casteInput" data-value="<%= c %>"><%= c %></div><% }) %>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label>Sub-caste</label>
-          <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
-        </div>
-
-        <div class="filter-group">
-          <label>Language</label>
-          <input type="text" name="language" id="languageInput" autocomplete="off"
-                 value="<%= filters.language || '' %>" placeholder="Type to search...">
-          <div class="filter-dropdown-list" id="languageList">
-            <% languages.forEach(function(l) { %><div data-target="languageInput" data-value="<%= l %>"><%= l %></div><% }) %>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label>Looking For</label>
-          <select name="gender">
-            <option value="">Any</option>
-            <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Groom</option>
-            <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Bride</option>
-          </select>
-        </div>
-
-        <button type="submit" class="btn btn-gold btn-block">Search</button>
-        <a href="/dashboard" class="btn btn-outline-gold btn-block" style="border-color:var(--maroon-800); color:var(--maroon-800); margin-top:10px;">Clear Filters</a>
-      </form>
-    </aside>
-
-    <main class="match-feed">
-      <div class="match-feed-header">
-        <h2>Your Matches</h2>
-        <span style="color:#8a7156; font-size:0.85rem;"><%= profiles.length %> profile(s) found</span>
+  <div class="search-bar-wrap">
+    <form id="filterForm" method="GET" action="/dashboard" class="search-bar">
+      <div class="search-input-group">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city...">
       </div>
+      <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
+        &#9881;&#65039; Filters
+      </button>
+      <button type="submit" class="btn btn-gold search-submit-btn">Search</button>
 
-      <% if (profiles.length === 0) { %>
-        <div class="empty-state">
-          <div style="font-size:2rem;">🔍</div>
-          <p>No matches found for these filters. Try widening your search.</p>
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-grid">
+          <div class="filter-group">
+            <label>Caste</label>
+            <input type="text" name="caste" id="casteInput" autocomplete="off"
+                   value="<%= filters.caste || '' %>" placeholder="Type to search...">
+            <div class="filter-dropdown-list" id="casteList">
+              <% castes.forEach(function(c) { %><div data-target="casteInput" data-value="<%= c %>"><%= c %></div><% }) %>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Language</label>
+            <input type="text" name="language" id="languageInput" autocomplete="off"
+                   value="<%= filters.language || '' %>" placeholder="Type to search...">
+            <div class="filter-dropdown-list" id="languageList">
+              <% languages.forEach(function(l) { %><div data-target="languageInput" data-value="<%= l %>"><%= l %></div><% }) %>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Age Range</label>
+            <div class="age-range-row">
+              <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
+              <span>to</span>
+              <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Religion</label>
+            <input type="text" name="religion" id="religionInput" autocomplete="off"
+                   value="<%= filters.religion || '' %>" placeholder="Type to search...">
+            <div class="filter-dropdown-list" id="religionList">
+              <% religions.forEach(function(r) { %><div data-target="religionInput" data-value="<%= r %>"><%= r %></div><% }) %>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Sub-caste</label>
+            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+          </div>
+
+          <div class="filter-group">
+            <label>Looking For</label>
+            <select name="gender">
+              <option value="">Any</option>
+              <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Groom</option>
+              <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Bride</option>
+            </select>
+          </div>
         </div>
-      <% } else { %>
-        <div class="profile-grid">
-          <% profiles.forEach(function(p) { %>
-            <div class="profile-card">
-              <div class="photo">
-                <img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>">
-              </div>
-              <div class="info">
-                <h4><%= p.full_name %>, <%= p.age %></h4>
-                <div class="meta">
-                  <div><strong>Caste:</strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
-                  <div><strong>Language:</strong> <%= p.language %></div>
-                  <div><strong>Occupation:</strong> <%= p.occupation %></div>
-                  <div><strong>Salary:</strong> ₹<%= Number(p.annual_salary).toLocaleString('en-IN') %>/yr</div>
-                </div>
-              </div>
-              <div class="actions">
-                <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" onclick="openProfileModal(<%= p.id %>)">View Details</button>
-                <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;">
-                  <button type="submit" class="btn btn-gold" style="width:100%;">Express Interest</button>
-                </form>
+
+        <div class="filter-panel-actions">
+          <a href="/dashboard" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear All</a>
+          <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <main class="match-feed match-feed-full">
+    <div class="match-feed-header">
+      <h2>Your Matches</h2>
+      <span style="color:#8a7156; font-size:0.85rem;"><%= profiles.length %> profile(s) found</span>
+    </div>
+
+    <% if (afterSearchAds && afterSearchAds.length) { %>
+      <div class="search-ad-banner">
+        <div class="eyebrow">Sponsored</div>
+        <% afterSearchAds.forEach(function(ad) { %>
+          <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
+            <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (profiles.length === 0) { %>
+      <div class="empty-state">
+        <div style="font-size:2rem;">🔍</div>
+        <p>No matches found for these filters. Try widening your search.</p>
+      </div>
+    <% } else { %>
+      <div class="profile-grid">
+        <% profiles.forEach(function(p) { %>
+          <div class="profile-card">
+            <div class="photo">
+              <img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>">
+            </div>
+            <div class="info">
+              <h4><%= p.full_name %>, <%= p.age %></h4>
+              <div class="meta">
+                <div><strong>Caste:</strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
+                <div><strong>Language:</strong> <%= p.language %></div>
+                <div><strong>Occupation:</strong> <%= p.occupation %></div>
+                <div><strong>Salary:</strong> ₹<%= Number(p.annual_salary).toLocaleString('en-IN') %>/yr</div>
               </div>
             </div>
-          <% }) %>
-        </div>
-      <% } %>
-    </main>
-  </div>
+            <div class="actions">
+              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" onclick="openProfileModal(<%= p.id %>)">View Details</button>
+              <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;">
+                <button type="submit" class="btn btn-gold" style="width:100%;">Express Interest</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box" id="modalBox">
@@ -105,6 +136,25 @@
   </div>
 
   <script>
+    // Filter panel toggle (YouTube/LinkedIn style filter menu)
+    var filterToggleBtn = document.getElementById('filterToggleBtn');
+    var filterPanel = document.getElementById('filterPanel');
+    if (filterToggleBtn && filterPanel) {
+      filterToggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        filterPanel.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (!filterPanel.contains(e.target) && e.target !== filterToggleBtn) {
+          filterPanel.classList.remove('open');
+        }
+      });
+      // Keep the panel open on load if any advanced filter is already applied
+      <% if (filters.caste || filters.language || filters.minAge || filters.maxAge || filters.religion || filters.subcaste || filters.gender) { %>
+        filterPanel.classList.add('open');
+      <% } %>
+    }
+
     // Type-to-filter scroll-down dropdowns for Religion / Caste / Language
     function wireDropdown(inputId, listId) {
       const input = document.getElementById(inputId);
