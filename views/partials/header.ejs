@@ -5,9 +5,9 @@
     <a href="/#about">About</a>
     <a href="/#stories">Success Stories</a>
     <a href="/#contact">Contact</a>
-    <% if (currentUser && currentUser.role === 'user') { %>
-      <a href="/dashboard">Find Matches</a>
-      <a href="/saved-profiles">Saved</a>
+    <% if (currentUser) { %>
+      <a href="/dashboard">Find Match</a>
+      <a href="/saved-profiles">Saved Profiles</a>
     <% } %>
     <div class="nav-actions nav-actions-mobile">
       <% if (currentUser) { %>

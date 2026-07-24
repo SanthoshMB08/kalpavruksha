@@ -413,7 +413,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 
 .empty-state { text-align: center; padding: 40px 20px; color: #a08a6a; }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
   .hero { grid-template-columns: 1fr; padding: 40px 24px; }
   .split-grid { grid-template-columns: 1fr; padding: 40px 24px; }
   .stories-grid { grid-template-columns: 1fr; }

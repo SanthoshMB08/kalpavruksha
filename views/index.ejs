@@ -21,10 +21,17 @@
       <div>
         <h1>Rooted in tradition,<br><em>blossoming into forever.</em></h1>
         <p>Kalpavruksha Kalyana connects Lingayat families in search of a life partner who shares their faith, values, and heritage &mdash; every profile verified, every match made with care.</p>
-        <div style="display:flex; gap:14px;">
-          <a href="/register" class="btn btn-gold">Register Now</a>
-          <a href="/login" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);">Already a member? Login</a>
-        </div>
+        <% if (currentUser) { %>
+          <div style="display:flex; gap:14px;">
+            <a href="/dashboard" class="btn btn-gold">Find Match</a>
+            <a href="/saved-profiles" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);">Saved Profiles</a>
+          </div>
+        <% } else if (!currentUser) { %>
+          <div style="display:flex; gap:14px;">
+            <a href="/register" class="btn btn-gold">Register Now</a>
+            <a href="/login" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);">Already a member? Login</a>
+          </div>
+        <% } %>
         <div style="margin-top:26px; font-size:0.85rem; color:#8a7156;"><%= totalProfiles %>+ verified profiles and counting</div>
       </div>
       <div class="hero-frame">
