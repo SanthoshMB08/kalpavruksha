@@ -44,7 +44,7 @@
       </div>
 
       <div class="panel">
-        <h3>🔔 Active Activity Stream</h3>
+        <h3><i class="fa-solid fa-bell"></i> Active Activity Stream</h3>
         <% if (recentInterests.length === 0) { %>
           <div class="empty-state">No interests expressed yet.</div>
         <% } else { %>
@@ -60,10 +60,10 @@
       <div class="panel quick-links">
         <h3>Quick Links</h3>
         <div class="quick-link-grid">
-          <a href="/portal/admin-dashboard/users" class="quick-link-card">👤 User Approvals &amp; Direct Creation</a>
-          <a href="/portal/admin-dashboard/profiles" class="quick-link-card">📇 Manage Profiles</a>
-          <a href="/portal/admin-dashboard/profiles/new" class="quick-link-card">➕ Upload New Profile</a>
-          <a href="/portal/admin-dashboard/stories" class="quick-link-card">💕 Edit Success Stories</a>
+          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check"></i> User Approvals &amp; Direct Creation</a>
+          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card"></i> Manage Profiles</a>
+          <a href="/portal/admin-dashboard/profiles/new" class="quick-link-card"><i class="fa-solid fa-plus"></i> Upload New Profile</a>
+          <a href="/portal/admin-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Edit Success Stories</a>
         </div>
       </div>
   <%- include('../partials/portal-shell-close') %>

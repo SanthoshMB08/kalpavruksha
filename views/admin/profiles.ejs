@@ -6,7 +6,7 @@
 <body>
   <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout', showViewToggle: true }) %>
       <div class="panel">
-        <h3>📇 All Profiles (<%= profiles.length %>)</h3>
+        <h3><i class="fa-solid fa-address-card"></i> All Profiles (<%= profiles.length %>)</h3>
         <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
         <div class="table-scroll">
         <table class="data-table">

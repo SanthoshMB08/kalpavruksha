@@ -34,10 +34,10 @@
           <label class="form-label">Password</label>
           <input type="password" name="password" id="password" required>
           <ul class="pw-checklist" id="pwChecklist">
-            <li data-rule="length">❌ At least 8 characters</li>
-            <li data-rule="upper">❌ One uppercase letter</li>
-            <li data-rule="lower">❌ One lowercase letter</li>
-            <li data-rule="number">❌ One number</li>
+            <li data-rule="length"><i class="fa-solid fa-xmark rule-icon"></i><span>At least 8 characters</span></li>
+            <li data-rule="upper"><i class="fa-solid fa-xmark rule-icon"></i><span>One uppercase letter</span></li>
+            <li data-rule="lower"><i class="fa-solid fa-xmark rule-icon"></i><span>One lowercase letter</span></li>
+            <li data-rule="number"><i class="fa-solid fa-xmark rule-icon"></i><span>One number</span></li>
           </ul>
         </div>
 
@@ -80,7 +80,9 @@
         const met = rules[rule];
         if (!met) allMet = false;
         li.classList.toggle('met', met);
-        li.textContent = (met ? '✓ ' : '❌ ') + li.textContent.replace(/^(✓|❌)\s*/, '');
+        const icon = li.querySelector('.rule-icon');
+        icon.classList.toggle('fa-check', met);
+        icon.classList.toggle('fa-xmark', !met);
       });
       submitBtn.disabled = !(allMet && terms.checked && privacy.checked);
     }

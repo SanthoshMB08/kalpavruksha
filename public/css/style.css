@@ -1,34 +1,43 @@
 /* ==========================================================================
    Kalpavruksha Kalyana — Design Tokens
-   Palette: Deep Maroon #7f1d1d, Gold #eab308, Warm Cream #fffdfa
+   Palette: Peacock Teal #0b3d3a, Marigold Gold #eab308, Warm Ivory #fffdfa
+   (Peacock and marigold are traditional, auspicious Indian ceremonial colours —
+   used here in place of the earlier maroon/red scheme.)
    Display face: 'Tiro Devanagari Sanskrit' fallback 'Cormorant Garamond' (serif, ceremonial)
    Body face: 'Mukta' (clean, legible, widely used for Kannada/Devanagari contexts)
    ========================================================================== */
 
 :root {
-  --maroon-900: #5c1414;
-  --maroon-800: #7f1d1d;
-  --maroon-700: #932323;
+  --maroon-900: #0a3835;
+  --maroon-800: #0f5c54;
+  --maroon-700: #14776d;
+  --maroon-600: #1c9086;
   --gold-600: #b8860b;
   --gold-500: #eab308;
+  --gold-400: #f0c33a;
   --gold-300: #f5d576;
   --cream-50: #fffdfa;
   --cream-100: #fbf4e4;
   --ivory-paper: #fdf8ec;
-  --charcoal-900: #241a15;
-  --ink: #2c1810;
+  --charcoal-900: #1b2422;
+  --ink: #1c2725;
   --success: #2f6f4f;
-  --danger: #a3262e;
+  --danger: #b23a3a;
 
   --font-display: 'Cormorant Garamond', 'Tiro Devanagari Sanskrit', Georgia, serif;
   --font-body: 'Mukta', 'Segoe UI', sans-serif;
 
   --radius-md: 10px;
   --radius-lg: 18px;
-  --shadow-soft: 0 10px 30px rgba(92, 20, 20, 0.12);
+  --shadow-soft: 0 10px 30px rgba(10, 56, 53, 0.12);
+  --shadow-hover: 0 16px 38px rgba(10, 56, 53, 0.2);
+  --ease: cubic-bezier(.4,0,.2,1);
+  --transition-base: 200ms var(--ease);
 }
 
 * { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -36,6 +45,24 @@ body {
   background: var(--cream-50);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--gold-400); color: var(--maroon-900); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--cream-100); }
+::-webkit-scrollbar-thumb { background: var(--maroon-600); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--maroon-700); }
+
+a, button, .btn, input, select, textarea {
+  transition: color var(--transition-base), background var(--transition-base),
+    border-color var(--transition-base), box-shadow var(--transition-base),
+    transform var(--transition-base), opacity var(--transition-base);
+}
+
+:focus-visible {
+  outline: 2px solid var(--maroon-600);
+  outline-offset: 2px;
 }
 
 h1, h2, h3, h4, .font-display {
@@ -696,4 +723,131 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 @media (max-width: 420px) {
   .profile-grid { grid-template-columns: 1fr; }
   .stat-cards { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   Stage 1 — Professional interaction & polish layer
+   Hover states, focus rings, icon styling, and motion for a more premium feel.
+   ========================================================================== */
+
+/* Icons (Font Awesome) used in place of emoji */
+i.fa-solid, i.fa-brands, i.fa-regular { line-height: 1; }
+.deco-star { color: var(--gold-500); font-size: 0.7em; vertical-align: 0.05em; }
+.diya-mark { color: var(--gold-500); vertical-align: -0.1em; }
+.navbar .brand .glyph svg { display: inline-block; vertical-align: -0.2em; width: 1.35rem; height: 1.35rem; }
+.portal-sidebar-brand svg { width: 1.15rem; height: 1.15rem; vertical-align: -0.18em; margin-right: 2px; }
+.portal-nav a i { width: 18px; text-align: center; }
+.quick-link-card i { margin-right: 8px; color: var(--maroon-700); }
+.panel h3 i { color: var(--maroon-700); }
+.pw-checklist li i { width: 14px; margin-right: 6px; }
+.pw-checklist li i.fa-xmark { color: var(--danger); }
+.pw-checklist li.met i.fa-check { color: var(--success); }
+
+/* Buttons — clearer affordance, lift + glow on hover, active press feedback */
+.btn { position: relative; overflow: hidden; }
+.btn:hover { box-shadow: var(--shadow-hover); }
+.btn:active { transform: translateY(0); box-shadow: none; }
+.btn-gold:hover { background: linear-gradient(180deg, var(--gold-400), var(--gold-600)); }
+.btn-outline-gold:hover { background: rgba(234,179,8,0.14); border-color: var(--gold-400); transform: translateY(-1px); }
+.btn-maroon:hover { background: var(--maroon-700); box-shadow: 0 6px 18px rgba(10,56,53,0.35); }
+.btn-danger:hover { background: #922f2f; }
+.btn:focus-visible { outline-offset: 3px; }
+
+/* Navbar links — animated underline on hover */
+.navbar nav a { position: relative; }
+.navbar nav a::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -4px;
+  width: 0; height: 2px;
+  background: var(--gold-400);
+  transition: width var(--transition-base);
+}
+.navbar nav a:hover::after { width: 100%; }
+
+/* Cards — consistent lift + shadow on hover across the app */
+.story-card, .profile-card, .stat-card, .ads-corner, .auth-card, .modal-box {
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.story-card:hover, .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+.profile-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--gold-400); }
+.profile-card .photo img { transition: transform 400ms var(--ease); }
+.profile-card:hover .photo img { transform: scale(1.05); }
+
+/* Quick link cards + admin panels */
+.quick-link-card:hover { border-color: var(--gold-500); background: var(--cream-50); }
+.panel { transition: box-shadow var(--transition-base); }
+.panel:hover { box-shadow: var(--shadow-hover); }
+
+/* Table rows */
+.data-table tr { transition: background var(--transition-base); }
+.data-table tbody tr:hover td { background: var(--cream-100); }
+.data-table tbody tr:hover { box-shadow: inset 3px 0 0 var(--gold-500); }
+
+/* Form fields — clearer focus ring in the theme colour, subtle hover lift */
+input, select, textarea {
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+}
+input:hover, select:hover, textarea:hover { border-color: var(--gold-500); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--maroon-600);
+  box-shadow: 0 0 0 4px rgba(20, 119, 109, 0.15);
+}
+input:invalid:not(:placeholder-shown), select:invalid:not(:placeholder-shown) {
+  border-color: var(--danger);
+}
+input::placeholder, textarea::placeholder { color: #a09082; }
+
+/* Small helper for field hints / tooltips (client asked for field tooltips) */
+.field-hint {
+  font-size: 0.74rem;
+  color: #8a7156;
+  margin-top: 2px;
+}
+.field-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: var(--cream-100);
+  color: var(--maroon-700);
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-left: 6px;
+  cursor: help;
+  position: relative;
+}
+.field-tip:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--charcoal-900);
+  color: var(--cream-50);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Badges get a touch more presence */
+.badge { transition: transform var(--transition-base); letter-spacing: 0.02em; }
+
+/* Filter dropdown items and search suggestions */
+.filter-dropdown-list div { transition: background var(--transition-base); }
+
+/* Sidebar nav active state gets a subtle glow */
+.portal-nav a.active { box-shadow: 0 4px 14px rgba(234,179,8,0.35); }
+
+/* Marquee bar icon spacing */
+.marquee-track .deco-star { margin: 0 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
