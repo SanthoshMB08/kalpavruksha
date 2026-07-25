@@ -4,7 +4,7 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout', showViewToggle: false }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
       <div class="stat-cards">
         <div class="stat-card"><div class="value"><%= userCounts.total_users || 0 %></div><div class="label">Total Users</div></div>

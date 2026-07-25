@@ -73,7 +73,7 @@ const Interest = {
   async recentExpressed(limit = 20) {
     const [rows] = await pool.query(
       `SELECT i.id, i.interested_at AS created_at, u.name AS user_name, u.mobile_number AS user_mobile,
-              p.full_name AS profile_name, p.phone_number AS profile_phone
+              p.id AS profile_id, p.full_name AS profile_name, p.phone_number AS profile_phone
        FROM interests i
        JOIN users u ON u.id = i.user_id
        JOIN profiles p ON p.id = i.profile_id

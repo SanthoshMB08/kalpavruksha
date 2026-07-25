@@ -2,14 +2,23 @@ const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const Advertisement = require('../models/Advertisement');
 
+// Gender-based matching is mandatory: a male member only ever sees female
+// profiles and vice versa. This is enforced here, not left to the user to pick.
+function oppositeGender(gender) {
+  if (gender === 'male') return 'female';
+  if (gender === 'female') return 'male';
+  return null;
+}
+
 exports.dashboard = async (req, res) => {
   try {
+    const myGender = req.session.user.gender;
     const filters = {
       religion: req.query.religion,
       caste: req.query.caste,
       language: req.query.language,
       subcaste: req.query.subcaste,
-      gender: req.query.gender,
+      gender: oppositeGender(myGender),
       keyword: req.query.keyword,
       minAge: req.query.minAge,
       maxAge: req.query.maxAge
@@ -48,6 +57,12 @@ exports.dashboard = async (req, res) => {
 exports.profileModal = async (req, res) => {
   const profile = await Profile.findByIdPublic(req.params.id);
   if (!profile) return res.status(404).send('<p class="p-6 text-maroon-800">Profile not found.</p>');
+  // A married profile (or a profile of the same gender, if the URL is guessed
+  // directly) must never be shown to a member.
+  const myGender = req.session.user && req.session.user.gender;
+  if (profile.marital_status === 'married' || (myGender && profile.gender === myGender)) {
+    return res.status(404).send('<p class="p-6 text-maroon-800">Profile not found.</p>');
+  }
   res.render('partials/profile-modal', { profile, layout: false });
 };
 

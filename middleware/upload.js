@@ -54,6 +54,7 @@ const uploadProfileAssets = multer({
   }
 }).fields([
   { name: 'profile_image', maxCount: 1 },
+  { name: 'profile_image_2', maxCount: 1 },
   { name: 'jathaka_pdf', maxCount: 1 }
 ]);
 

@@ -4,13 +4,13 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout', showViewToggle: false }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
       <div class="panel">
         <h3><i class="fa-solid fa-shield-halved"></i> Sub-Admin Management</h3>
         <div class="table-scroll">
         <table class="data-table" style="margin-bottom:20px;">
-          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Action</th></tr></thead>
+          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Reset Password</th><th>Remove</th></tr></thead>
           <tbody>
             <% admins.forEach(function(a) { %>
               <tr>
@@ -18,23 +18,32 @@
                 <td data-label="Username"><%= a.username %></td>
                 <td data-label="Mobile"><%= a.mobile_number %></td>
                 <td data-label="Since"><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
-                <td data-label="Action">
+                <td data-label="Reset Password">
+                  <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" class="password-reset-row" onsubmit="return confirm('Reset password for <%= a.username %>?');">
+                    <input type="password" name="password" placeholder="New password" minlength="8" required>
+                    <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit">Update</button>
+                  </form>
+                </td>
+                <td data-label="Remove">
                   <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
                     <button class="btn btn-danger btn-sm" type="submit">Remove</button>
                   </form>
                 </td>
               </tr>
             <% }) %>
-            <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
+            <% if (admins.length === 0) { %><tr><td colspan="6" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
           </tbody>
         </table>
         </div>
 
         <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Create New Sub-Admin</h4>
+        <% if (formErrors && formErrors.length) { %>
+          <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+        <% } %>
         <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
-          <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" required></div>
-          <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" pattern="[0-9]{10}" maxlength="10" required></div>
-          <div class="field"><label class="form-label">Username</label><input type="text" name="username" required></div>
+          <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
+          <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
+          <div class="field"><label class="form-label">Username</label><input type="text" name="username" value="<%= old.username || '' %>" required></div>
           <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
           <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
         </form>

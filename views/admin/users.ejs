@@ -4,20 +4,21 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout', showViewToggle: true }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
 
       <div class="panel">
-        <h3>⏳ Pending Approvals</h3>
+        <h3><i class="fa-solid fa-hourglass-half"></i> Pending Approvals</h3>
         <% if (pending.length === 0) { %>
           <div class="empty-state">No pending registrations right now.</div>
         <% } else { %>
           <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Mobile</th><th>Username</th><th>Registered</th><th>Action</th></tr></thead>
+            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Registered</th><th>Action</th></tr></thead>
             <tbody>
               <% pending.forEach(function(u) { %>
                 <tr>
                   <td data-label="Name"><%= u.name %></td>
+                  <td data-label="Gender"><%= u.gender ? (u.gender === 'male' ? 'Male' : 'Female') : '—' %></td>
                   <td data-label="Mobile"><%= u.mobile_number %></td>
                   <td data-label="Username"><%= u.username %></td>
                   <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
@@ -38,19 +39,59 @@
       </div>
 
       <div class="panel">
+        <h3><i class="fa-solid fa-users"></i> Active Members <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(reset a member's password if they're locked out)</span></h3>
+        <% if (members.length === 0) { %>
+          <div class="empty-state">No approved members yet.</div>
+        <% } else { %>
+          <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Reset Password</th></tr></thead>
+            <tbody>
+              <% members.forEach(function(m) { %>
+                <tr>
+                  <td data-label="Name"><%= m.name %></td>
+                  <td data-label="Gender"><%= m.gender ? (m.gender === 'male' ? 'Male' : 'Female') : '—' %></td>
+                  <td data-label="Mobile"><%= m.mobile_number %></td>
+                  <td data-label="Username"><%= m.username %></td>
+                  <td data-label="Reset Password">
+                    <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" class="password-reset-row" onsubmit="return confirm('Reset password for <%= m.username %>?');">
+                      <input type="password" name="password" placeholder="New password" minlength="8" required>
+                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit">Update</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="panel">
         <h3><i class="fa-solid fa-user-plus"></i> Direct User Creation <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(bypasses approval, activates instantly)</span></h3>
+        <% if (formErrors && formErrors.length) { %>
+          <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+        <% } %>
         <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST">
           <div class="field">
             <label class="form-label">Full Name</label>
-            <input type="text" name="name" required>
+            <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="Letters only, no numbers" required>
           </div>
           <div class="field">
             <label class="form-label">Mobile Number</label>
-            <input type="text" name="mobile_number" pattern="[0-9]{10}" maxlength="10" required>
+            <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="Exactly 10 digits" required>
           </div>
           <div class="field">
             <label class="form-label">Username</label>
-            <input type="text" name="username" required>
+            <input type="text" name="username" value="<%= old.username || '' %>" required>
+          </div>
+          <div class="field">
+            <label class="form-label">Gender <span class="field-tip" data-tip="Determines which members this account will be matched with.">?</span></label>
+            <select name="gender" required>
+              <option value="">Select Gender</option>
+              <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
+              <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
+            </select>
           </div>
           <div class="field">
             <label class="form-label">Password</label>

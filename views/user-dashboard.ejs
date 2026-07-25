@@ -9,11 +9,11 @@
   <div class="search-bar-wrap">
     <form id="filterForm" method="GET" action="/dashboard" class="search-bar">
       <div class="search-input-group">
-        <span class="search-icon">&#128269;</span>
+        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
         <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city...">
       </div>
       <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
-        &#9881;&#65039; Filters
+        <i class="fa-solid fa-sliders"></i> Filters
       </button>
       <button type="submit" class="btn btn-gold search-submit-btn">Search</button>
 
@@ -60,14 +60,6 @@
             <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
           </div>
 
-          <div class="filter-group">
-            <label>Looking For</label>
-            <select name="gender">
-              <option value="">Any</option>
-              <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Groom</option>
-              <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Bride</option>
-            </select>
-          </div>
         </div>
 
         <div class="filter-panel-actions">
@@ -150,7 +142,7 @@
         }
       });
       // Keep the panel open on load if any advanced filter is already applied
-      <% if (filters.caste || filters.language || filters.minAge || filters.maxAge || filters.religion || filters.subcaste || filters.gender) { %>
+      <% if (filters.caste || filters.language || filters.minAge || filters.maxAge || filters.religion || filters.subcaste) { %>
         filterPanel.classList.add('open');
       <% } %>
     }

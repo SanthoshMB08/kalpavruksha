@@ -35,3 +35,11 @@ exports.contactSubmit = (req, res) => {
   req.flash('success', 'Thank you, we will get back to you shortly.');
   res.redirect('/#contact');
 };
+
+exports.terms = (req, res) => {
+  res.render('terms', { title: 'Terms & Conditions' });
+};
+
+exports.privacy = (req, res) => {
+  res.render('privacy', { title: 'Privacy Policy' });
+};

@@ -1,5 +1,5 @@
 <%
-/* Expected locals: portal ('admin'|'superadmin'), active (nav key), title, logoutUrl, showViewToggle */
+/* Expected locals: portal ('admin'|'superadmin'), active (nav key), title, logoutUrl */
 %>
 <div class="admin-shell">
   <input type="checkbox" id="portalSidebarToggle" class="portal-sidebar-toggle-checkbox">
@@ -25,11 +25,6 @@
     <div class="portal-sidebar-footer">
       <% if (portal === 'superadmin') { %>
         <a href="/portal/admin-dashboard" class="btn btn-outline-gold btn-sm btn-block" style="margin-bottom:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Open Admin Tools</a>
-      <% } %>
-      <% if (typeof showViewToggle !== 'undefined' && showViewToggle) { %>
-        <form action="/portal/admin-dashboard/toggle-view" method="POST">
-          <button type="submit" class="view-toggle">Switch to <%= currentUser.viewMode === 'admin' ? 'User' : 'Admin' %> View</button>
-        </form>
       <% } %>
       <a href="<%= logoutUrl %>" class="btn btn-outline-gold btn-sm btn-block" style="margin-top:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Logout</a>
     </div>

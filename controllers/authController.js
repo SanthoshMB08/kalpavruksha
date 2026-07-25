@@ -8,7 +8,7 @@ exports.showRegister = (req, res) => {
 
 exports.register = async (req, res) => {
   const errors = validationResult(req);
-  const { name, mobile_number, username, password, terms, privacy } = req.body;
+  const { name, mobile_number, username, password, gender, terms, privacy } = req.body;
 
   if (!errors.isEmpty() || !terms || !privacy) {
     const errList = errors.array().map((e) => e.msg);
@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
     return res.render('register', {
       title: 'Register',
       errors: errList,
-      old: { name, mobile_number, username }
+      old: { name, mobile_number, username, gender }
     });
   }
 
@@ -26,12 +26,12 @@ exports.register = async (req, res) => {
       return res.render('register', {
         title: 'Register',
         errors: ['That mobile number or username is already registered.'],
-        old: { name, mobile_number, username }
+        old: { name, mobile_number, username, gender }
       });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await User.create({ name, mobile_number, username, passwordHash });
+    await User.create({ name, mobile_number, username, passwordHash, gender });
 
     req.flash('success', 'Registration received. An admin will review your profile shortly.');
     return res.redirect('/pending-approval');
@@ -40,7 +40,7 @@ exports.register = async (req, res) => {
     return res.render('register', {
       title: 'Register',
       errors: ['Something went wrong. Please try again.'],
-      old: { name, mobile_number, username }
+      old: { name, mobile_number, username, gender }
     });
   }
 };
@@ -66,7 +66,8 @@ exports.login = async (req, res) => {
       name: user.name,
       username: user.username,
       role: user.role,
-      status: user.status
+      status: user.status,
+      gender: user.gender
     };
 
     if (user.status === 'pending') return res.redirect('/pending-approval');

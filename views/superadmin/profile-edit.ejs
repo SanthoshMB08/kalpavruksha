@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active: 'profiles', title, logoutUrl: '/portal/super-secure-logout' }) %>
+
+  <a href="/portal/admin-dashboard/profiles/<%= profile.id %>" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to profile</a>
+  <div class="panel">
+    <h3><i class="fa-solid fa-pen-to-square"></i> Edit Profile — Super Admin</h3>
+    <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">Super Admin can edit every field, including gender and the jathaka document. Leave a file field empty to keep the existing file.</p>
+    <% if (errors && errors.length) { %>
+      <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+    <% } %>
+    <form class="form-grid" action="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" method="POST" enctype="multipart/form-data">
+
+      <div class="field"><label class="form-label">Replace Photo 1 <span class="field-tip" data-tip="Leave empty to keep the current photo.">?</span></label><input type="file" name="profile_image" accept="image/*"></div>
+      <div class="field"><label class="form-label">Replace Photo 2</label><input type="file" name="profile_image_2" accept="image/*"></div>
+
+      <div class="field"><label class="form-label">Full Name</label><input type="text" name="full_name" value="<%= profile.full_name %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Gender</label>
+        <select name="gender" required>
+          <option value="male" <%= profile.gender === 'male' ? 'selected' : '' %>>Male (Groom)</option>
+          <option value="female" <%= profile.gender === 'female' ? 'selected' : '' %>>Female (Bride)</option>
+        </select>
+      </div>
+
+      <div class="field"><label class="form-label">Religion</label><input type="text" name="religion" value="<%= profile.religion %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" value="<%= profile.caste %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" value="<%= profile.subcaste %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Language</label>
+        <select name="language" required>
+          <% ['Kannada','Marathi','Hindi','Telugu','Tamil','English','Other'].forEach(function(l) { %>
+            <option value="<%= l %>" <%= profile.language === l ? 'selected' : '' %>><%= l %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="field"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" value="<%= profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().slice(0,10) : '' %>" required></div>
+      <div class="field"><label class="form-label">Time of Birth</label><input type="time" name="time_of_birth" value="<%= profile.time_of_birth || '' %>"></div>
+
+      <div class="field"><label class="form-label">Occupation</label><input type="text" name="occupation" value="<%= profile.occupation %>" required></div>
+      <div class="field"><label class="form-label">Annual Salary (₹)</label><input type="number" step="0.01" min="0" name="annual_salary" value="<%= profile.annual_salary %>" required></div>
+
+      <div class="field"><label class="form-label">Phone Number</label><input type="text" name="phone_number" value="<%= profile.phone_number %>" pattern="[0-9]{10}" maxlength="10" required></div>
+      <div class="field"><label class="form-label">City</label><input type="text" name="city" value="<%= profile.city %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">State</label><input type="text" name="state" value="<%= profile.state %>" pattern="[A-Za-z\s.'-]+" required></div>
+
+      <div class="field full"><label class="form-label">Address</label><textarea name="address" rows="2" required><%= profile.address %></textarea></div>
+
+      <div class="field"><label class="form-label">Father's Name</label><input type="text" name="father_name" value="<%= profile.father_name %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Father's Occupation</label><input type="text" name="father_occupation" value="<%= profile.father_occupation %>" required></div>
+      <div class="field"><label class="form-label">Father's Salary (₹)</label><input type="number" step="0.01" min="0" name="father_salary" value="<%= profile.father_salary %>" required></div>
+
+      <div class="field"><label class="form-label">Mother's Name</label><input type="text" name="mother_name" value="<%= profile.mother_name %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Mother's Occupation</label><input type="text" name="mother_occupation" value="<%= profile.mother_occupation %>" required></div>
+      <div class="field"><label class="form-label">Mother's Salary (₹)</label><input type="number" step="0.01" min="0" name="mother_salary" value="<%= profile.mother_salary %>" required></div>
+
+      <div class="field"><label class="form-label">Total Siblings</label><input type="number" name="total_siblings" value="<%= profile.total_siblings %>" min="0"></div>
+      <div class="field"><label class="form-label">Male Siblings</label><input type="number" name="male_siblings" value="<%= profile.male_siblings %>" min="0"></div>
+      <div class="field"><label class="form-label">Female Siblings</label><input type="number" name="female_siblings" value="<%= profile.female_siblings %>" min="0"></div>
+
+      <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required><%= profile.assets %></textarea></div>
+      <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"><%= profile.loans || '' %></textarea></div>
+
+      <div class="field"><label class="form-label">Rashi</label><input type="text" name="rashi" value="<%= profile.rashi %>" required></div>
+      <div class="field"><label class="form-label">Nakshatra</label><input type="text" name="nakshatra" value="<%= profile.nakshatra %>" required></div>
+
+      <div class="field"><label class="form-label">Marital Status</label>
+        <select name="marital_status">
+          <option value="unmarried" <%= profile.marital_status === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
+          <option value="married" <%= profile.marital_status === 'married' ? 'selected' : '' %>>Married</option>
+        </select>
+      </div>
+
+      <div class="field full"><label class="form-label">Replace Jathaka PDF <span class="field-tip" data-tip="Only Super Admin can re-attach this document.">?</span></label>
+        <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+
+      <div class="field full"><button type="submit" class="btn btn-gold">Save Changes</button></div>
+    </form>
+  </div>
+  <%- include('../partials/portal-shell-close') %>
+</body>
+</html>

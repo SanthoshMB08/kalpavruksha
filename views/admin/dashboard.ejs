@@ -4,7 +4,7 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout', showViewToggle: true }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
 
       <div class="stat-cards">
         <div class="stat-card"><div class="value"><%= pending.length %></div><div class="label">Pending Approvals</div></div>
@@ -13,7 +13,7 @@
       </div>
 
       <div class="panel">
-        <h3>⏳ Pending Approvals <span class="panel-head-link"><a href="/portal/admin-dashboard/users">Manage all &rarr;</a></span></h3>
+        <h3><i class="fa-solid fa-hourglass-half"></i> Pending Approvals <span class="panel-head-link"><a href="/portal/admin-dashboard/users">Manage all &rarr;</a></span></h3>
         <% if (pending.length === 0) { %>
           <div class="empty-state">No pending registrations right now.</div>
         <% } else { %>
@@ -50,7 +50,8 @@
         <% } else { %>
           <% recentInterests.forEach(function(i) { %>
             <div class="alert-box">
-              <strong><%= i.user_name %></strong> is interested in <strong><%= i.profile_name %></strong>
+              <strong><%= i.user_name %></strong> is interested in
+              <a href="/portal/admin-dashboard/profiles/<%= i.profile_id %>" class="activity-profile-link"><strong><%= i.profile_name %></strong></a>
               (Call: <%= i.profile_phone %>) &mdash; <%= new Date(i.created_at).toLocaleString('en-IN') %>
             </div>
           <% }) %>

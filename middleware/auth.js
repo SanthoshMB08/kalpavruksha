@@ -1,6 +1,5 @@
 // Session-based auth guards. req.session.user is set on login and holds
-// { id, name, username, role, status, viewMode } where viewMode is only
-// used for the admin dual-view toggle ('admin' | 'user').
+// { id, name, username, role, status, gender }.
 
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) return next();

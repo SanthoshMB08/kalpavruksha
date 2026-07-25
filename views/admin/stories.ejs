@@ -6,13 +6,23 @@
 <body>
   <% const portal = typeof isSuperAdmin !== 'undefined' && isSuperAdmin ? 'superadmin' : 'admin'; %>
   <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
-  <% const showViewToggle = portal !== 'superadmin'; %>
-  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl, showViewToggle }) %>
+  <% const editable = typeof canEdit !== 'undefined' && canEdit; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-heart"></i> Success Stories <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page</span></h3>
+        <h3><i class="fa-solid fa-heart"></i> Success Stories <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page <% if (!editable) { %>&mdash; view only, Super Admin edits these<% } %></span></h3>
         <% if (stories.length === 0) { %>
-          <div class="empty-state">No success stories yet — add the first one below.</div>
+          <div class="empty-state">No success stories yet.</div>
+        <% } else if (!editable) { %>
+          <div class="story-edit-list">
+            <% stories.forEach(function(s) { %>
+              <div class="story-edit-card">
+                <h4 style="margin-bottom:6px;"><%= s.couple_names %></h4>
+                <p style="color:#6b5638; font-size:0.9rem;">"<%= s.story_text %>"</p>
+                <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= s.is_active ? 'Visible on home page' : 'Hidden' %></span>
+              </div>
+            <% }) %>
+          </div>
         <% } else { %>
           <div class="story-edit-list">
             <% stories.forEach(function(s) { %>
@@ -49,6 +59,7 @@
         <% } %>
       </div>
 
+      <% if (editable) { %>
       <div class="panel">
         <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Add New Success Story</h4>
         <form class="form-grid" action="<%= portalHome %>/stories" method="POST">
@@ -58,6 +69,7 @@
           <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
         </form>
       </div>
+      <% } %>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

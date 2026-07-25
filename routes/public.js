@@ -4,19 +4,20 @@ const { body } = require('express-validator');
 const publicController = require('../controllers/publicController');
 const authController = require('../controllers/authController');
 const { redirectIfLoggedIn } = require('../middleware/auth');
+const { nameField, mobileField, genderField } = require('../middleware/validators');
 
 router.get('/', publicController.home);
 router.post('/contact', publicController.contactSubmit);
+router.get('/terms', publicController.terms);
+router.get('/privacy', publicController.privacy);
 
 router.get('/register', redirectIfLoggedIn, authController.showRegister);
 router.post(
   '/register',
   [
-    body('name').trim().notEmpty().withMessage('Name is required.'),
-    body('mobile_number')
-      .trim()
-      .matches(/^[0-9]{10}$/)
-      .withMessage('Enter a valid 10-digit mobile number.'),
+    nameField('name', 'Name'),
+    mobileField('mobile_number', 'Mobile number'),
+    genderField('gender'),
     body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters.'),
     body('password')
       .isLength({ min: 8 })

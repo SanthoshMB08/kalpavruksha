@@ -5,6 +5,7 @@ const PgSession = require('connect-pg-simple')(session);
 const flash = require('connect-flash');
 const path = require('path');
 const { pool } = require('./config/db');
+const Advertisement = require('./models/Advertisement');
 
 const publicRoutes = require('./routes/public');
 const userRoutes = require('./routes/user');
@@ -47,6 +48,18 @@ app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.successMsg = req.flash('success');
   res.locals.errorMsg = req.flash('error');
+  next();
+});
+
+// Top-banner ads are a site-wide placement (not just the home page) — fetched
+// once here so the shared header partial can render them on every page.
+app.use(async (req, res, next) => {
+  try {
+    res.locals.topBannerAds = await Advertisement.listActiveByPlacement('top_banner');
+  } catch (err) {
+    console.error(err);
+    res.locals.topBannerAds = [];
+  }
   next();
 });
 

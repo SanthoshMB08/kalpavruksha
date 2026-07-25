@@ -1,8 +1,11 @@
 const bcrypt = require('bcrypt');
+const path = require('path');
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const SuccessStory = require('../models/SuccessStory');
+const { streamProfilePdf } = require('../utils/profilePdf');
 
 exports.showLogin = (req, res) => {
   res.render('admin/login', { title: 'Admin Login', error: null });
@@ -25,8 +28,7 @@ exports.login = async (req, res) => {
       name: user.name,
       username: user.username,
       role: user.role,
-      status: user.status,
-      viewMode: 'admin'
+      status: user.status
     };
 
     if (user.role === 'superadmin') return res.redirect('/portal/super-secure-dashboard');
@@ -39,14 +41,6 @@ exports.login = async (req, res) => {
 
 exports.logout = (req, res) => {
   req.session.destroy(() => res.redirect('/portal/admin-login'));
-};
-
-exports.toggleView = (req, res) => {
-  if (!req.session.user) return res.redirect('/portal/admin-login');
-  req.session.user.viewMode = req.session.user.viewMode === 'admin' ? 'user' : 'admin';
-  const back = req.get('Referrer');
-  if (req.session.user.viewMode === 'user') return res.redirect('/dashboard');
-  return res.redirect(back || '/portal/admin-dashboard');
 };
 
 // --- Overview page: at-a-glance stats + recent activity only ---
@@ -76,14 +70,14 @@ exports.dashboard = async (req, res) => {
   }
 };
 
-// --- User management page: pending approvals + direct creation ---
+// --- User management page: pending approvals, active members, direct creation ---
 exports.userManagement = async (req, res) => {
   try {
-    const pending = await User.listPending();
-    res.render('admin/users', { title: 'User Management', active: 'users', pending });
+    const [pending, members] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
+    res.render('admin/users', { title: 'User Management', active: 'users', pending, members, formErrors: [], old: {} });
   } catch (err) {
     console.error(err);
-    res.render('admin/users', { title: 'User Management', active: 'users', pending: [] });
+    res.render('admin/users', { title: 'User Management', active: 'users', pending: [], members: [], formErrors: [], old: {} });
   }
 };
 
@@ -99,9 +93,23 @@ exports.rejectUser = async (req, res) => {
   res.redirect('/portal/admin-dashboard/users');
 };
 
-// Admin direct-creation form: bypasses approval entirely.
+// Admin direct-creation form: bypasses approval entirely. Gender is required
+// (mandatory for the opposite-gender match rule) and must be the opposite of
+// nothing in particular here — this is account creation, not matching.
 exports.createUserDirect = async (req, res) => {
-  const { name, mobile_number, username, password } = req.body;
+  const errors = validationResult(req);
+  const { name, mobile_number, username, password, gender } = req.body;
+  if (!errors.isEmpty()) {
+    const [pending, members] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
+    return res.render('admin/users', {
+      title: 'User Management',
+      active: 'users',
+      pending,
+      members,
+      formErrors: errors.array().map((e) => e.msg),
+      old: { name, mobile_number, username, gender }
+    });
+  }
   try {
     const exists = await User.mobileOrUsernameExists(mobile_number, username);
     if (exists) {
@@ -109,7 +117,7 @@ exports.createUserDirect = async (req, res) => {
       return res.redirect('/portal/admin-dashboard/users');
     }
     const passwordHash = await bcrypt.hash(password, 12);
-    await User.create({ name, mobile_number, username, passwordHash, role: 'user', status: 'approved' });
+    await User.create({ name, mobile_number, username, passwordHash, role: 'user', status: 'approved', gender });
     req.flash('success', `User "${username}" created and activated instantly.`);
     res.redirect('/portal/admin-dashboard/users');
   } catch (err) {
@@ -119,20 +127,70 @@ exports.createUserDirect = async (req, res) => {
   }
 };
 
+// Admin can reset a member's (role='user') password.
+exports.changeUserPassword = async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 8) {
+    req.flash('error', 'Password must be at least 8 characters.');
+    return res.redirect('/portal/admin-dashboard/users');
+  }
+  try {
+    const target = await User.findById(req.params.id);
+    if (!target || target.role !== 'user') {
+      req.flash('error', 'That account cannot be changed here.');
+      return res.redirect('/portal/admin-dashboard/users');
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
+    await User.updatePassword(req.params.id, passwordHash);
+    req.flash('success', `Password updated for "${target.username}".`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Could not update password.');
+  }
+  res.redirect('/portal/admin-dashboard/users');
+};
+
 // --- Profiles ---
 exports.listProfiles = async (req, res) => {
-  const profiles = await Profile.listAllFull();
-  res.render('admin/profiles', { title: 'All Profiles', active: 'profiles', profiles });
+  const filters = {
+    keyword: req.query.keyword,
+    religion: req.query.religion,
+    caste: req.query.caste,
+    subcaste: req.query.subcaste,
+    language: req.query.language,
+    gender: req.query.gender,
+    minAge: req.query.minAge,
+    maxAge: req.query.maxAge,
+    maritalStatus: req.query.maritalStatus
+  };
+  const hasFilters = Object.values(filters).some((v) => v !== undefined && v !== '');
+  const [profiles, religions, castes, languages] = await Promise.all([
+    hasFilters ? Profile.searchFull(filters) : Profile.listAllFull(),
+    Profile.distinctValues('religion'),
+    Profile.distinctValues('caste'),
+    Profile.distinctValues('language')
+  ]);
+  res.render('admin/profiles', { title: 'All Profiles', active: 'profiles', profiles, religions, castes, languages, filters });
 };
 
 exports.showNewProfileForm = (req, res) => {
-  res.render('admin/profile-form', { title: 'Upload New Profile', active: 'profiles', errors: [] });
+  res.render('admin/profile-form', { title: 'Upload New Profile', active: 'profiles', errors: [], old: {} });
 };
 
 exports.createProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('admin/profile-form', {
+      title: 'Upload New Profile',
+      active: 'profiles',
+      errors: errors.array().map((e) => e.msg),
+      old: req.body
+    });
+  }
   try {
     const files = req.files || {};
     const image = files.profile_image ? files.profile_image[0].filename : null;
+    const image2 = files.profile_image_2 ? files.profile_image_2[0].filename : null;
     const jathaka = files.jathaka_pdf ? files.jathaka_pdf[0].filename : null;
 
     if (!image) {
@@ -143,7 +201,9 @@ exports.createProfile = async (req, res) => {
     await Profile.create({
       ...req.body,
       image_name: image,
+      image_name_2: image2,
       jathaka_pdf_name: jathaka,
+      marital_status: 'unmarried',
       created_by: req.session.user.id
     });
 
@@ -168,43 +228,44 @@ exports.viewProfileFull = async (req, res) => {
   res.render('admin/profile-detail', { title: profile.full_name, active: 'profiles', profile });
 };
 
-// --- Success stories (home page content) ---
+// Admin capability: add/replace up to two profile photos on an existing profile.
+exports.updateProfilePhotos = async (req, res) => {
+  try {
+    const files = req.files || {};
+    const data = {};
+    if (files.profile_image) data.image_name = files.profile_image[0].filename;
+    if (files.profile_image_2) data.image_name_2 = files.profile_image_2[0].filename;
+    if (Object.keys(data).length === 0) {
+      req.flash('error', 'Choose at least one photo to upload.');
+      return res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
+    }
+    await Profile.updateFields(req.params.id, data);
+    req.flash('success', 'Profile photo(s) updated.');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Could not update photos.');
+  }
+  res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
+};
+
+// Admin capability: mark a profile Married / Unmarried. Married profiles stop
+// appearing to members immediately (enforced in Profile.search()).
+exports.updateMaritalStatus = async (req, res) => {
+  const status = req.body.marital_status === 'married' ? 'married' : 'unmarried';
+  await Profile.updateFields(req.params.id, { marital_status: status });
+  req.flash('success', `Profile marked as ${status}.`);
+  res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
+};
+
+// Admin capability: download the profile as a PDF (with photo).
+exports.exportProfilePdf = async (req, res) => {
+  const profile = await Profile.findByIdFull(req.params.id);
+  if (!profile) return res.redirect('/portal/admin-dashboard/profiles');
+  streamProfilePdf(res, profile, path.join(__dirname, '..', 'public', 'uploads'));
+};
+
+// --- Success stories (view-only for Admin — editing is Super Admin only) ---
 exports.storiesPage = async (req, res) => {
   const stories = await SuccessStory.listAll();
-  res.render('admin/stories', { title: 'Success Stories', active: 'stories', stories, portalHome: '/portal/admin-dashboard' });
-};
-
-exports.createStory = async (req, res) => {
-  const { couple_names, story_text, display_order } = req.body;
-  try {
-    await SuccessStory.create({ couple_names, story_text, display_order, created_by: req.session.user.id });
-    req.flash('success', 'Success story added.');
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Could not add the success story.');
-  }
-  res.redirect('/portal/admin-dashboard/stories');
-};
-
-exports.updateStory = async (req, res) => {
-  const { couple_names, story_text, display_order } = req.body;
-  try {
-    await SuccessStory.update(req.params.id, { couple_names, story_text, display_order });
-    req.flash('success', 'Success story updated.');
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Could not update the success story.');
-  }
-  res.redirect('/portal/admin-dashboard/stories');
-};
-
-exports.toggleStory = async (req, res) => {
-  await SuccessStory.toggleActive(req.params.id);
-  res.redirect('/portal/admin-dashboard/stories');
-};
-
-exports.deleteStory = async (req, res) => {
-  await SuccessStory.deleteById(req.params.id);
-  req.flash('success', 'Success story removed.');
-  res.redirect('/portal/admin-dashboard/stories');
+  res.render('admin/stories', { title: 'Success Stories', active: 'stories', stories, portalHome: '/portal/admin-dashboard', canEdit: false });
 };

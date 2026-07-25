@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Advertisement = require('../models/Advertisement');
@@ -73,11 +74,22 @@ exports.dashboard = async (req, res) => {
 // --- Sub-admin (staff) management page ---
 exports.adminsPage = async (req, res) => {
   const admins = await User.listAll({ role: 'admin' });
-  res.render('superadmin/admins', { title: 'Sub-Admin Management', active: 'admins', admins });
+  res.render('superadmin/admins', { title: 'Sub-Admin Management', active: 'admins', admins, formErrors: [], old: {} });
 };
 
 exports.createAdmin = async (req, res) => {
+  const errors = validationResult(req);
   const { name, mobile_number, username, password } = req.body;
+  if (!errors.isEmpty()) {
+    const admins = await User.listAll({ role: 'admin' });
+    return res.render('superadmin/admins', {
+      title: 'Sub-Admin Management',
+      active: 'admins',
+      admins,
+      formErrors: errors.array().map((e) => e.msg),
+      old: { name, mobile_number, username }
+    });
+  }
   try {
     const exists = await User.mobileOrUsernameExists(mobile_number, username);
     if (exists) {
@@ -99,6 +111,64 @@ exports.removeAdmin = async (req, res) => {
   await User.deleteById(req.params.id);
   req.flash('success', 'Admin account removed.');
   res.redirect('/portal/super-secure-dashboard/admins');
+};
+
+// Super Admin can reset an Admin's password.
+exports.changeAdminPassword = async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 8) {
+    req.flash('error', 'Password must be at least 8 characters.');
+    return res.redirect('/portal/super-secure-dashboard/admins');
+  }
+  try {
+    const target = await User.findById(req.params.id);
+    if (!target || target.role !== 'admin') {
+      req.flash('error', 'That account cannot be changed here.');
+      return res.redirect('/portal/super-secure-dashboard/admins');
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
+    await User.updatePassword(req.params.id, passwordHash);
+    req.flash('success', `Password updated for "${target.username}".`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Could not update password.');
+  }
+  res.redirect('/portal/super-secure-dashboard/admins');
+};
+
+// --- Full profile edit (Super Admin only — includes gender & the jathaka
+// document, which an ordinary Admin is not permitted to touch) ---
+exports.showEditProfileForm = async (req, res) => {
+  const profile = await Profile.findByIdFull(req.params.id);
+  if (!profile) return res.redirect('/portal/admin-dashboard/profiles');
+  res.render('superadmin/profile-edit', { title: `Edit ${profile.full_name}`, active: 'profiles', profile, errors: [] });
+};
+
+exports.updateProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const profile = await Profile.findByIdFull(req.params.id);
+    return res.render('superadmin/profile-edit', {
+      title: `Edit ${profile ? profile.full_name : ''}`,
+      active: 'profiles',
+      profile: { ...profile, ...req.body, id: req.params.id },
+      errors: errors.array().map((e) => e.msg)
+    });
+  }
+  try {
+    const files = req.files || {};
+    const data = { ...req.body };
+    if (files.profile_image) data.image_name = files.profile_image[0].filename;
+    if (files.profile_image_2) data.image_name_2 = files.profile_image_2[0].filename;
+    if (files.jathaka_pdf) data.jathaka_pdf_name = files.jathaka_pdf[0].filename;
+    await Profile.updateFields(req.params.id, data);
+    req.flash('success', 'Profile updated.');
+    res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Could not update profile.');
+    res.redirect(`/portal/super-secure-dashboard/profiles/${req.params.id}/edit`);
+  }
 };
 
 // --- Sponsorship / Ad manager page ---
@@ -140,7 +210,7 @@ exports.deleteAd = async (req, res) => {
   res.redirect('/portal/super-secure-dashboard/ads');
 };
 
-// --- Success stories (home page content) ---
+// --- Success stories (home page content) — Super Admin only ---
 exports.storiesPage = async (req, res) => {
   const stories = await SuccessStory.listAll();
   res.render('admin/stories', {
@@ -148,7 +218,8 @@ exports.storiesPage = async (req, res) => {
     active: 'stories',
     stories,
     portalHome: '/portal/super-secure-dashboard',
-    isSuperAdmin: true
+    isSuperAdmin: true,
+    canEdit: true
   });
 };
 

@@ -4,21 +4,78 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout', showViewToggle: true }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
       <div class="panel">
         <h3><i class="fa-solid fa-address-card"></i> All Profiles (<%= profiles.length %>)</h3>
         <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
+
+        <form method="GET" action="/portal/admin-dashboard/profiles" class="form-grid" style="margin-bottom:20px; background:var(--cream-100); padding:16px; border-radius:var(--radius-md);">
+          <div class="field">
+            <label class="form-label">Search (name / occupation / city)</label>
+            <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Type to search...">
+          </div>
+          <div class="field">
+            <label class="form-label">Religion</label>
+            <input type="text" name="religion" list="religionOptions" value="<%= filters.religion || '' %>">
+            <datalist id="religionOptions"><% religions.forEach(function(r){ %><option value="<%= r %>"><% }) %></datalist>
+          </div>
+          <div class="field">
+            <label class="form-label">Caste</label>
+            <input type="text" name="caste" list="casteOptions" value="<%= filters.caste || '' %>">
+            <datalist id="casteOptions"><% castes.forEach(function(c){ %><option value="<%= c %>"><% }) %></datalist>
+          </div>
+          <div class="field">
+            <label class="form-label">Sub-caste</label>
+            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>">
+          </div>
+          <div class="field">
+            <label class="form-label">Language</label>
+            <input type="text" name="language" list="languageOptions" value="<%= filters.language || '' %>">
+            <datalist id="languageOptions"><% languages.forEach(function(l){ %><option value="<%= l %>"><% }) %></datalist>
+          </div>
+          <div class="field">
+            <label class="form-label">Gender</label>
+            <select name="gender">
+              <option value="">Any</option>
+              <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
+              <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="form-label">Marital Status</label>
+            <select name="maritalStatus">
+              <option value="">Any</option>
+              <option value="unmarried" <%= filters.maritalStatus === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
+              <option value="married" <%= filters.maritalStatus === 'married' ? 'selected' : '' %>>Married</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="form-label">Age Range</label>
+            <div class="age-range-row">
+              <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
+              <span>to</span>
+              <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+            </div>
+          </div>
+          <div class="field full" style="display:flex; gap:10px;">
+            <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
+            <a href="/portal/admin-dashboard/profiles" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear</a>
+          </div>
+        </form>
+
         <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>Photo</th><th>Name</th><th>Caste</th><th>Age</th><th>City</th><th>Uploaded</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Photo</th><th>Name</th><th>Gender</th><th>Caste</th><th>Age</th><th>City</th><th>Status</th><th>Uploaded</th><th>Actions</th></tr></thead>
           <tbody>
             <% profiles.forEach(function(p) { %>
               <tr>
                 <td data-label="Photo"><img src="/uploads/profiles/<%= p.image_name %>" style="width:44px; height:44px; border-radius:8px; object-fit:cover;"></td>
                 <td data-label="Name"><%= p.full_name %></td>
+                <td data-label="Gender"><%= p.gender === 'male' ? 'Male' : 'Female' %></td>
                 <td data-label="Caste"><%= p.caste %></td>
                 <td data-label="Age"><%= p.age %></td>
                 <td data-label="City"><%= p.city %></td>
+                <td data-label="Status"><span class="badge <%= p.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= p.marital_status === 'married' ? 'Married' : 'Unmarried' %></span></td>
                 <td data-label="Uploaded"><%= new Date(p.created_at).toLocaleDateString('en-IN') %></td>
                 <td data-label="Actions" class="row-actions">
                   <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>

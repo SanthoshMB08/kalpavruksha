@@ -19,19 +19,28 @@ const User = {
     return rows.length > 0;
   },
 
-  async create({ name, mobile_number, username, passwordHash, role = 'user', status = 'pending' }) {
+  async create({ name, mobile_number, username, passwordHash, role = 'user', status = 'pending', gender = null }) {
     const [result] = await pool.query(
-      `INSERT INTO users (name, mobile_number, username, password, role, status)
-       VALUES (?, ?, ?, ?, ?, ?) RETURNING id`,
-      [name, mobile_number, username, passwordHash, role, status]
+      `INSERT INTO users (name, mobile_number, username, password, role, status, gender)
+       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      [name, mobile_number, username, passwordHash, role, status, gender]
     );
     return result.insertId;
   },
 
   async listPending() {
     const [rows] = await pool.query(
-      `SELECT id, name, mobile_number, username, created_at
+      `SELECT id, name, mobile_number, username, gender, created_at
        FROM users WHERE status = 'pending' AND role = 'user' ORDER BY created_at ASC`
+    );
+    return rows;
+  },
+
+  // Approved members only — used by the admin "manage users" list (password resets etc).
+  async listApprovedUsers() {
+    const [rows] = await pool.query(
+      `SELECT id, name, mobile_number, username, gender, status, created_at
+       FROM users WHERE role = 'user' AND status = 'approved' ORDER BY created_at DESC`
     );
     return rows;
   },
@@ -40,16 +49,20 @@ const User = {
     await pool.query('UPDATE users SET status = ? WHERE id = ?', [status, id]);
   },
 
+  async updatePassword(id, passwordHash) {
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [passwordHash, id]);
+  },
+
   async listAll({ role } = {}) {
     if (role) {
       const [rows] = await pool.query(
-        'SELECT id, name, mobile_number, username, role, status, created_at FROM users WHERE role = ? ORDER BY created_at DESC',
+        'SELECT id, name, mobile_number, username, role, status, gender, created_at FROM users WHERE role = ? ORDER BY created_at DESC',
         [role]
       );
       return rows;
     }
     const [rows] = await pool.query(
-      'SELECT id, name, mobile_number, username, role, status, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, name, mobile_number, username, role, status, gender, created_at FROM users ORDER BY created_at DESC'
     );
     return rows;
   },

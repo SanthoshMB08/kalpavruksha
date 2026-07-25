@@ -31,6 +31,14 @@
           <input type="text" name="username" value="<%= old.username || '' %>" required>
         </div>
         <div class="field">
+          <label class="form-label">Gender <span class="field-tip" data-tip="You'll only be matched with members of the opposite gender.">?</span></label>
+          <select name="gender" required>
+            <option value="">Select Gender</option>
+            <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
+            <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
+          </select>
+        </div>
+        <div class="field">
           <label class="form-label">Password</label>
           <input type="password" name="password" id="password" required>
           <ul class="pw-checklist" id="pwChecklist">
@@ -43,11 +51,11 @@
 
         <label class="checkbox-row">
           <input type="checkbox" name="terms" id="terms">
-          I agree to the <a href="#" style="color:var(--maroon-800); text-decoration:underline;">Terms &amp; Conditions</a>
+          I agree to the <a href="/terms" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Terms &amp; Conditions</a>
         </label>
         <label class="checkbox-row">
           <input type="checkbox" name="privacy" id="privacy">
-          I agree to the <a href="#" style="color:var(--maroon-800); text-decoration:underline;">Privacy Policy</a>
+          I agree to the <a href="/privacy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Privacy Policy</a>
         </label>
 
         <button type="submit" class="btn btn-gold btn-block" id="submitBtn" disabled>Register</button>

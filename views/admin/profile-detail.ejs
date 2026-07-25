@@ -4,23 +4,58 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout', showViewToggle: true }) %>
+  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
     <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to all profiles</a>
 
-    <div class="panel" style="margin-top:16px; display:flex; gap:24px;">
-      <img src="/uploads/profiles/<%= profile.image_name %>" style="width:160px; height:160px; object-fit:cover; border-radius:var(--radius-lg); border:3px solid var(--gold-500);">
+    <div class="panel" style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
+      <div style="display:flex; gap:12px;">
+        <img src="/uploads/profiles/<%= profile.image_name %>" style="width:150px; height:150px; object-fit:cover; border-radius:var(--radius-lg); border:3px solid var(--gold-500);">
+        <% if (profile.image_name_2) { %>
+          <img src="/uploads/profiles/<%= profile.image_name_2 %>" style="width:150px; height:150px; object-fit:cover; border-radius:var(--radius-lg); border:3px solid var(--gold-500);">
+        <% } %>
+      </div>
       <div>
         <h2><%= profile.full_name %>, <%= profile.age %></h2>
         <p style="color:#8a7156;"><%= profile.occupation %> &middot; <%= profile.city %>, <%= profile.state %></p>
-        <% if (profile.jathaka_pdf_name) { %>
-          <a href="/uploads/jathaka/<%= profile.jathaka_pdf_name %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800); margin-top:10px; display:inline-block;">View Jathaka PDF</a>
-        <% } %>
+        <span class="badge <%= profile.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= profile.marital_status === 'married' ? 'Married' : 'Unmarried' %></span>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <% if (profile.jathaka_pdf_name) { %>
+            <a href="/uploads/jathaka/<%= profile.jathaka_pdf_name %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Jathaka PDF</a>
+          <% } %>
+          <a href="/portal/admin-dashboard/profiles/<%= profile.id %>/pdf" class="btn btn-gold btn-sm"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
+          <% if (currentUser.role === 'superadmin') { %>
+            <a href="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" class="btn btn-maroon btn-sm">Edit Profile</a>
+          <% } %>
+        </div>
       </div>
+    </div>
+
+    <div class="panel">
+      <h3>Photos</h3>
+      <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">Add or replace up to two profile photos.</p>
+      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/photos" method="POST" enctype="multipart/form-data" class="form-grid">
+        <div class="field"><label class="form-label">Photo 1</label><input type="file" name="profile_image" accept="image/*"></div>
+        <div class="field"><label class="form-label">Photo 2</label><input type="file" name="profile_image_2" accept="image/*"></div>
+        <div class="field full"><button type="submit" class="btn btn-gold btn-sm">Update Photos</button></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>Marital Status</h3>
+      <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">A profile marked "Married" is hidden from members immediately.</p>
+      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/marital-status" method="POST" style="display:flex; gap:10px; align-items:center;">
+        <select name="marital_status">
+          <option value="unmarried" <%= profile.marital_status === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
+          <option value="married" <%= profile.marital_status === 'married' ? 'selected' : '' %>>Married</option>
+        </select>
+        <button type="submit" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Save Status</button>
+      </form>
     </div>
 
     <div class="panel">
       <h3>Personal Details</h3>
       <table class="data-table">
+        <tr><td><strong>Gender</strong></td><td><%= profile.gender === 'male' ? 'Male' : 'Female' %></td></tr>
         <tr><td><strong>Religion</strong></td><td><%= profile.religion %></td></tr>
         <tr><td><strong>Caste / Sub-caste</strong></td><td><%= profile.caste %> / <%= profile.subcaste %></td></tr>
         <tr><td><strong>Date of Birth</strong></td><td><%= profile.date_of_birth %> <% if (profile.time_of_birth) { %>(<%= profile.time_of_birth %>)<% } %></td></tr>

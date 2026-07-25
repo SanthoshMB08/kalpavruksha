@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="legal-page">
+    <a href="javascript:history.back()" class="legal-back">&larr; Back</a>
+    <h1>Privacy Policy</h1>
+    <p class="legal-updated">Last updated: <%= new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+
+    <p class="legal-placeholder-note">
+      <i class="fa-solid fa-circle-info"></i>
+      This page is a placeholder. Replace the text below with Kalpavruksha Kalyana's
+      final Privacy Policy content.
+    </p>
+
+    <section>
+      <h2>1. Information We Collect</h2>
+      <p>When you register, we collect information such as your name, mobile number, gender, and the matrimonial profile details you submit (including photographs, family details, and horoscope information where provided).</p>
+    </section>
+
+    <section>
+      <h2>2. How We Use Your Information</h2>
+      <p>Your information is used to create and verify your profile, match you with suitable members of the opposite gender, respond to your enquiries, and improve our services. Approved profile details are shown only to other approved, logged-in members.</p>
+    </section>
+
+    <section>
+      <h2>3. Profile Visibility</h2>
+      <p>Basic matrimonial details are visible to other approved members of the opposite gender. Sensitive contact information is shared only as intended by the platform's design (for example, once interest is expressed). Profiles marked "Married" are automatically hidden from other members.</p>
+    </section>
+
+    <section>
+      <h2>4. Data Storage &amp; Security</h2>
+      <p>We take reasonable technical and organizational measures to protect your data from unauthorized access, alteration, or disclosure. Uploaded photographs and documents are stored securely and are accessible only to authorized admin staff and, where applicable, to members you are matched with.</p>
+    </section>
+
+    <section>
+      <h2>5. Admin Access</h2>
+      <p>Our Admin and Super Admin staff may access profile information to verify registrations, respond to support requests, and maintain the quality of the platform. Access is limited to what is necessary to perform these duties.</p>
+    </section>
+
+    <section>
+      <h2>6. Advertisements &amp; Third Parties</h2>
+      <p>We may display advertisements from third-party sponsors. We do not share your personal matrimonial details with advertisers.</p>
+    </section>
+
+    <section>
+      <h2>7. Your Choices</h2>
+      <p>You may contact us at any time to request corrections to your profile information or to ask about how your data is handled.</p>
+    </section>
+
+    <section>
+      <h2>8. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. Continued use of the platform after changes are posted constitutes acceptance of the revised policy.</p>
+    </section>
+
+    <section>
+      <h2>9. Contact</h2>
+      <p>For privacy-related questions, please reach out via the Contact section on our home page.</p>
+    </section>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
