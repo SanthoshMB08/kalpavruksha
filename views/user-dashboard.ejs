@@ -105,7 +105,6 @@
                 <div><strong>Caste:</strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
                 <div><strong>Language:</strong> <%= p.language %></div>
                 <div><strong>Occupation:</strong> <%= p.occupation %></div>
-                <div><strong>Salary:</strong> ₹<%= Number(p.annual_salary).toLocaleString('en-IN') %>/yr</div>
               </div>
             </div>
             <div class="actions">
@@ -141,10 +140,6 @@
           filterPanel.classList.remove('open');
         }
       });
-      // Keep the panel open on load if any advanced filter is already applied
-      <% if (filters.caste || filters.language || filters.minAge || filters.maxAge || filters.religion || filters.subcaste) { %>
-        filterPanel.classList.add('open');
-      <% } %>
     }
 
     // Type-to-filter scroll-down dropdowns for Religion / Caste / Language

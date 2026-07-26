@@ -4,7 +4,9 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
+  <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
+  <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
     <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to all profiles</a>
 
     <div class="panel" style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
@@ -22,9 +24,15 @@
           <% if (profile.jathaka_pdf_name) { %>
             <a href="/uploads/jathaka/<%= profile.jathaka_pdf_name %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Jathaka PDF</a>
           <% } %>
+          <% if (profile.biodata_pdf_name) { %>
+            <a href="/uploads/biodata/<%= profile.biodata_pdf_name %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Bio-Data PDF</a>
+          <% } %>
           <a href="/portal/admin-dashboard/profiles/<%= profile.id %>/pdf" class="btn btn-gold btn-sm"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
           <% if (currentUser.role === 'superadmin') { %>
             <a href="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" class="btn btn-maroon btn-sm">Edit Profile</a>
+            <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile? This cannot be undone.');">
+              <button type="submit" class="btn btn-danger btn-sm">Delete Profile</button>
+            </form>
           <% } %>
         </div>
       </div>

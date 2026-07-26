@@ -6,7 +6,9 @@
 </head>
 
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
+  <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
+  <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
  <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back </a>
     <div class="panel">
@@ -94,6 +96,8 @@
 </div>
         <div class="field full"><label class="form-label">Jathaka PDF (optional)</label>
           <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+        <div class="field full"><label class="form-label">Bio-Data PDF (optional) <span class="field-tip" data-tip="A ready-made bio-data document, separate from the jathaka.">?</span></label>
+          <input type="file" name="biodata_pdf" accept="application/pdf"></div>
 
         <div class="field full">
           <button type="submit" class="btn btn-gold">Save Profile</button>

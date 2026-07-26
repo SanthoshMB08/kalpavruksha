@@ -8,7 +8,6 @@
   <tr><td><strong>Sub-caste</strong></td><td><%= profile.subcaste %></td></tr>
   <tr><td><strong>Language</strong></td><td><%= profile.language %></td></tr>
   <tr><td><strong>Occupation</strong></td><td><%= profile.occupation %></td></tr>
-  <tr><td><strong>Annual Salary</strong></td><td>₹<%= Number(profile.annual_salary).toLocaleString('en-IN') %></td></tr>
 </table>
 <div style="display:flex; gap:10px; margin-top:20px;">
   <form action="/profile/<%= profile.id %>/save" method="POST" style="flex:1;">

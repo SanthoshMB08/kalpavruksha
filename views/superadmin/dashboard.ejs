@@ -18,9 +18,10 @@
         <h3>Quick Links</h3>
         <div class="quick-link-grid">
           <a href="/portal/super-secure-dashboard/admins" class="quick-link-card"><i class="fa-solid fa-shield-halved"></i> Sub-Admins (<%= adminCount %>)</a>
+          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check"></i> User Approvals</a>
+          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card"></i> Manage Profiles (<%= totalProfiles %>)</a>
           <a href="/portal/super-secure-dashboard/ads" class="quick-link-card"><i class="fa-solid fa-bullhorn"></i> Advertisements (<%= adCount %>)</a>
           <a href="/portal/super-secure-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Success Stories (<%= storyCount %>)</a>
-          <a href="/portal/admin-dashboard" class="quick-link-card"><i class="fa-solid fa-toolbox"></i> Admin Tools (Users &amp; Profiles)</a>
         </div>
       </div>
   <%- include('../partials/portal-shell-close') %>

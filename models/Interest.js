@@ -46,7 +46,7 @@ const Interest = {
   async listSavedByUser(userId) {
     const [rows] = await pool.query(
       `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
-              p.occupation, p.annual_salary,
+              p.occupation,
               DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
               i.saved_at
        FROM interests i JOIN profiles p ON p.id = i.profile_id
@@ -59,7 +59,7 @@ const Interest = {
   async listInterestedByUser(userId) {
     const [rows] = await pool.query(
       `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
-              p.occupation, p.annual_salary,
+              p.occupation,
               DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
               i.interested_at
        FROM interests i JOIN profiles p ON p.id = i.profile_id

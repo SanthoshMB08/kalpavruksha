@@ -192,6 +192,7 @@ exports.createProfile = async (req, res) => {
     const image = files.profile_image ? files.profile_image[0].filename : null;
     const image2 = files.profile_image_2 ? files.profile_image_2[0].filename : null;
     const jathaka = files.jathaka_pdf ? files.jathaka_pdf[0].filename : null;
+    const biodata = files.biodata_pdf ? files.biodata_pdf[0].filename : null;
 
     if (!image) {
       req.flash('error', 'A profile photo is required.');
@@ -203,6 +204,7 @@ exports.createProfile = async (req, res) => {
       image_name: image,
       image_name_2: image2,
       jathaka_pdf_name: jathaka,
+      biodata_pdf_name: biodata,
       marital_status: 'unmarried',
       created_by: req.session.user.id
     });

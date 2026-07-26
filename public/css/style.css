@@ -422,6 +422,15 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 .form-grid .field.full { grid-column: 1 / -1; }
 .field label.form-label { font-size: 0.78rem; font-weight: 700; color: var(--maroon-800); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.04em; }
 
+.password-field { position: relative; display: flex; }
+.password-field input { width: 100%; padding-right: 42px; }
+.password-toggle-btn {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: #8a7156; font-size: 1rem; padding: 8px; line-height: 1;
+}
+.password-toggle-btn:hover { color: var(--maroon-800); }
+
 .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
 .badge-pending { background: #fdf1cf; color: #8a6d1a; }
 .badge-approved { background: #dff1e4; color: var(--success); }
@@ -440,7 +449,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 }
 
 /* ==========================================================================
-   Mobile navigation (hamburger menu for the public navbar)
+   Mobile navigation — left-side sliding drawer (mobile only; matches the
+   admin panel's sidebar pattern rather than a right-side dropdown).
    ========================================================================== */
 .nav-toggle {
   display: none;
@@ -451,26 +461,60 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
   cursor: pointer;
 }
 .nav-actions-mobile { display: none; }
+.nav-drawer-close { display: none; }
+.nav-drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 13, 0.5);
+  z-index: 190;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
 
 @media (max-width: 900px) {
-  .navbar { flex-wrap: wrap; padding: 12px 18px; }
-  .navbar .brand { font-size: 1.25rem; }
-  .nav-toggle { display: block; order: 2; }
+  .navbar { flex-wrap: nowrap; padding: 12px 18px; justify-content: flex-start; gap: 12px; }
+  .nav-toggle { display: block; order: -1; }
+  .navbar .brand { font-size: 1.15rem; }
   .nav-actions-desktop { display: none; }
+
+  .nav-drawer-overlay.open { display: block; opacity: 1; }
+
   #navLinks {
-    order: 3;
-    flex-basis: 100%;
-    max-height: 0;
-    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 80%;
+    max-width: 300px;
+    background: var(--maroon-900);
+    box-shadow: 10px 0 34px rgba(0,0,0,0.3);
+    padding: 66px 22px 24px;
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    transition: max-height .2s ease;
-    width: 100%;
+    overflow-y: auto;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 280ms var(--ease);
   }
-  #navLinks.open { max-height: 500px; padding-top: 12px; }
-  .navbar nav a { margin: 0; padding: 10px 0; width: 100%; border-bottom: 1px solid rgba(245,213,118,0.15); }
-  .nav-actions-mobile { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; padding: 14px 0 6px; }
+  #navLinks.open { transform: translateX(0); }
+  .nav-drawer-close {
+    display: block;
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: none;
+    border: none;
+    color: var(--gold-300);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .navbar nav a { margin: 0; padding: 12px 0; width: 100%; border-bottom: 1px solid rgba(245,213,118,0.15); }
+  .nav-actions-mobile { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; padding: 16px 0 6px; }
+  body.nav-drawer-locked { overflow: hidden; }
 }
 
 /* ==========================================================================
@@ -568,7 +612,15 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 .quick-link-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
 
 .table-scroll { overflow-x: auto; }
-.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* .row-actions is applied to a <td>. Giving display:flex to a <td> directly
+   breaks the table row-height / vertical-align calculation and makes the
+   buttons drift out of line with the row text (especially from row 2
+   onward). The td just centers its own box; the flex layout lives on the
+   inner .row-actions-inner wrapper instead. */
+.row-actions { vertical-align: middle; }
+.row-actions-inner { display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; }
+.row-actions-inner form { display: inline-flex; margin: 0; }
+.row-actions-inner .btn { white-space: nowrap; }
 
 @media (max-width: 980px) {
   .portal-sidebar {
@@ -712,7 +764,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
   .contact-section { padding: 30px 18px; }
   .site-footer { padding: 26px 18px; flex-direction: column; }
   .verify-steps { grid-template-columns: 1fr; }
-  .profile-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .profile-grid { gap: 14px; }
   .profile-card .actions { flex-direction: column; }
   .stat-cards { grid-template-columns: 1fr 1fr; }
   .form-grid { grid-template-columns: 1fr; }
@@ -721,7 +773,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
 }
 
 @media (max-width: 420px) {
-  .profile-grid { grid-template-columns: 1fr; }
   .stat-cards { grid-template-columns: 1fr; }
 }
 
@@ -908,3 +959,16 @@ input::placeholder, textarea::placeholder { color: #a09082; }
 .password-reset-row input { max-width: 160px; }
 .marital-badge-married { background: #f0dede; color: #7a3030; }
 .marital-badge-unmarried { background: #e2f2ea; color: #1f6b46; }
+
+/* Fixed-size table thumbnails so rows of different image aspect ratios stay
+   aligned (this was causing a visible row-height mismatch in the Ad Manager). */
+.ad-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  background: var(--cream-100);
+  border: 1px solid rgba(10,56,53,0.1);
+}
+/* .row-actions consolidated above; .data-table td vertical-align consolidated above */

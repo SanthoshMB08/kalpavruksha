@@ -28,12 +28,14 @@
                   <td data-label="Username"><%= u.username %></td>
                   <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
                   <td data-label="Action" class="row-actions">
-                    <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
-                      <button class="btn btn-gold btn-sm" type="submit">Approve</button>
-                    </form>
-                    <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
-                      <button class="btn btn-danger btn-sm" type="submit">Deny</button>
-                    </form>
+                    <div class="row-actions-inner">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
+                        <button class="btn btn-gold btn-sm" type="submit">Approve</button>
+                      </form>
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
+                        <button class="btn btn-danger btn-sm" type="submit">Deny</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               <% }) %>
@@ -64,7 +66,7 @@
           <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check"></i> User Approvals &amp; Direct Creation</a>
           <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card"></i> Manage Profiles</a>
           <a href="/portal/admin-dashboard/profiles/new" class="quick-link-card"><i class="fa-solid fa-plus"></i> Upload New Profile</a>
-          <a href="/portal/admin-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Edit Success Stories</a>
+          <a href="/portal/admin-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Success Stories</a>
         </div>
       </div>
   <%- include('../partials/portal-shell-close') %>

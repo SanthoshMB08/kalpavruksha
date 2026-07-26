@@ -4,7 +4,9 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
+  <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
+  <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
       <div class="panel">
         <h3><i class="fa-solid fa-hourglass-half"></i> Pending Approvals</h3>
@@ -23,12 +25,14 @@
                   <td data-label="Username"><%= u.username %></td>
                   <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
                   <td data-label="Action" class="row-actions">
-                    <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
-                      <button class="btn btn-gold btn-sm" type="submit">Approve Profile</button>
-                    </form>
-                    <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
-                      <button class="btn btn-danger btn-sm" type="submit">Deny Profile</button>
-                    </form>
+                    <div class="row-actions-inner">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
+                        <button class="btn btn-gold btn-sm" type="submit">Approve Profile</button>
+                      </form>
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
+                        <button class="btn btn-danger btn-sm" type="submit">Deny Profile</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               <% }) %>

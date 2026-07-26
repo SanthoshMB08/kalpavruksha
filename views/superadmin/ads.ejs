@@ -21,17 +21,19 @@
           <tbody>
             <% ads.forEach(function(ad) { %>
               <tr>
-                <td data-label="Preview"><img src="/uploads/ads/<%= ad.image_name %>" style="width:60px; border-radius:6px;"></td>
+                <td data-label="Preview"><img src="/uploads/ads/<%= ad.image_name %>" class="ad-thumb" alt="<%= ad.ad_title %>"></td>
                 <td data-label="Title"><%= ad.ad_title %></td>
                 <td data-label="Placement"><%= placementLabels[ad.placement] || ad.placement %></td>
                 <td data-label="Status"><span class="badge <%= ad.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= ad.is_active ? 'Active' : 'Inactive' %></span></td>
                 <td data-label="Actions" class="row-actions">
-                  <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
-                    <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
-                  </form>
-                  <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
-                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                  </form>
+                  <div class="row-actions-inner">
+                    <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
+                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
+                    </form>
+                    <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
+                      <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             <% }) %>

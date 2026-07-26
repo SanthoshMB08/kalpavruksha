@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { isAdmin } = require('../middleware/auth');
+const { isAdmin, isSuperAdmin } = require('../middleware/auth');
 const { uploadProfileAssets } = require('../middleware/upload');
 const { profileValidators, memberCreateValidators } = require('../middleware/validators');
 
@@ -24,7 +24,7 @@ router.get('/admin-dashboard/profiles/:id', isAdmin, adminController.viewProfile
 router.get('/admin-dashboard/profiles/:id/pdf', isAdmin, adminController.exportProfilePdf);
 router.post('/admin-dashboard/profiles/:id/photos', isAdmin, uploadProfileAssets, adminController.updateProfilePhotos);
 router.post('/admin-dashboard/profiles/:id/marital-status', isAdmin, adminController.updateMaritalStatus);
-router.post('/admin-dashboard/profiles/:id/delete', isAdmin, adminController.deleteProfile);
+router.post('/admin-dashboard/profiles/:id/delete', isSuperAdmin, adminController.deleteProfile);
 
 // Success stories: view-only for Admin — create/update/toggle/delete are Super Admin only (see routes/superadmin.js)
 router.get('/admin-dashboard/stories', isAdmin, adminController.storiesPage);

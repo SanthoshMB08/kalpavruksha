@@ -13,19 +13,17 @@
       <% if (portal === 'superadmin') { %>
         <a href="/portal/super-secure-dashboard" class="<%= active === 'overview' ? 'active' : '' %>"><i class="fa-solid fa-gauge-high"></i> Overview</a>
         <a href="/portal/super-secure-dashboard/admins" class="<%= active === 'admins' ? 'active' : '' %>"><i class="fa-solid fa-shield-halved"></i> Sub-Admins</a>
+        <a href="/portal/admin-dashboard/users" class="<%= active === 'users' ? 'active' : '' %>"><i class="fa-solid fa-user-check"></i> User Approvals</a>
+        <a href="/portal/admin-dashboard/profiles" class="<%= active === 'profiles' ? 'active' : '' %>"><i class="fa-solid fa-address-card"></i> Manage Profiles</a>
         <a href="/portal/super-secure-dashboard/ads" class="<%= active === 'ads' ? 'active' : '' %>"><i class="fa-solid fa-bullhorn"></i> Advertisements</a>
         <a href="/portal/super-secure-dashboard/stories" class="<%= active === 'stories' ? 'active' : '' %>"><i class="fa-solid fa-heart"></i> Success Stories</a>
       <% } else { %>
         <a href="/portal/admin-dashboard" class="<%= active === 'overview' ? 'active' : '' %>"><i class="fa-solid fa-gauge-high"></i> Overview</a>
         <a href="/portal/admin-dashboard/users" class="<%= active === 'users' ? 'active' : '' %>"><i class="fa-solid fa-user-check"></i> User Approvals</a>
         <a href="/portal/admin-dashboard/profiles" class="<%= active === 'profiles' ? 'active' : '' %>"><i class="fa-solid fa-address-card"></i> Profiles</a>
-        <a href="/portal/admin-dashboard/stories" class="<%= active === 'stories' ? 'active' : '' %>"><i class="fa-solid fa-heart"></i> Success Stories</a>
       <% } %>
     </nav>
     <div class="portal-sidebar-footer">
-      <% if (portal === 'superadmin') { %>
-        <a href="/portal/admin-dashboard" class="btn btn-outline-gold btn-sm btn-block" style="margin-bottom:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Open Admin Tools</a>
-      <% } %>
       <a href="<%= logoutUrl %>" class="btn btn-outline-gold btn-sm btn-block" style="margin-top:10px; text-align:center; border-color:var(--gold-500); color:var(--gold-300);">Logout</a>
     </div>
   </aside>

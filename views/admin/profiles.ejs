@@ -4,62 +4,74 @@
   <%- include('../partials/head') %>
 </head>
 <body>
-  <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
+  <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
+  <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
+  <% const canManage = currentUser.role === 'superadmin'; %>
+  <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
       <div class="panel">
-        <h3><i class="fa-solid fa-address-card"></i> All Profiles (<%= profiles.length %>)</h3>
+        <h3><i class="fa-solid fa-address-card"></i> Profiles <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= profiles.length %> &middot; all genders)</span></h3>
         <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
 
-        <form method="GET" action="/portal/admin-dashboard/profiles" class="form-grid" style="margin-bottom:20px; background:var(--cream-100); padding:16px; border-radius:var(--radius-md);">
-          <div class="field">
-            <label class="form-label">Search (name / occupation / city)</label>
-            <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Type to search...">
+        <form id="filterForm" method="GET" action="/portal/admin-dashboard/profiles" class="search-bar admin-search-bar">
+          <div class="search-input-group">
+            <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city...">
           </div>
-          <div class="field">
-            <label class="form-label">Religion</label>
-            <input type="text" name="religion" list="religionOptions" value="<%= filters.religion || '' %>">
-            <datalist id="religionOptions"><% religions.forEach(function(r){ %><option value="<%= r %>"><% }) %></datalist>
-          </div>
-          <div class="field">
-            <label class="form-label">Caste</label>
-            <input type="text" name="caste" list="casteOptions" value="<%= filters.caste || '' %>">
-            <datalist id="casteOptions"><% castes.forEach(function(c){ %><option value="<%= c %>"><% }) %></datalist>
-          </div>
-          <div class="field">
-            <label class="form-label">Sub-caste</label>
-            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>">
-          </div>
-          <div class="field">
-            <label class="form-label">Language</label>
-            <input type="text" name="language" list="languageOptions" value="<%= filters.language || '' %>">
-            <datalist id="languageOptions"><% languages.forEach(function(l){ %><option value="<%= l %>"><% }) %></datalist>
-          </div>
-          <div class="field">
-            <label class="form-label">Gender</label>
-            <select name="gender">
-              <option value="">Any</option>
-              <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
-              <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="form-label">Marital Status</label>
-            <select name="maritalStatus">
-              <option value="">Any</option>
-              <option value="unmarried" <%= filters.maritalStatus === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
-              <option value="married" <%= filters.maritalStatus === 'married' ? 'selected' : '' %>>Married</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="form-label">Age Range</label>
-            <div class="age-range-row">
-              <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
-              <span>to</span>
-              <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+          <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
+            <i class="fa-solid fa-sliders"></i> Filters
+          </button>
+          <button type="submit" class="btn btn-gold search-submit-btn">Search</button>
+
+          <div class="filter-panel" id="filterPanel">
+            <div class="filter-panel-grid">
+              <div class="filter-group">
+                <label>Religion</label>
+                <input type="text" name="religion" list="religionOptions" value="<%= filters.religion || '' %>" placeholder="Type to search...">
+                <datalist id="religionOptions"><% religions.forEach(function(r){ %><option value="<%= r %>"><% }) %></datalist>
+              </div>
+              <div class="filter-group">
+                <label>Caste</label>
+                <input type="text" name="caste" list="casteOptions" value="<%= filters.caste || '' %>" placeholder="Type to search...">
+                <datalist id="casteOptions"><% castes.forEach(function(c){ %><option value="<%= c %>"><% }) %></datalist>
+              </div>
+              <div class="filter-group">
+                <label>Sub-caste</label>
+                <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+              </div>
+              <div class="filter-group">
+                <label>Language</label>
+                <input type="text" name="language" list="languageOptions" value="<%= filters.language || '' %>" placeholder="Type to search...">
+                <datalist id="languageOptions"><% languages.forEach(function(l){ %><option value="<%= l %>"><% }) %></datalist>
+              </div>
+              <div class="filter-group">
+                <label>Gender</label>
+                <select name="gender">
+                  <option value="">Any</option>
+                  <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
+                  <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Marital Status</label>
+                <select name="maritalStatus">
+                  <option value="">Any</option>
+                  <option value="unmarried" <%= filters.maritalStatus === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
+                  <option value="married" <%= filters.maritalStatus === 'married' ? 'selected' : '' %>>Married</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Age Range</label>
+                <div class="age-range-row">
+                  <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
+                  <span>to</span>
+                  <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="field full" style="display:flex; gap:10px;">
-            <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
-            <a href="/portal/admin-dashboard/profiles" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear</a>
+            <div class="filter-panel-actions">
+              <a href="/portal/admin-dashboard/profiles" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear All</a>
+              <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
+            </div>
           </div>
         </form>
 
@@ -69,7 +81,7 @@
           <tbody>
             <% profiles.forEach(function(p) { %>
               <tr>
-                <td data-label="Photo"><img src="/uploads/profiles/<%= p.image_name %>" style="width:44px; height:44px; border-radius:8px; object-fit:cover;"></td>
+                <td data-label="Photo"><img src="/uploads/profiles/<%= p.image_name %>" class="ad-thumb" style="border-radius:8px;"></td>
                 <td data-label="Name"><%= p.full_name %></td>
                 <td data-label="Gender"><%= p.gender === 'male' ? 'Male' : 'Female' %></td>
                 <td data-label="Caste"><%= p.caste %></td>
@@ -78,17 +90,39 @@
                 <td data-label="Status"><span class="badge <%= p.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= p.marital_status === 'married' ? 'Married' : 'Unmarried' %></span></td>
                 <td data-label="Uploaded"><%= new Date(p.created_at).toLocaleDateString('en-IN') %></td>
                 <td data-label="Actions" class="row-actions">
-                  <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
-                  <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Remove this profile?');">
-                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                  </form>
+                  <div class="row-actions-inner">
+                    <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
+                    <% if (canManage) { %>
+                      <a href="/portal/super-secure-dashboard/profiles/<%= p.id %>/edit" class="btn btn-maroon btn-sm">Edit</a>
+                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile?');">
+                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                      </form>
+                    <% } %>
+                  </div>
                 </td>
               </tr>
             <% }) %>
+            <% if (profiles.length === 0) { %><tr><td colspan="9" style="text-align:center; color:#a08a6a;">No profiles match these filters.</td></tr><% } %>
           </tbody>
         </table>
         </div>
       </div>
+
+  <script>
+    var filterToggleBtn = document.getElementById('filterToggleBtn');
+    var filterPanel = document.getElementById('filterPanel');
+    if (filterToggleBtn && filterPanel) {
+      filterToggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        filterPanel.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (!filterPanel.contains(e.target) && e.target !== filterToggleBtn) {
+          filterPanel.classList.remove('open');
+        }
+      });
+    }
+  </script>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

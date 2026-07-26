@@ -161,6 +161,7 @@ exports.updateProfile = async (req, res) => {
     if (files.profile_image) data.image_name = files.profile_image[0].filename;
     if (files.profile_image_2) data.image_name_2 = files.profile_image_2[0].filename;
     if (files.jathaka_pdf) data.jathaka_pdf_name = files.jathaka_pdf[0].filename;
+    if (files.biodata_pdf) data.biodata_pdf_name = files.biodata_pdf[0].filename;
     await Profile.updateFields(req.params.id, data);
     req.flash('success', 'Profile updated.');
     res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);

@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 const PUBLIC_FIELDS = `
   id, full_name, gender, image_name, image_name_2, caste, subcaste, language, occupation,
-  annual_salary, date_of_birth, marital_status,
+  date_of_birth, marital_status,
   DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
 `;
 
@@ -11,7 +11,7 @@ const FULL_FIELDS = `
   time_of_birth, language, occupation, annual_salary, father_name, father_occupation,
   father_salary, mother_name, mother_occupation, mother_salary, total_siblings,
   male_siblings, female_siblings, phone_number, address, city, state, assets,
-  loans, rashi, nakshatra, jathaka_pdf_name, marital_status, created_by, created_at,
+  loans, rashi, nakshatra, jathaka_pdf_name, biodata_pdf_name, marital_status, created_by, created_at,
   DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
 `;
 
@@ -23,7 +23,7 @@ const UPDATABLE_COLUMNS = [
   'father_name', 'father_occupation', 'father_salary', 'mother_name', 'mother_occupation',
   'mother_salary', 'total_siblings', 'male_siblings', 'female_siblings', 'phone_number',
   'address', 'city', 'state', 'assets', 'loans', 'rashi', 'nakshatra',
-  'jathaka_pdf_name', 'marital_status'
+  'jathaka_pdf_name', 'biodata_pdf_name', 'marital_status'
 ];
 
 function buildSearchQuery(filters = {}, fieldSet, { includeMarried = false } = {}) {
@@ -113,8 +113,8 @@ const Profile = {
         father_occupation, father_salary, mother_name, mother_occupation,
         mother_salary, total_siblings, male_siblings, female_siblings,
         phone_number, address, city, state, assets, loans, rashi, nakshatra,
-        jathaka_pdf_name, marital_status, created_by
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        jathaka_pdf_name, biodata_pdf_name, marital_status, created_by
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       RETURNING id`,
       [
         data.full_name, data.gender, data.image_name, data.image_name_2 || null, data.religion, data.caste,
@@ -124,7 +124,7 @@ const Profile = {
         data.total_siblings || 0, data.male_siblings || 0, data.female_siblings || 0,
         data.phone_number, data.address, data.city, data.state, data.assets,
         data.loans || null, data.rashi, data.nakshatra, data.jathaka_pdf_name || null,
-        data.marital_status || 'unmarried', data.created_by || null
+        data.biodata_pdf_name || null, data.marital_status || 'unmarried', data.created_by || null
       ]
     );
     return result.insertId;
