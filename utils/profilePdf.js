@@ -1,6 +1,14 @@
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
+const { getPublicUrl } = require('./supabaseStorage');
+
+// Downloads a file from a public URL into a Buffer. Used to pull the profile
+// photo out of Supabase Storage so it can be embedded in the generated PDF.
+async function fetchAsBuffer(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+  const arrayBuffer = await res.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
 
 const GOLD = '#b8860b';
 const TEAL = '#0a3835';
@@ -27,8 +35,8 @@ function sectionTitle(doc, title) {
 }
 
 // Streams a PDF for the given full profile record directly to `res`.
-// `uploadsDir` is the absolute path to public/uploads (so the photo can be embedded).
-function streamProfilePdf(res, profile, uploadsDir) {
+// The profile photo is fetched from its Supabase Storage public URL.
+async function streamProfilePdf(res, profile) {
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${profile.full_name.replace(/[^a-z0-9]/gi, '_')}_profile.pdf"`);
@@ -38,12 +46,13 @@ function streamProfilePdf(res, profile, uploadsDir) {
   doc.font('Helvetica').fontSize(10).fillColor(GOLD).text('Matrimony Profile', { align: 'center' });
   doc.moveDown(1);
 
-  const photoPath = profile.image_name ? path.join(uploadsDir, 'profiles', profile.image_name) : null;
+  const photoUrl = profile.image_name ? getPublicUrl('profiles', profile.image_name) : null;
   const topY = doc.y;
-  if (photoPath && fs.existsSync(photoPath)) {
+  if (photoUrl) {
     try {
-      doc.image(photoPath, 40, topY, { width: 130, height: 150, fit: [130, 150] });
-    } catch (e) { /* corrupt/unsupported image — skip silently */ }
+      const photoBuffer = await fetchAsBuffer(photoUrl);
+      doc.image(photoBuffer, 40, topY, { width: 130, height: 150, fit: [130, 150] });
+    } catch (e) { /* missing/corrupt/unsupported image — skip silently */ }
   }
 
   const infoX = 190;

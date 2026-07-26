@@ -81,7 +81,7 @@
           <tbody>
             <% profiles.forEach(function(p) { %>
               <tr>
-                <td data-label="Photo"><img src="/uploads/profiles/<%= p.image_name %>" class="ad-thumb" style="border-radius:8px;"></td>
+                <td data-label="Photo"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb" style="border-radius:8px;"></td>
                 <td data-label="Name"><%= p.full_name %></td>
                 <td data-label="Gender"><%= p.gender === 'male' ? 'Male' : 'Female' %></td>
                 <td data-label="Caste"><%= p.caste %></td>

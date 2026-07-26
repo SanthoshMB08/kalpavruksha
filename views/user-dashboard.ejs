@@ -81,7 +81,7 @@
         <div class="eyebrow">Sponsored</div>
         <% afterSearchAds.forEach(function(ad) { %>
           <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
-            <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+            <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
           </a>
         <% }) %>
       </div>
@@ -97,7 +97,7 @@
         <% profiles.forEach(function(p) { %>
           <div class="profile-card">
             <div class="photo">
-              <img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>">
+              <img src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>">
             </div>
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>

@@ -24,7 +24,7 @@
                  const expired = ad.expires_at && new Date(ad.expires_at) <= new Date();
             %>
               <tr>
-                <td data-label="Preview"><img src="/uploads/ads/<%= ad.image_name %>" class="ad-thumb" alt="<%= ad.ad_title %>"></td>
+                <td data-label="Preview"><img src="<%= fileUrl('ads', ad.image_name) %>" class="ad-thumb" alt="<%= ad.ad_title %>"></td>
                 <td data-label="Title"><%= ad.ad_title %></td>
                 <td data-label="Placement"><%= placementLabels[ad.placement] || ad.placement %></td>
                 <td data-label="Expires"><%= ad.expires_at ? new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %><% if (expired) { %> <span class="badge badge-rejected">Expired</span><% } %></td>

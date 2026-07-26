@@ -36,7 +36,7 @@
     <span class="eyebrow">Sponsored</span>
     <% topBannerAds.forEach(function(ad) { %>
       <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="top-banner-ad-item">
-        <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+        <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
       </a>
     <% }) %>
   </div>

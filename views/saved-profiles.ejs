@@ -32,7 +32,7 @@
       <div class="profile-grid">
         <% list.forEach(function(p) { %>
           <div class="profile-card">
-            <div class="photo"><img src="/uploads/profiles/<%= p.image_name %>" alt="<%= p.full_name %>"></div>
+            <div class="photo"><img src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>"></div>
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>
               <div class="meta">

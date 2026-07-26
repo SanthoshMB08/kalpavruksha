@@ -1,40 +1,14 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const { uploadFile } = require('../utils/supabaseStorage');
 
-function ensureDir(subfolder) {
-  const dest = path.join(__dirname, '..', 'public', 'uploads', subfolder);
-  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-  return dest;
-}
-
-function makeStorage(subfolder) {
-  const dest = ensureDir(subfolder);
-  return multer.diskStorage({
-    destination: (req, file, cb) => cb(null, dest),
-    filename: (req, file, cb) => {
-      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      cb(null, `${unique}${path.extname(file.originalname)}`);
-    }
-  });
-}
-
-// Profile uploads have three fields that must land in different folders:
-// profile_image[_2] -> uploads/profiles, jathaka_pdf -> uploads/jathaka, biodata_pdf -> uploads/biodata
-const profileDir = ensureDir('profiles');
-const jathakaDir = ensureDir('jathaka');
-const biodataDir = ensureDir('biodata');
-const profileAssetsStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (file.fieldname === 'jathaka_pdf') return cb(null, jathakaDir);
-    if (file.fieldname === 'biodata_pdf') return cb(null, biodataDir);
-    return cb(null, profileDir);
-  },
-  filename: (req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
-  }
-});
+// Files are held in memory only (never touch local disk) and then streamed
+// straight to the matching Supabase Storage bucket. Bucket per fieldname:
+//   profile_image / profile_image_2 -> "profiles"
+//   jathaka_pdf                     -> "jathaka"
+//   biodata_pdf                     -> "biodata"
+//   ad_image                        -> "ads"
+const memoryStorage = multer.memoryStorage();
 
 const imageFilter = (req, file, cb) => {
   const allowed = /jpeg|jpg|png|webp/;
@@ -48,8 +22,8 @@ const pdfFilter = (req, file, cb) => {
   cb(new Error('Only PDF files are allowed for this document.'));
 };
 
-const uploadProfileAssets = multer({
-  storage: profileAssetsStorage,
+const multerProfileAssets = multer({
+  storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'jathaka_pdf' || file.fieldname === 'biodata_pdf') return pdfFilter(req, file, cb);
@@ -62,10 +36,54 @@ const uploadProfileAssets = multer({
   { name: 'biodata_pdf', maxCount: 1 }
 ]);
 
-const uploadAdImage = multer({
-  storage: makeStorage('ads'),
+const multerAdImage = multer({
+  storage: memoryStorage,
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: imageFilter
 }).single('ad_image');
+
+const FIELD_TO_BUCKET = {
+  profile_image: 'profiles',
+  profile_image_2: 'profiles',
+  jathaka_pdf: 'jathaka',
+  biodata_pdf: 'biodata'
+};
+
+// Runs after multerProfileAssets. Uploads whichever fields were present to
+// their Supabase bucket, then sets file.filename on each — same shape multer
+// gives you with diskStorage — so controllers (which read
+// files.profile_image[0].filename etc.) don't need any changes.
+async function uploadProfileAssets(req, res, next) {
+  multerProfileAssets(req, res, async (err) => {
+    if (err) return next(err);
+    try {
+      const files = req.files || {};
+      for (const field of Object.keys(files)) {
+        const bucket = FIELD_TO_BUCKET[field];
+        for (const file of files[field]) {
+          file.filename = await uploadFile(bucket, file);
+        }
+      }
+      next();
+    } catch (uploadErr) {
+      next(uploadErr);
+    }
+  });
+}
+
+// Runs after multerAdImage. Same idea for the single ad_image field.
+async function uploadAdImage(req, res, next) {
+  multerAdImage(req, res, async (err) => {
+    if (err) return next(err);
+    try {
+      if (req.file) {
+        req.file.filename = await uploadFile('ads', req.file);
+      }
+      next();
+    } catch (uploadErr) {
+      next(uploadErr);
+    }
+  });
+}
 
 module.exports = { uploadProfileAssets, uploadAdImage };

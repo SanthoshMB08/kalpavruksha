@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt');
-const path = require('path');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
@@ -263,7 +262,7 @@ exports.updateMaritalStatus = async (req, res) => {
 exports.exportProfilePdf = async (req, res) => {
   const profile = await Profile.findByIdFull(req.params.id);
   if (!profile) return res.redirect('/portal/admin-dashboard/profiles');
-  streamProfilePdf(res, profile, path.join(__dirname, '..', 'public', 'uploads'));
+  await streamProfilePdf(res, profile);
 };
 
 // --- Success stories (view-only for Admin — editing is Super Admin only) ---

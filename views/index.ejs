@@ -47,7 +47,7 @@
           <% sidebarAds.forEach(function(ad) { %>
             <div class="ad-slot">
               <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
-                <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+                <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
               </a>
             </div>
           <% }) %>
@@ -102,7 +102,7 @@
         <div class="home-ad-banner-row">
           <% midAds.forEach(function(ad) { %>
             <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
             </a>
           <% }) %>
         </div>
@@ -134,7 +134,7 @@
         <div class="home-ad-banner-row">
           <% bottomAds.forEach(function(ad) { %>
             <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="/uploads/ads/<%= ad.image_name %>" alt="<%= ad.ad_title %>">
+              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
             </a>
           <% }) %>
         </div>

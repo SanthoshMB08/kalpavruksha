@@ -3,9 +3,9 @@
 Matrimony service exclusively for Lingayats — Node.js + Express + EJS +
 Supabase (Postgres).
 
-File uploads (profile photos, jathaka PDFs, ad images) are stored on the
-**local filesystem** under `public/uploads/`, same as before — only the
-database was migrated to Supabase. Supabase Storage is not used.
+File uploads (profile photos, jathaka PDFs, biodata PDFs, ad images) are
+stored in **Supabase Storage**, in buckets named to match the old local
+folders: `profiles`, `jathaka`, `biodata`, `ads`.
 
 ## Setup
 
@@ -25,7 +25,32 @@ database was migrated to Supabase. Supabase Storage is not used.
    Paste your Supabase connection string into `DATABASE_URL`. The app runs on
    **port 5000** by default.
 
-4. **Create the database schema**
+4. **Create four Storage buckets**
+   In the Supabase dashboard, go to **Storage** and create four buckets, each
+   set to **Public**:
+   - `profiles`
+   - `jathaka`
+   - `biodata`
+   - `ads`
+
+   Then go to **Project Settings -> API** and copy the **Project URL** and
+   **service_role secret key** into `SUPABASE_URL` and
+   `SUPABASE_SERVICE_ROLE_KEY` in `.env`. Use the service_role key, not the
+   anon key — uploads run server-side and need to bypass bucket RLS.
+
+5. **Migrate any existing local uploads**
+   If `public/uploads/` already has files in it (profiles/jathaka/biodata/ads
+   subfolders) from before this migration, push them into the new buckets:
+   ```
+   npm run migrate-uploads
+   ```
+   This preserves filenames exactly, so existing database rows (which store
+   only the bare filename) keep working without any DB changes. It's safe to
+   re-run — files already in a bucket are skipped. Once you've confirmed
+   everything looks right in the Supabase dashboard, you can delete the local
+   `public/uploads/` folder; the app no longer reads or writes it.
+
+6. **Create the database schema**
    Run the SQL in `migrations/schema.sql` against your Supabase database —
    easiest way is to paste it into the Supabase dashboard's **SQL Editor** and
    run it, or from the command line:
@@ -33,14 +58,14 @@ database was migrated to Supabase. Supabase Storage is not used.
    psql "$DATABASE_URL" -f migrations/schema.sql
    ```
 
-5. **Seed the first Super Admin account**
+7. **Seed the first Super Admin account**
    ```
    npm run seed
    ```
    This reads `SUPERADMIN_USERNAME` / `SUPERADMIN_PASSWORD` / `SUPERADMIN_MOBILE`
    from `.env` and creates the account. Change the password after first login.
 
-6. **Run the app**
+8. **Run the app**
    ```
    npm start
    ```
