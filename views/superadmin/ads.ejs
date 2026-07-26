@@ -15,20 +15,24 @@
 
       <div class="panel">
         <h3><i class="fa-solid fa-bullhorn"></i> Sponsorship Hub (Ad Manager)</h3>
+        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Each location below is a single slot — uploading or activating a new ad for a location automatically retires whichever ad was live there. Every ad also expires on its own and switches to Inactive by itself once its time is up.</p>
         <div class="table-scroll">
         <table class="data-table" style="margin-bottom:20px;">
-          <thead><tr><th>Preview</th><th>Title</th><th>Placement</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Preview</th><th>Title</th><th>Placement</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <% ads.forEach(function(ad) { %>
+            <% ads.forEach(function(ad) {
+                 const expired = ad.expires_at && new Date(ad.expires_at) <= new Date();
+            %>
               <tr>
                 <td data-label="Preview"><img src="/uploads/ads/<%= ad.image_name %>" class="ad-thumb" alt="<%= ad.ad_title %>"></td>
                 <td data-label="Title"><%= ad.ad_title %></td>
                 <td data-label="Placement"><%= placementLabels[ad.placement] || ad.placement %></td>
+                <td data-label="Expires"><%= ad.expires_at ? new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %><% if (expired) { %> <span class="badge badge-rejected">Expired</span><% } %></td>
                 <td data-label="Status"><span class="badge <%= ad.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= ad.is_active ? 'Active' : 'Inactive' %></span></td>
                 <td data-label="Actions" class="row-actions">
                   <div class="row-actions-inner">
                     <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
-                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
+                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit" <%= (!ad.is_active && expired) ? 'disabled title="Expired — edit expiry to reactivate"' : '' %>><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
                     </form>
                     <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
                       <button class="btn btn-danger btn-sm" type="submit">Delete</button>
@@ -37,7 +41,7 @@
                 </td>
               </tr>
             <% }) %>
-            <% if (ads.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No advertisements uploaded yet.</td></tr><% } %>
+            <% if (ads.length === 0) { %><tr><td colspan="6" style="text-align:center; color:#a08a6a;">No advertisements uploaded yet.</td></tr><% } %>
           </tbody>
         </table>
         </div>
@@ -56,6 +60,7 @@
             </select>
           </div>
           <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
+          <div class="field"><label class="form-label">Expires On</label><input type="datetime-local" name="expires_at" required></div>
           <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required></div>
           <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
         </form>

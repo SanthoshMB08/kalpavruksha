@@ -84,3 +84,14 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Kalpavruksha Kalyana running at http://localhost:${PORT}`);
 });
+
+// Ads also get swept lazily on every read (see Advertisement.deactivateExpired
+// call sites), but this background timer makes expiry happen even on a quiet
+// site with no visitors — an ad won't stay live past its expiry just because
+// nobody hit a page that would've triggered the lazy sweep.
+const AD_EXPIRY_SWEEP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+setInterval(() => {
+  Advertisement.deactivateExpired().catch((err) => {
+    console.error('Ad expiry sweep failed:', err);
+  });
+}, AD_EXPIRY_SWEEP_INTERVAL_MS);

@@ -184,14 +184,24 @@ exports.createAd = async (req, res) => {
       req.flash('error', 'Please choose an image for the advertisement.');
       return res.redirect('/portal/super-secure-dashboard/ads');
     }
-    const { ad_title, placement, target_url } = req.body;
+    const { ad_title, placement, target_url, expires_at } = req.body;
+    if (!expires_at) {
+      req.flash('error', 'Please set an expiry date/time for the advertisement.');
+      return res.redirect('/portal/super-secure-dashboard/ads');
+    }
+    const expiresAt = new Date(expires_at);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      req.flash('error', 'Expiry must be a valid date/time in the future.');
+      return res.redirect('/portal/super-secure-dashboard/ads');
+    }
     await Advertisement.create({
       ad_title,
       placement,
       target_url,
-      image_name: req.file.filename
+      image_name: req.file.filename,
+      expiresAt
     });
-    req.flash('success', 'Advertisement uploaded.');
+    req.flash('success', 'Advertisement uploaded. It has taken over the single slot for this location.');
     res.redirect('/portal/super-secure-dashboard/ads');
   } catch (err) {
     console.error(err);
@@ -201,7 +211,16 @@ exports.createAd = async (req, res) => {
 };
 
 exports.toggleAd = async (req, res) => {
-  await Advertisement.toggleActive(req.params.id);
+  try {
+    await Advertisement.toggleActive(req.params.id);
+  } catch (err) {
+    if (err.code === 'AD_EXPIRED') {
+      req.flash('error', err.message);
+    } else {
+      console.error(err);
+      req.flash('error', 'Could not update advertisement status.');
+    }
+  }
   res.redirect('/portal/super-secure-dashboard/ads');
 };
 
