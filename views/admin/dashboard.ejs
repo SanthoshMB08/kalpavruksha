@@ -54,7 +54,7 @@
             <div class="alert-box">
               <strong><%= i.user_name %></strong> is interested in
               <a href="/portal/admin-dashboard/profiles/<%= i.profile_id %>" class="activity-profile-link"><strong><%= i.profile_name %></strong></a>
-              (Call: <%= i.profile_phone %>) &mdash; <%= new Date(i.created_at).toLocaleString('en-IN') %>
+              (Call: <%= i.user_mobile %>) &mdash; <%= new Date(i.created_at).toLocaleString('en-IN') %>
             </div>
           <% }) %>
         <% } %>

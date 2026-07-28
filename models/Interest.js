@@ -70,7 +70,9 @@ const Interest = {
   },
 
   // Recent "Express Interest" activity for the admin activity stream.
-  async recentExpressed(limit = 20) {
+  // Paginated (offset/limit) so it can back both the dashboard panel and the
+  // scrollable top notification tab.
+  async recentExpressed(limit = 20, offset = 0) {
     const [rows] = await pool.query(
       `SELECT i.id, i.interested_at AS created_at, u.name AS user_name, u.mobile_number AS user_mobile,
               p.id AS profile_id, p.full_name AS profile_name, p.phone_number AS profile_phone
@@ -78,10 +80,21 @@ const Interest = {
        JOIN users u ON u.id = i.user_id
        JOIN profiles p ON p.id = i.profile_id
        WHERE i.is_interested = TRUE
-       ORDER BY i.interested_at DESC LIMIT ?`,
-      [limit]
+       ORDER BY i.interested_at DESC LIMIT ? OFFSET ?`,
+      [limit, offset]
     );
     return rows;
+  },
+
+  // Count of interests expressed in the last 24 hours — powers the badge
+  // count on the notification bell.
+  async countRecent(hours = 24) {
+    const [rows] = await pool.query(
+      `SELECT COUNT(*)::int AS count FROM interests
+       WHERE is_interested = TRUE AND interested_at > NOW() - (?::text || ' hours')::interval`,
+      [hours]
+    );
+    return rows[0].count;
   }
 };
 

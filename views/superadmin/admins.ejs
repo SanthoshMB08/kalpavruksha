@@ -7,10 +7,15 @@
   <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-shield-halved"></i> Sub-Admin Management</h3>
+        <h3>
+          <i class="fa-solid fa-shield-halved"></i> Sub-Admin Management
+          <span class="panel-head-actions">
+            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createAdminModal"><i class="fa-solid fa-plus"></i> Create Sub-Admin</button>
+          </span>
+        </h3>
         <div class="table-scroll">
         <table class="data-table" style="margin-bottom:20px;">
-          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Reset Password</th><th>Remove</th></tr></thead>
+          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Actions</th></tr></thead>
           <tbody>
             <% admins.forEach(function(a) { %>
               <tr>
@@ -18,36 +23,71 @@
                 <td data-label="Username"><%= a.username %></td>
                 <td data-label="Mobile"><%= a.mobile_number %></td>
                 <td data-label="Since"><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
-                <td data-label="Reset Password">
-                  <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" class="password-reset-row" onsubmit="return confirm('Reset password for <%= a.username %>?');">
-                    <input type="password" name="password" placeholder="New password" minlength="8" required>
-                    <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit">Update</button>
-                  </form>
-                </td>
-                <td data-label="Remove">
-                  <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
-                    <button class="btn btn-danger btn-sm" type="submit">Remove</button>
-                  </form>
+                <td data-label="Actions" class="row-actions">
+                  <div class="row-menu">
+                    <button type="button" class="row-menu-btn" aria-label="Actions for <%= a.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="row-menu-dropdown">
+                      <button type="button" data-open-modal="pwModal-<%= a.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
+                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
+                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Remove</button>
+                      </form>
+                    </div>
+                  </div>
+
+                  <div class="modal-overlay" id="pwModal-<%= a.id %>">
+                    <div class="modal-box modal-narrow">
+                      <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+                      <div style="padding:0 24px 24px;">
+                        <h3 style="margin-bottom:4px;">Change Password</h3>
+                        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= a.username %></p>
+                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= a.username %>?');">
+                          <div class="field">
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="password" minlength="8" required autofocus>
+                          </div>
+                          <div class="field" style="margin-top:16px;">
+                            <button type="submit" class="btn btn-maroon btn-block">Update Password</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             <% }) %>
-            <% if (admins.length === 0) { %><tr><td colspan="6" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
+            <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
           </tbody>
         </table>
         </div>
-
-        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Create New Sub-Admin</h4>
-        <% if (formErrors && formErrors.length) { %>
-          <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
-        <% } %>
-        <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
-          <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-          <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
-          <div class="field"><label class="form-label">Username</label><input type="text" name="username" value="<%= old.username || '' %>" required></div>
-          <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
-          <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
-        </form>
       </div>
+
+      <!-- Create Sub-Admin modal -->
+      <div class="modal-overlay" id="createAdminModal">
+        <div class="modal-box">
+          <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+          <div style="padding:0 24px 24px;">
+            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-shield-halved"></i> Create New Sub-Admin</h3>
+            <% if (formErrors && formErrors.length) { %>
+              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+            <% } %>
+            <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
+              <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
+              <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
+              <div class="field"><label class="form-label">Username</label><input type="text" name="username" value="<%= old.username || '' %>" required></div>
+              <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
+              <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <% if (formErrors && formErrors.length) { %>
+        <script>document.addEventListener('DOMContentLoaded', function () {
+          var m = document.getElementById('createAdminModal');
+          if (m) m.classList.add('open');
+        });</script>
+      <% } %>
+      <%- include('../partials/panel-ui-script') %>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

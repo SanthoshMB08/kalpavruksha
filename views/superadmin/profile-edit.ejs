@@ -26,7 +26,13 @@
         </select>
       </div>
 
-      <div class="field"><label class="form-label">Religion</label><input type="text" name="religion" value="<%= profile.religion %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Religion</label>
+        <select name="religion" required>
+          <% ['Lingayat','Hindu','Sikh','Jain','Buddhist','Other'].forEach(function(r) { %>
+            <option value="<%= r %>" <%= profile.religion === r ? 'selected' : '' %>><%= r %></option>
+          <% }) %>
+        </select>
+      </div>
       <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" value="<%= profile.caste %>" pattern="[A-Za-z\s.'-]+" required></div>
       <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" value="<%= profile.subcaste %>" pattern="[A-Za-z\s.'-]+" required></div>
       <div class="field"><label class="form-label">Language</label>

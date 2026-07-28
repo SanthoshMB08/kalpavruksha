@@ -1,0 +1,37 @@
+<script>
+(function () {
+  // Three-dot row action menu — click toggles the dropdown, click elsewhere closes it.
+  document.querySelectorAll('.row-menu-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var dropdown = btn.nextElementSibling;
+      var wasOpen = dropdown.classList.contains('open');
+      document.querySelectorAll('.row-menu-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
+      if (!wasOpen) dropdown.classList.add('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.row-menu-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
+  });
+
+  // Button-triggered modals — data-open-modal="modalId" opens, data-close-modal
+  // (or clicking the dark overlay itself) closes.
+  document.querySelectorAll('[data-open-modal]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.getAttribute('data-open-modal'));
+      if (el) el.classList.add('open');
+    });
+  });
+  document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var overlay = btn.closest('.modal-overlay');
+      if (overlay) overlay.classList.remove('open');
+    });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+})();
+</script>

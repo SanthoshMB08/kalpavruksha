@@ -32,7 +32,17 @@
           </select>
         </div>
 
-        <div class="field"><label class="form-label">Religion</label><input type="text" name="religion" value="<%= old.religion || 'Lingayat' %>" pattern="[A-Za-z\s.'-]+" required></div>
+        <div class="field"><label class="form-label">Religion</label>
+          <select name="religion" required>
+            <% const relOld = old.religion || 'Lingayat'; %>
+            <option value="Lingayat" <%= relOld === 'Lingayat' ? 'selected' : '' %>>Lingayat</option>
+            <option value="Hindu" <%= relOld === 'Hindu' ? 'selected' : '' %>>Hindu</option>
+            <option value="Sikh" <%= relOld === 'Sikh' ? 'selected' : '' %>>Sikh</option>
+            <option value="Jain" <%= relOld === 'Jain' ? 'selected' : '' %>>Jain</option>
+            <option value="Buddhist" <%= relOld === 'Buddhist' ? 'selected' : '' %>>Buddhist</option>
+            <option value="Other" <%= relOld === 'Other' ? 'selected' : '' %>>Other</option>
+          </select>
+        </div>
         <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" value="<%= old.caste || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
         <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" value="<%= old.subcaste || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
         <div class="field"><label class="form-label">Language <span class="field-tip" data-tip="e.g. Kannada, Marathi, Hindi">?</span></label>
