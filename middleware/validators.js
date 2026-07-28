@@ -24,7 +24,7 @@ function textField(field, label, { optional = false } = {}) {
 }
 
 
-const OCCUPATION_PATTERN = /^[A-Za-z]{1,148}$/;
+const OCCUPATION_PATTERN = /^[A-Za-z0-9]{1,148}$/;
 function occupationField(field, label, { optional = false } = {}) {
   let chain = body(field).trim();
   chain = optional ? chain.optional({ checkFalsy: true }) : chain.notEmpty().withMessage(`${label} is required.`);

@@ -1038,6 +1038,22 @@ input[type="file"] { width: 100%; }
   flex-direction: column;
 }
 .notif-panel.open { display: flex; }
+
+/* On narrow screens, anchor the panel to the viewport itself rather than to
+   the bell's position in the topbar — the bell isn't flush with the screen
+   edge (the admin's name sits to its right), so a bell-relative "right: 0"
+   panel can run out of room and spill off the opposite edge. Pinning it to
+   the viewport guarantees it always fits. */
+@media (max-width: 640px) {
+  .notif-panel {
+    position: fixed;
+    top: var(--notif-panel-top, 66px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 75vh;
+  }
+}
 .notif-panel-header {
   font-family: var(--font-display);
   font-size: 1rem;

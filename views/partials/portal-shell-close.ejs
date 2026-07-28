@@ -12,6 +12,17 @@
   var loading = document.getElementById('notifLoading');
   if (!bellBtn || !panel) return;
 
+  // Position the fixed mobile panel exactly below the real topbar height
+  // (varies slightly by device/font-scaling) instead of a hardcoded guess.
+  function updateTopbarOffset() {
+    var topbar = document.querySelector('.portal-topbar');
+    if (topbar) {
+      document.documentElement.style.setProperty('--notif-panel-top', (topbar.getBoundingClientRect().bottom + 8) + 'px');
+    }
+  }
+  updateTopbarOffset();
+  window.addEventListener('resize', updateTopbarOffset);
+
   var offset = 0;
   var limit = 15;
   var hasMore = true;
