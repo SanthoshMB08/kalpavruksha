@@ -10,48 +10,67 @@
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-heart"></i> Success Stories <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page <% if (!editable) { %>&mdash; view only, Super Admin edits these<% } %></span></h3>
+        <h3>
+          <i class="fa-solid fa-heart"></i> Success Stories
+          <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page <% if (!editable) { %>&mdash; view only, Super Admin edits these<% } %></span>
+          <% if (editable) { %>
+            <span class="panel-head-actions">
+              <button type="button" class="btn btn-gold btn-sm" data-open-modal="createStoryModal"><i class="fa-solid fa-plus"></i> Add Success Story</button>
+            </span>
+          <% } %>
+        </h3>
         <% if (stories.length === 0) { %>
           <div class="empty-state">No success stories yet.</div>
-        <% } else if (!editable) { %>
-          <div class="story-edit-list">
-            <% stories.forEach(function(s) { %>
-              <div class="story-edit-card">
-                <h4 style="margin-bottom:6px;"><%= s.couple_names %></h4>
-                <p style="color:#6b5638; font-size:0.9rem;">"<%= s.story_text %>"</p>
-                <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= s.is_active ? 'Visible on home page' : 'Hidden' %></span>
-              </div>
-            <% }) %>
-          </div>
         <% } else { %>
           <div class="story-edit-list">
             <% stories.forEach(function(s) { %>
               <div class="story-edit-card">
-                <form action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST" class="form-grid">
-                  <div class="field">
-                    <label class="form-label">Couple Names</label>
-                    <input type="text" name="couple_names" value="<%= s.couple_names %>" required>
-                  </div>
-                  <div class="field">
-                    <label class="form-label">Display Order</label>
-                    <input type="number" name="display_order" value="<%= s.display_order %>" min="0">
-                  </div>
-                  <div class="field full">
-                    <label class="form-label">Story Text</label>
-                    <textarea name="story_text" rows="3" required><%= s.story_text %></textarea>
-                  </div>
-                  <div class="field full story-edit-actions">
-                    <button type="submit" class="btn btn-maroon btn-sm">Save Changes</button>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                  <div>
+                    <h4 style="margin-bottom:6px;"><%= s.couple_names %></h4>
+                    <p style="color:#6b5638; font-size:0.9rem;">"<%= s.story_text %>"</p>
                     <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= s.is_active ? 'Visible on home page' : 'Hidden' %></span>
                   </div>
-                </form>
-                <div class="story-edit-toggle-row">
-                  <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST">
-                    <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit"><%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
-                  </form>
-                  <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');">
-                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                  </form>
+                  <% if (editable) { %>
+                    <div class="row-menu">
+                      <button type="button" class="row-menu-btn" aria-label="Actions for <%= s.couple_names %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                      <div class="row-menu-dropdown">
+                        <button type="button" data-open-modal="editStoryModal-<%= s.id %>"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST">
+                          <button type="submit"><i class="fa-solid <%= s.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i> <%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
+                        </form>
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');">
+                          <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </form>
+                      </div>
+                    </div>
+
+                    <div class="modal-overlay" id="editStoryModal-<%= s.id %>">
+                      <div class="modal-box">
+                        <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+                        <div style="padding:0 24px 24px;">
+                          <h3 style="margin-bottom:16px;">Edit Success Story</h3>
+                          <form class="form-grid" action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST">
+                            <div class="field">
+                              <label class="form-label">Couple Names</label>
+                              <input type="text" name="couple_names" value="<%= s.couple_names %>" required>
+                            </div>
+                            <div class="field">
+                              <label class="form-label">Display Order</label>
+                              <input type="number" name="display_order" value="<%= s.display_order %>" min="0">
+                            </div>
+                            <div class="field full">
+                              <label class="form-label">Story Text</label>
+                              <textarea name="story_text" rows="3" required><%= s.story_text %></textarea>
+                            </div>
+                            <div class="field full">
+                              <button type="submit" class="btn btn-maroon">Save Changes</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  <% } %>
                 </div>
               </div>
             <% }) %>
@@ -60,15 +79,21 @@
       </div>
 
       <% if (editable) { %>
-      <div class="panel">
-        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Add New Success Story</h4>
-        <form class="form-grid" action="<%= portalHome %>/stories" method="POST">
-          <div class="field"><label class="form-label">Couple Names</label><input type="text" name="couple_names" placeholder="e.g. Shivaraj &amp; Basavi" required></div>
-          <div class="field"><label class="form-label">Display Order</label><input type="number" name="display_order" value="0" min="0"></div>
-          <div class="field full"><label class="form-label">Story Text</label><textarea name="story_text" rows="3" placeholder="Share a short quote from the couple..." required></textarea></div>
-          <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
-        </form>
+      <div class="modal-overlay" id="createStoryModal">
+        <div class="modal-box">
+          <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+          <div style="padding:0 24px 24px;">
+            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-heart"></i> Add New Success Story</h3>
+            <form class="form-grid" action="<%= portalHome %>/stories" method="POST">
+              <div class="field"><label class="form-label">Couple Names</label><input type="text" name="couple_names" placeholder="e.g. Shivaraj &amp; Basavi" required></div>
+              <div class="field"><label class="form-label">Display Order</label><input type="number" name="display_order" value="0" min="0"></div>
+              <div class="field full"><label class="form-label">Story Text</label><textarea name="story_text" rows="3" placeholder="Share a short quote from the couple..." required></textarea></div>
+              <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
+            </form>
+          </div>
+        </div>
       </div>
+      <%- include('../partials/panel-ui-script') %>
       <% } %>
   <%- include('../partials/portal-shell-close') %>
 </body>
