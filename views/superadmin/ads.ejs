@@ -14,7 +14,12 @@
   <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-bullhorn"></i> Sponsorship Hub (Ad Manager)</h3>
+        <h3>
+          <i class="fa-solid fa-bullhorn"></i> Sponsorship Hub (Ad Manager)
+          <span class="panel-head-actions">
+            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createAdModal"><i class="fa-solid fa-plus"></i> Upload Ad</button>
+          </span>
+        </h3>
         <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Each location below is a single slot — uploading or activating a new ad for a location automatically retires whichever ad was live there. Every ad also expires on its own and switches to Inactive by itself once its time is up.</p>
         <div class="table-scroll">
         <table class="data-table" style="margin-bottom:20px;">
@@ -30,13 +35,18 @@
                 <td data-label="Expires"><%= ad.expires_at ? new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %><% if (expired) { %> <span class="badge badge-rejected">Expired</span><% } %></td>
                 <td data-label="Status"><span class="badge <%= ad.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= ad.is_active ? 'Active' : 'Inactive' %></span></td>
                 <td data-label="Actions" class="row-actions">
-                  <div class="row-actions-inner">
-                    <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
-                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit" <%= (!ad.is_active && expired) ? 'disabled title="Expired — edit expiry to reactivate"' : '' %>><%= ad.is_active ? 'Deactivate' : 'Activate' %></button>
-                    </form>
-                    <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
-                      <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                    </form>
+                  <div class="row-menu">
+                    <button type="button" class="row-menu-btn" aria-label="Actions for <%= ad.ad_title %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="row-menu-dropdown">
+                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
+                        <button type="submit" <%= (!ad.is_active && expired) ? 'disabled title="Expired — edit expiry to reactivate"' : '' %>>
+                          <i class="fa-solid <%= ad.is_active ? 'fa-toggle-off' : 'fa-toggle-on' %>"></i> <%= ad.is_active ? 'Deactivate' : 'Activate' %>
+                        </button>
+                      </form>
+                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
+                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                      </form>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -45,26 +55,36 @@
           </tbody>
         </table>
         </div>
-
-        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--maroon-800);">Upload New Advertisement</h4>
-        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Ads can be placed in several spots on the home page, plus one banner slot shown right after a member searches for matches — never mixed in with member profiles.</p>
-        <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data">
-          <div class="field"><label class="form-label">Ad Title</label><input type="text" name="ad_title" required></div>
-          <div class="field"><label class="form-label">Placement</label>
-            <select name="placement" required>
-              <option value="top_banner">Top Banner (Home)</option>
-              <option value="sidebar">Home Sidebar</option>
-              <option value="home_middle">Home — Middle Section</option>
-              <option value="home_bottom">Home — Bottom Section</option>
-              <option value="after_search">After Search Results (Find Matches page)</option>
-            </select>
-          </div>
-          <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
-          <div class="field"><label class="form-label">Expires On</label><input type="datetime-local" name="expires_at" required></div>
-          <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required></div>
-          <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
-        </form>
       </div>
+
+      <!-- Upload Ad modal -->
+      <div class="modal-overlay" id="createAdModal">
+        <div class="modal-box">
+          <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+          <div style="padding:0 24px 24px;">
+            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bullhorn"></i> Upload New Advertisement</h3>
+            <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">Ads can be placed in several spots on the home page, plus one banner slot shown right after a member searches for matches — never mixed in with member profiles.</p>
+            <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data">
+              <div class="field"><label class="form-label">Ad Title</label><input type="text" name="ad_title" required></div>
+              <div class="field"><label class="form-label">Placement</label>
+                <select name="placement" required>
+                  <option value="top_banner">Top Banner (Home)</option>
+                  <option value="sidebar">Home Sidebar</option>
+                  <option value="home_middle">Home — Middle Section</option>
+                  <option value="home_bottom">Home — Bottom Section</option>
+                  <option value="after_search">After Search Results (Find Matches page)</option>
+                </select>
+              </div>
+              <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
+              <div class="field"><label class="form-label">Expires On</label><input type="datetime-local" name="expires_at" required></div>
+              <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required></div>
+              <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <%- include('../partials/panel-ui-script') %>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

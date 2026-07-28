@@ -45,21 +45,6 @@
         <% } %>
       </div>
 
-      <div class="panel">
-        <h3><i class="fa-solid fa-bell"></i> Active Activity Stream</h3>
-        <% if (recentInterests.length === 0) { %>
-          <div class="empty-state">No interests expressed yet.</div>
-        <% } else { %>
-          <% recentInterests.forEach(function(i) { %>
-            <div class="alert-box">
-              <strong><%= i.user_name %></strong> is interested in
-              <a href="/portal/admin-dashboard/profiles/<%= i.profile_id %>" class="activity-profile-link"><strong><%= i.profile_name %></strong></a>
-              (Call: <%= i.profile_phone %>) &mdash; <%= new Date(i.created_at).toLocaleString('en-IN') %>
-            </div>
-          <% }) %>
-        <% } %>
-      </div>
-
       <div class="panel quick-links">
         <h3>Quick Links</h3>
         <div class="quick-link-grid">

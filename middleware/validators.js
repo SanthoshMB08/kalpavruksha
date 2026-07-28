@@ -1,9 +1,9 @@
 const { body } = require('express-validator');
 
 // Letters, spaces, and a few common name punctuation marks only — no digits.
-const NAME_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{1,99}$/;
-const MOBILE_PATTERN = /^[0-9]{10}$/;
-const TEXT_WORD_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{1,99}$/;
+const NAME_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{3,50}$/;
+const MOBILE_PATTERN = /^[6-9][0-9]{9}$/;
+const TEXT_WORD_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{1,50}$/;
 
 function nameField(field, label, { optional = false } = {}) {
   let chain = body(field).trim();
@@ -23,9 +23,8 @@ function textField(field, label, { optional = false } = {}) {
   return chain.matches(TEXT_WORD_PATTERN).withMessage(`${label} should contain letters only.`);
 }
 
-// Job titles / occupations: letters, numbers, and common punctuation (e.g.
-// "Software Engineer", "Class-1 Officer", "Self-employed (Trading)").
-const OCCUPATION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9\s.,'&()/-]{1,148}$/;
+
+const OCCUPATION_PATTERN = /^[A-Za-z0-9]{1,148}$/;
 function occupationField(field, label, { optional = false } = {}) {
   let chain = body(field).trim();
   chain = optional ? chain.optional({ checkFalsy: true }) : chain.notEmpty().withMessage(`${label} is required.`);
@@ -58,7 +57,7 @@ function dobField(field = 'date_of_birth', { optional = false, minAge = 18 } = {
     const dob = new Date(value);
     const age = (Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
     if (age < minAge) throw new Error(`Age must be at least ${minAge} years.`);
-    if (age > 100) throw new Error('Enter a valid date of birth.');
+    if (age > 50) throw new Error('Enter a valid date of birth.');
     return true;
   });
 }

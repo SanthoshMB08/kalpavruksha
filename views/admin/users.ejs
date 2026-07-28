@@ -43,13 +43,18 @@
       </div>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-users"></i> Active Members <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(reset a member's password if they're locked out)</span></h3>
+        <h3>
+          <i class="fa-solid fa-users"></i> Active Members
+          <span class="panel-head-actions">
+            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createUserModal"><i class="fa-solid fa-plus"></i> Create User</button>
+          </span>
+        </h3>
         <% if (members.length === 0) { %>
           <div class="empty-state">No approved members yet.</div>
         <% } else { %>
           <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Reset Password</th></tr></thead>
+            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Actions</th></tr></thead>
             <tbody>
               <% members.forEach(function(m) { %>
                 <tr>
@@ -57,11 +62,32 @@
                   <td data-label="Gender"><%= m.gender ? (m.gender === 'male' ? 'Male' : 'Female') : '—' %></td>
                   <td data-label="Mobile"><%= m.mobile_number %></td>
                   <td data-label="Username"><%= m.username %></td>
-                  <td data-label="Reset Password">
-                    <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" class="password-reset-row" onsubmit="return confirm('Reset password for <%= m.username %>?');">
-                      <input type="password" name="password" placeholder="New password" minlength="8" required>
-                      <button class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);" type="submit">Update</button>
-                    </form>
+                  <td data-label="Actions" class="row-actions">
+                    <div class="row-menu">
+                      <button type="button" class="row-menu-btn" aria-label="Actions for <%= m.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                      <div class="row-menu-dropdown">
+                        <button type="button" data-open-modal="pwModal-<%= m.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
+                      </div>
+                    </div>
+
+                    <div class="modal-overlay" id="pwModal-<%= m.id %>">
+                      <div class="modal-box modal-narrow">
+                        <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+                        <div style="padding:0 24px 24px;">
+                          <h3 style="margin-bottom:4px;">Change Password</h3>
+                          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= m.username %></p>
+                          <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= m.username %>?');">
+                            <div class="field">
+                              <label class="form-label">New Password</label>
+                              <input type="password" name="password" minlength="8" required autofocus>
+                            </div>
+                            <div class="field" style="margin-top:16px;">
+                              <button type="submit" class="btn btn-maroon btn-block">Update Password</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               <% }) %>
@@ -71,41 +97,56 @@
         <% } %>
       </div>
 
-      <div class="panel">
-        <h3><i class="fa-solid fa-user-plus"></i> Direct User Creation <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(bypasses approval, activates instantly)</span></h3>
-        <% if (formErrors && formErrors.length) { %>
-          <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
-        <% } %>
-        <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST">
-          <div class="field">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="Letters only, no numbers" required>
+      <!-- Create User modal -->
+      <div class="modal-overlay" id="createUserModal">
+        <div class="modal-box">
+          <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+          <div style="padding:0 24px 24px;">
+            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus"></i> Direct User Creation</h3>
+            <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">Bypasses approval, activates instantly.</p>
+            <% if (formErrors && formErrors.length) { %>
+              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+            <% } %>
+            <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST">
+              <div class="field">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="Letters only, no numbers" required>
+              </div>
+              <div class="field">
+                <label class="form-label">Mobile Number</label>
+                <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="Exactly 10 digits" required>
+              </div>
+              <div class="field">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" value="<%= old.username || '' %>" required>
+              </div>
+              <div class="field">
+                <label class="form-label">Gender <span class="field-tip" data-tip="Determines which members this account will be matched with.">?</span></label>
+                <select name="gender" required>
+                  <option value="">Select Gender</option>
+                  <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
+                  <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" required minlength="8">
+              </div>
+              <div class="field full">
+                <button type="submit" class="btn btn-maroon">Create &amp; Activate User</button>
+              </div>
+            </form>
           </div>
-          <div class="field">
-            <label class="form-label">Mobile Number</label>
-            <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="Exactly 10 digits" required>
-          </div>
-          <div class="field">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" value="<%= old.username || '' %>" required>
-          </div>
-          <div class="field">
-            <label class="form-label">Gender <span class="field-tip" data-tip="Determines which members this account will be matched with.">?</span></label>
-            <select name="gender" required>
-              <option value="">Select Gender</option>
-              <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
-              <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" required minlength="8">
-          </div>
-          <div class="field full">
-            <button type="submit" class="btn btn-maroon">Create &amp; Activate User</button>
-          </div>
-        </form>
+        </div>
       </div>
+
+      <% if (formErrors && formErrors.length) { %>
+        <script>document.addEventListener('DOMContentLoaded', function () {
+          var m = document.getElementById('createUserModal');
+          if (m) m.classList.add('open');
+        });</script>
+      <% } %>
+      <%- include('../partials/panel-ui-script') %>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

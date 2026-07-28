@@ -26,7 +26,13 @@
         </select>
       </div>
 
-      <div class="field"><label class="form-label">Religion</label><input type="text" name="religion" value="<%= profile.religion %>" pattern="[A-Za-z\s.'-]+" required></div>
+      <div class="field"><label class="form-label">Religion</label>
+        <select name="religion" required>
+          <% ['Lingayat','Hindu','Sikh','Jain','Buddhist','Other'].forEach(function(r) { %>
+            <option value="<%= r %>" <%= profile.religion === r ? 'selected' : '' %>><%= r %></option>
+          <% }) %>
+        </select>
+      </div>
       <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" value="<%= profile.caste %>" pattern="[A-Za-z\s.'-]+" required></div>
       <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" value="<%= profile.subcaste %>" pattern="[A-Za-z\s.'-]+" required></div>
       <div class="field"><label class="form-label">Language</label>
@@ -64,8 +70,30 @@
       <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required><%= profile.assets %></textarea></div>
       <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"><%= profile.loans || '' %></textarea></div>
 
-      <div class="field"><label class="form-label">Rashi</label><input type="text" name="rashi" value="<%= profile.rashi %>" required></div>
-      <div class="field"><label class="form-label">Nakshatra</label><input type="text" name="nakshatra" value="<%= profile.nakshatra %>" required></div>
+      <div class="field">
+        <label class="form-label">Rashi</label>
+        <select name="rashi" id="rashi" required>
+          <option value="">Select Rashi</option>
+          <option value="Mesha" <%= profile.rashi === 'Mesha' ? 'selected' : '' %>>Mesha (Aries)</option>
+          <option value="Vrishabha" <%= profile.rashi === 'Vrishabha' ? 'selected' : '' %>>Vrishabha (Taurus)</option>
+          <option value="Mithuna" <%= profile.rashi === 'Mithuna' ? 'selected' : '' %>>Mithuna (Gemini)</option>
+          <option value="Karka" <%= profile.rashi === 'Karka' ? 'selected' : '' %>>Karka (Cancer)</option>
+          <option value="Simha" <%= profile.rashi === 'Simha' ? 'selected' : '' %>>Simha (Leo)</option>
+          <option value="Kanya" <%= profile.rashi === 'Kanya' ? 'selected' : '' %>>Kanya (Virgo)</option>
+          <option value="Tula" <%= profile.rashi === 'Tula' ? 'selected' : '' %>>Tula (Libra)</option>
+          <option value="Vrischika" <%= profile.rashi === 'Vrischika' ? 'selected' : '' %>>Vrischika (Scorpio)</option>
+          <option value="Dhanu" <%= profile.rashi === 'Dhanu' ? 'selected' : '' %>>Dhanu (Sagittarius)</option>
+          <option value="Makara" <%= profile.rashi === 'Makara' ? 'selected' : '' %>>Makara (Capricorn)</option>
+          <option value="Kumbha" <%= profile.rashi === 'Kumbha' ? 'selected' : '' %>>Kumbha (Aquarius)</option>
+          <option value="Meena" <%= profile.rashi === 'Meena' ? 'selected' : '' %>>Meena (Pisces)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="form-label">Nakshatra</label>
+        <select name="nakshatra" id="nakshatra" required>
+          <option value="<%= profile.nakshatra %>"><%= profile.nakshatra %></option>
+        </select>
+      </div>
 
       <div class="field"><label class="form-label">Marital Status</label>
         <select name="marital_status">
@@ -83,6 +111,55 @@
       <div class="field full"><button type="submit" class="btn btn-gold">Save Changes</button></div>
     </form>
   </div>
+
+  <script>
+const rashiNakshatras = {
+  Mesha: ["Ashwini", "Bharani", "Krittika"],
+  Vrishabha: ["Krittika", "Rohini", "Mrigashira"],
+  Mithuna: ["Mrigashira", "Ardra", "Punarvasu"],
+  Karka: ["Punarvasu", "Pushya", "Ashlesha"],
+  Simha: ["Magha", "Purva Phalguni", "Uttara Phalguni"],
+  Kanya: ["Uttara Phalguni", "Hasta", "Chitra"],
+  Tula: ["Chitra", "Swati", "Vishakha"],
+  Vrischika: ["Vishakha", "Anuradha", "Jyeshtha"],
+  Dhanu: ["Mula", "Purva Ashadha", "Uttara Ashadha"],
+  Makara: ["Uttara Ashadha", "Shravana", "Dhanishta"],
+  Kumbha: ["Dhanishta", "Shatabhisha", "Purva Bhadrapada"],
+  Meena: ["Purva Bhadrapada", "Uttara Bhadrapada", "Revati"]
+};
+
+const rashiSelect = document.getElementById("rashi");
+const nakshatraSelect = document.getElementById("nakshatra");
+const currentNakshatra = <%- JSON.stringify(profile.nakshatra || '') %>;
+
+function fillNakshatras(selectedRashi, preselect) {
+  nakshatraSelect.innerHTML = '<option value="">Select Nakshatra</option>';
+  if (!selectedRashi || !rashiNakshatras[selectedRashi]) return;
+  rashiNakshatras[selectedRashi].forEach(function (nakshatra) {
+    const option = document.createElement("option");
+    option.value = nakshatra;
+    option.textContent = nakshatra;
+    if (nakshatra === preselect) option.selected = true;
+    nakshatraSelect.appendChild(option);
+  });
+  // The profile's saved nakshatra might not be one of the standard 3 tied
+  // to its rashi (older/free-text data) — keep it selectable either way.
+  if (preselect && !rashiNakshatras[selectedRashi].includes(preselect)) {
+    const option = document.createElement("option");
+    option.value = preselect;
+    option.textContent = preselect + " (existing value)";
+    option.selected = true;
+    nakshatraSelect.appendChild(option);
+  }
+}
+
+// Populate immediately using the profile's existing rashi/nakshatra
+fillNakshatras(rashiSelect.value, currentNakshatra);
+
+rashiSelect.addEventListener("change", function () {
+  fillNakshatras(this.value, null);
+});
+</script>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

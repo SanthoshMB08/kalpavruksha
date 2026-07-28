@@ -10,6 +10,7 @@ router.post('/admin-login', adminController.login);
 router.get('/admin-logout', adminController.logout);
 
 router.get('/admin-dashboard', isAdmin, adminController.dashboard);
+router.get('/admin-dashboard/activity', isAdmin, adminController.activityFeed);
 
 router.get('/admin-dashboard/users', isAdmin, adminController.userManagement);
 router.post('/admin-dashboard/users/:id/approve', isAdmin, adminController.approveUser);

@@ -972,3 +972,134 @@ input::placeholder, textarea::placeholder { color: #a09082; }
   border: 1px solid rgba(10,56,53,0.1);
 }
 /* .row-actions consolidated above; .data-table td vertical-align consolidated above */
+
+/* ==========================================================================
+   Mobile overflow safeguard — a stray wide element (long unbroken text,
+   an unstyled native control, etc.) can push body width past 100vw on some
+   Android WebViews, which shows up as a persistent sliver/"bulge" of empty
+   page background down the right edge. This clips it defensively without
+   touching intentional horizontal scrollers (.table-scroll etc., which set
+   their own overflow-x: auto and are unaffected by clipping the outer page).
+   ========================================================================== */
+html, body { max-width: 100%; overflow-x: hidden; }
+input[type="file"] { width: 100%; }
+
+/* ==========================================================================
+   Portal topbar — now shown on every screen size (not just mobile), so the
+   notification bell is reachable everywhere. The sidebar-toggle hamburger
+   is only meaningful once the sidebar goes off-canvas, so it hides again
+   above that breakpoint.
+   ========================================================================== */
+.portal-topbar { display: flex; }
+@media (min-width: 981px) {
+  .portal-menu-btn { display: none; }
+}
+
+/* ---------------- Notification bell + scrollable activity panel ---------------- */
+.notif-bell-wrap { position: relative; }
+.notif-bell-btn {
+  position: relative;
+  background: none;
+  border: 2px solid var(--gold-500);
+  color: var(--gold-300);
+  border-radius: 8px;
+  font-size: 1.05rem;
+  padding: 7px 11px;
+  cursor: pointer;
+  line-height: 1;
+}
+.notif-bell-btn:hover { background: rgba(234,179,8,0.12); }
+.notif-badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 17px; height: 17px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--maroon-800);
+}
+.notif-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(360px, 88vw);
+  max-height: 70vh;
+  background: var(--cream-50);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+  border-top: 4px solid var(--gold-500);
+  overflow: hidden;
+  z-index: 130;
+  flex-direction: column;
+}
+.notif-panel.open { display: flex; }
+.notif-panel-header {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maroon-800);
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0e6d0;
+  flex-shrink: 0;
+}
+.notif-panel-list { overflow-y: auto; flex: 1; }
+.notif-item {
+  display: block;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f5eeda;
+  font-size: 0.85rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.notif-item:hover { background: var(--cream-100); }
+.notif-item a { color: var(--maroon-700); font-weight: 700; }
+.notif-item .notif-time { display: block; font-size: 0.72rem; color: #a08a6a; margin-top: 3px; }
+.notif-panel-empty, .notif-panel-loading {
+  text-align: center; padding: 24px 16px; color: #a08a6a; font-size: 0.85rem;
+}
+
+/* ---------------- Three-dot row action menu (Users / Sub-Admins / Ads) ---------------- */
+.row-menu { position: relative; display: inline-block; }
+.row-menu-btn {
+  background: none;
+  border: 1px solid #e0d3b8;
+  border-radius: 8px;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  color: var(--maroon-800);
+  font-size: 1rem;
+}
+.row-menu-btn:hover { background: var(--cream-100); }
+.row-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--cream-50);
+  border: 1px solid #e6dcc4;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover);
+  min-width: 180px;
+  z-index: 70;
+  overflow: hidden;
+}
+.row-menu-dropdown.open { display: block; }
+.row-menu-dropdown button, .row-menu-dropdown a {
+  display: block; width: 100%; text-align: left;
+  background: none; border: none;
+  padding: 11px 14px; font-size: 0.85rem;
+  cursor: pointer; color: var(--ink); font-family: var(--font-body);
+}
+.row-menu-dropdown button:hover, .row-menu-dropdown a:hover { background: var(--cream-100); }
+.row-menu-dropdown button.danger, .row-menu-dropdown a.danger { color: var(--danger); }
+.row-menu-dropdown form { margin: 0; }
+
+/* ---------------- Panel header "Create ..." trigger buttons ---------------- */
+.panel-head-actions { margin-left: auto; }
+.modal-box.modal-narrow { max-width: 380px; }
+

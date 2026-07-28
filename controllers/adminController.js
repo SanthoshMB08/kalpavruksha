@@ -270,3 +270,29 @@ exports.storiesPage = async (req, res) => {
   const stories = await SuccessStory.listAll();
   res.render('admin/stories', { title: 'Success Stories', active: 'stories', stories, portalHome: '/portal/admin-dashboard', canEdit: false });
 };
+
+// JSON feed for the top notification tab (shared by Admin + Super Admin
+// shells). Paginated with offset/limit; on the first page it also returns
+// a 24h badge count so the bell icon can show how many are new.
+exports.activityFeed = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 15, 50);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    const rows = await Interest.recentExpressed(limit + 1, offset);
+    const hasMore = rows.length > limit;
+    const items = rows.slice(0, limit).map((i) => ({
+      id: i.id,
+      userName: i.user_name,
+      userMobile: i.user_mobile,
+      profileId: i.profile_id,
+      profileName: i.profile_name,
+      createdAt: i.created_at
+    }));
+    const payload = { items, hasMore };
+    if (offset === 0) payload.badgeCount = await Interest.countRecent(24);
+    res.json(payload);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ items: [], hasMore: false, badgeCount: 0 });
+  }
+};
