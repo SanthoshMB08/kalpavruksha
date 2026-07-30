@@ -1,5 +1,5 @@
 const PDFDocument = require('pdfkit');
-const { getPublicUrl } = require('./supabaseStorage');
+const { getPublicUrl } = require('./storage');
 
 // Downloads a file from a public URL into a Buffer. Used to pull the profile
 // photo out of Supabase Storage so it can be embedded in the generated PDF.

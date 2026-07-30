@@ -6,7 +6,7 @@ const flash = require('connect-flash');
 const path = require('path');
 const { pool } = require('./config/db');
 const Advertisement = require('./models/Advertisement');
-const { getPublicUrl } = require('./utils/supabaseStorage');
+const { getPublicUrl } = require('./utils/storage');
 
 const publicRoutes = require('./routes/public');
 const userRoutes = require('./routes/user');
@@ -50,8 +50,9 @@ app.use((req, res, next) => {
   res.locals.successMsg = req.flash('success');
   res.locals.errorMsg = req.flash('error');
   // Views used to hardcode "/uploads/<bucket>/<filename>" (served from local
-  // disk). Files now live in Supabase Storage, so views call this helper
-  // instead, e.g. fileUrl('profiles', profile.image_name).
+  // disk). Files now live wherever STORAGE_PROVIDER points (Supabase / S3-
+  // compatible / local disk), so views call this helper instead, e.g.
+  // fileUrl('profiles', profile.image_name).
   res.locals.fileUrl = (bucket, filename) => getPublicUrl(bucket, filename);
   next();
 });

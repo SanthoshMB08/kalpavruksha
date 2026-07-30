@@ -149,6 +149,24 @@ exports.changeUserPassword = async (req, res) => {
   res.redirect('/portal/admin-dashboard/users');
 };
 
+// Admin/Super Admin can permanently delete a member (role='user') account.
+// Their saved/interested rows cascade-delete with them (see interests FK).
+exports.deleteUser = async (req, res) => {
+  try {
+    const target = await User.findById(req.params.id);
+    if (!target || target.role !== 'user') {
+      req.flash('error', 'That account cannot be deleted here.');
+      return res.redirect('/portal/admin-dashboard/users');
+    }
+    await User.deleteById(req.params.id);
+    req.flash('success', `User "${target.username}" was deleted.`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Could not delete user.');
+  }
+  res.redirect('/portal/admin-dashboard/users');
+};
+
 // --- Profiles ---
 exports.listProfiles = async (req, res) => {
   const filters = {

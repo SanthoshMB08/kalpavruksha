@@ -17,6 +17,7 @@ router.post('/admin-dashboard/users/:id/approve', isAdmin, adminController.appro
 router.post('/admin-dashboard/users/:id/reject', isAdmin, adminController.rejectUser);
 router.post('/admin-dashboard/users/create-direct', isAdmin, memberCreateValidators, adminController.createUserDirect);
 router.post('/admin-dashboard/users/:id/password', isAdmin, adminController.changeUserPassword);
+router.post('/admin-dashboard/users/:id/delete', isAdmin, adminController.deleteUser);
 
 router.get('/admin-dashboard/profiles', isAdmin, adminController.listProfiles);
 router.get('/admin-dashboard/profiles/new', isAdmin, adminController.showNewProfileForm);

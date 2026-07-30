@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 100" width="460" height="100" role="img" aria-label="Kalpavruksha Kalyana">
+  <!-- PLACEHOLDER LOGO -- replace this file with the final designed artwork.
+       Transparent background: designed to sit on the site's dark green
+       navbar (see public/css/style.css, --maroon-800). Kept as a single
+       self-contained SVG so it stays crisp at any size -- swap the file in
+       place (same filename) once real artwork is ready. -->
+  <defs>
+    <radialGradient id="badgeGradDesktop" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1c9086"/>
+      <stop offset="100%" stop-color="#0a3835"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="50" cy="50" r="46" fill="url(#badgeGradDesktop)" stroke="#eab308" stroke-width="3"/>
+  <!-- Diya (lamp) glyph, matching the site's existing brand mark -->
+  <g transform="translate(50,50)" fill="#f5d576">
+    <path d="M0 -28c7 13 17 23 17 39 0 14.5-8.5 25-17 25s-17-10.5-17-25c0-16 10-26 17-39z"/>
+    <path d="M-22.5 20.5C-22.5 5.8 -7 0 0 0s22.5 5.8 22.5 20.5v6.5h-45v-6.5z" opacity="0.92"/>
+  </g>
+
+  <text x="112" y="46" font-family="Georgia, 'Times New Roman', serif" font-size="34" fill="#fffdfa" font-weight="700">Kalpavruksha</text>
+  <text x="112" y="80" font-family="Georgia, 'Times New Roman', serif" font-size="34" fill="#f5d576" font-weight="700">Kalyana</text>
+</svg>

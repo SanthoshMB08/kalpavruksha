@@ -67,6 +67,9 @@
                       <button type="button" class="row-menu-btn" aria-label="Actions for <%= m.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                       <div class="row-menu-dropdown">
                         <button type="button" data-open-modal="pwModal-<%= m.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
+                        <form action="/portal/admin-dashboard/users/<%= m.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete user &quot;<%= m.username %>&quot;? This cannot be undone.');">
+                          <button type="submit" class="danger"><i class="fa-solid fa-user-xmark"></i> Delete User</button>
+                        </form>
                       </div>
                     </div>
 

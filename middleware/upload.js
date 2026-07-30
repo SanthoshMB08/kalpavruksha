@@ -1,9 +1,11 @@
 const multer = require('multer');
 const path = require('path');
-const { uploadFile } = require('../utils/supabaseStorage');
+const { uploadFile } = require('../utils/storage');
 
-// Files are held in memory only (never touch local disk) and then streamed
-// straight to the matching Supabase Storage bucket. Bucket per fieldname:
+// Files are held in memory only (never touch local disk here) and then
+// streamed straight to the active storage provider (see utils/storage —
+// Supabase / S3-compatible / local disk, chosen via STORAGE_PROVIDER).
+// Bucket per fieldname:
 //   profile_image / profile_image_2 -> "profiles"
 //   jathaka_pdf                     -> "jathaka"
 //   biodata_pdf                     -> "biodata"

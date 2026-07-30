@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Kalpavruksha Kalyana">
+  <!-- PLACEHOLDER LOGO (compact/mobile mark) -- replace this file with the
+       final designed artwork. Icon-only, no wordmark, so it stays legible
+       at the small size mobile navbars have room for. Transparent
+       background, designed to sit on the site's dark green navbar. -->
+  <defs>
+    <radialGradient id="badgeGradMobile" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1c9086"/>
+      <stop offset="100%" stop-color="#0a3835"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="50" cy="50" r="47" fill="url(#badgeGradMobile)" stroke="#eab308" stroke-width="4"/>
+  <g transform="translate(50,50)" fill="#f5d576">
+    <path d="M0 -30c7.5 14 18 24.5 18 41.5 0 15.5-9 26.5-18 26.5s-18-11-18-26.5c0-17 10.5-27.5 18-41.5z"/>
+    <path d="M-24 22C-24 6.5 -7.5 0 0 0s24 6.5 24 22v7h-48v-7z" opacity="0.92"/>
+  </g>
+</svg>

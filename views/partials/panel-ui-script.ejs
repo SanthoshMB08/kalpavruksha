@@ -1,18 +1,56 @@
 <script>
 (function () {
   // Three-dot row action menu — click toggles the dropdown, click elsewhere closes it.
+  //
+  // These dropdowns live inside a table wrapped in .table-scroll (overflow-x:
+  // auto, so the browser is forced to also treat overflow-y as auto per the
+  // CSS overflow spec). That means a dropdown opened on a row near the
+  // bottom of the table gets its lower half clipped by that box instead of
+  // floating over the page — it looked "jumbled"/cut off, especially on the
+  // Ads tab. Fix: switch each dropdown to position:fixed with coordinates
+  // computed from the trigger button, the same technique already used for
+  // the notification panel below, so it escapes the scroll container.
+  function closeAllRowMenus() {
+    document.querySelectorAll('.row-menu-dropdown.open').forEach(function (d) {
+      d.classList.remove('open');
+      d.style.position = '';
+      d.style.top = '';
+      d.style.left = '';
+      d.style.right = '';
+    });
+  }
+
+  function positionRowMenu(btn, dropdown) {
+    var rect = btn.getBoundingClientRect();
+    var width = dropdown.offsetWidth || 180;
+    var left = Math.min(Math.max(rect.right - width, 8), window.innerWidth - width - 8);
+    var top = rect.bottom + 4;
+    if (top + dropdown.offsetHeight > window.innerHeight - 8) {
+      top = rect.top - dropdown.offsetHeight - 4; // flip above the button if there's no room below
+    }
+    dropdown.style.position = 'fixed';
+    dropdown.style.left = left + 'px';
+    dropdown.style.top = top + 'px';
+    dropdown.style.right = 'auto';
+  }
+
   document.querySelectorAll('.row-menu-btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       var dropdown = btn.nextElementSibling;
       var wasOpen = dropdown.classList.contains('open');
-      document.querySelectorAll('.row-menu-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
-      if (!wasOpen) dropdown.classList.add('open');
+      closeAllRowMenus();
+      if (!wasOpen) {
+        dropdown.classList.add('open');
+        positionRowMenu(btn, dropdown);
+      }
     });
   });
-  document.addEventListener('click', function () {
-    document.querySelectorAll('.row-menu-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
-  });
+  document.addEventListener('click', closeAllRowMenus);
+  // A fixed-position menu doesn't scroll with the page/table — close it
+  // rather than let it drift away from its button.
+  window.addEventListener('scroll', closeAllRowMenus, true);
+  window.addEventListener('resize', closeAllRowMenus);
 
   // Button-triggered modals — data-open-modal="modalId" opens, data-close-modal
   // (or clicking the dark overlay itself) closes.
