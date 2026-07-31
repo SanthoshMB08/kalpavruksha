@@ -1,6 +1,7 @@
 const Advertisement = require('../models/Advertisement');
 const Profile = require('../models/Profile');
 const SuccessStory = require('../models/SuccessStory');
+const ContactMessage = require('../models/ContactMessage');
 
 exports.home = async (req, res) => {
   try {
@@ -18,7 +19,7 @@ exports.home = async (req, res) => {
       stories
     });
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.render('index', {
       title: 'Kalpavruksha Kalyana',
       sidebarAds: [],
@@ -30,9 +31,19 @@ exports.home = async (req, res) => {
   }
 };
 
-exports.contactSubmit = (req, res) => {
-  // Placeholder: in production this would email/store the enquiry.
-  req.flash('success', 'Thank you, we will get back to you shortly.');
+exports.contactSubmit = async (req, res) => {
+  const { name, mobile, message } = req.body;
+  if (!name || !mobile || !message) {
+    req.flash('error', 'Please fill in all fields.');
+    return res.redirect('/#contact');
+  }
+  try {
+    await ContactMessage.create({ name: name.trim(), mobile: mobile.trim(), message: message.trim() });
+    req.flash('success', 'Thank you, we will get back to you shortly.');
+  } catch (err) {
+    req.log.error(err);
+    req.flash('error', 'Something went wrong sending your message. Please try again.');
+  }
   res.redirect('/#contact');
 };
 

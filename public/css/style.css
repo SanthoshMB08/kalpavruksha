@@ -1130,3 +1130,25 @@ input[type="file"] { width: 100%; }
 .panel-head-actions { margin-left: auto; }
 .modal-box.modal-narrow { max-width: 380px; }
 
+/* ---------------- Pagination controls ---------------- */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #f0e6d0;
+  flex-wrap: wrap;
+}
+.pagination-controls .btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+.pagination-status {
+  font-size: 0.82rem;
+  color: #8a7156;
+  white-space: nowrap;
+}
+

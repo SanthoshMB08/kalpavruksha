@@ -10,10 +10,10 @@
   <tr><td><strong>Occupation</strong></td><td><%= profile.occupation %></td></tr>
 </table>
 <div style="display:flex; gap:10px; margin-top:20px;">
-  <form action="/profile/<%= profile.id %>/save" method="POST" style="flex:1;">
+  <form action="/profile/<%= profile.id %>/save" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="btn btn-outline-gold btn-block" style="border-color:var(--maroon-800); color:var(--maroon-800);">Save Profile</button>
   </form>
-  <form action="/profile/<%= profile.id %>/express-interest" method="POST" style="flex:1;">
+  <form action="/profile/<%= profile.id %>/express-interest" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="btn btn-gold btn-block">Express Interest</button>
   </form>
 </div>

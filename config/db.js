@@ -20,7 +20,11 @@ if (!process.env.DATABASE_URL) {
 
 const pgPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }
+  ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+  max: 20, // max simultaneous connections in the pool
+  idleTimeoutMillis: 30000, // close idle connections after 30s
+  connectionTimeoutMillis: 5000, // fail fast if the DB is unreachable, rather than hanging
+  statement_timeout: 15000 // kill any single query that runs over 15s instead of blocking the pool indefinitely
 });
 
 pgPool.on('error', (err) => {

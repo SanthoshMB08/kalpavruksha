@@ -36,7 +36,7 @@ exports.register = async (req, res) => {
     req.flash('success', 'Registration received. An admin will review your profile shortly.');
     return res.redirect('/pending-approval');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     return res.render('register', {
       title: 'Register',
       errors: ['Something went wrong. Please try again.'],
@@ -80,7 +80,7 @@ exports.login = async (req, res) => {
     }
     return res.redirect('/dashboard');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     return res.render('login', { title: 'Login', error: 'Something went wrong. Please try again.' });
   }
 };

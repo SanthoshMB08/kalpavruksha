@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
+
+      <div class="panel">
+        <h3><i class="fa-solid fa-envelope"></i> Contact Messages</h3>
+        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Submissions from the home page "Get in touch" form.</p>
+        <% if (messages.length === 0) { %>
+          <div class="empty-state">No messages yet.</div>
+        <% } else { %>
+          <div class="story-edit-list">
+            <% messages.forEach(function(m) { %>
+              <div class="story-edit-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                  <div>
+                    <h4 style="margin-bottom:4px;">
+                      <%= m.name %>
+                      <% if (!m.is_read) { %><span class="badge badge-pending" style="margin-left:8px;">New</span><% } %>
+                    </h4>
+                    <p style="font-size:0.82rem; color:#8a7156; margin-bottom:8px;">
+                      <i class="fa-solid fa-phone"></i> <%= m.mobile %> &mdash; <%= new Date(m.created_at).toLocaleString('en-IN') %>
+                    </p>
+                    <p style="color:#6b5638; font-size:0.9rem;"><%= m.message %></p>
+                  </div>
+                  <div class="row-menu">
+                    <button type="button" class="row-menu-btn" aria-label="Actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="row-menu-dropdown">
+                      <% if (!m.is_read) { %>
+                        <form action="/portal/super-secure-dashboard/messages/<%= m.id %>/read" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="submit"><i class="fa-solid fa-check"></i> Mark as Read</button>
+                        </form>
+                      <% } %>
+                      <form action="/portal/super-secure-dashboard/messages/<%= m.id %>/delete" method="POST" onsubmit="return confirm('Delete this message?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+      <%- include('../partials/panel-ui-script') %>
+  <%- include('../partials/portal-shell-close') %>
+</body>
+</html>

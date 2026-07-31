@@ -73,7 +73,7 @@
   <main class="match-feed match-feed-full">
     <div class="match-feed-header">
       <h2>Your Matches</h2>
-      <span style="color:#8a7156; font-size:0.85rem;"><%= profiles.length %> profile(s) found</span>
+      <span style="color:#8a7156; font-size:0.85rem;"><%= pageInfo.total %> profile(s) found</span>
     </div>
 
     <% if (afterSearchAds && afterSearchAds.length) { %>
@@ -109,13 +109,14 @@
             </div>
             <div class="actions">
               <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" onclick="openProfileModal(<%= p.id %>)">View Details</button>
-              <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;">
+              <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="btn btn-gold" style="width:100%;">Express Interest</button>
               </form>
             </div>
           </div>
         <% }) %>
       </div>
+      <%- include('partials/pagination', { pageInfo, currentQuery }) %>
     <% } %>
   </main>
 

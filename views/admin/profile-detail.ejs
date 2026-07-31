@@ -30,7 +30,7 @@
           <a href="/portal/admin-dashboard/profiles/<%= profile.id %>/pdf" class="btn btn-gold btn-sm"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
           <% if (currentUser.role === 'superadmin') { %>
             <a href="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" class="btn btn-maroon btn-sm">Edit Profile</a>
-            <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile? This cannot be undone.');">
+            <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile? This cannot be undone.');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit" class="btn btn-danger btn-sm">Delete Profile</button>
             </form>
           <% } %>
@@ -41,7 +41,7 @@
     <div class="panel">
       <h3>Photos</h3>
       <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">Add or replace up to two profile photos.</p>
-      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/photos" method="POST" enctype="multipart/form-data" class="form-grid">
+      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/photos" method="POST" enctype="multipart/form-data" class="form-grid"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field"><label class="form-label">Photo 1</label><input type="file" name="profile_image" accept="image/*"></div>
         <div class="field"><label class="form-label">Photo 2</label><input type="file" name="profile_image_2" accept="image/*"></div>
         <div class="field full"><button type="submit" class="btn btn-gold btn-sm">Update Photos</button></div>
@@ -51,7 +51,7 @@
     <div class="panel">
       <h3>Marital Status</h3>
       <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">A profile marked "Married" is hidden from members immediately.</p>
-      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/marital-status" method="POST" style="display:flex; gap:10px; align-items:center;">
+      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/marital-status" method="POST" style="display:flex; gap:10px; align-items:center;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <select name="marital_status">
           <option value="unmarried" <%= profile.marital_status === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
           <option value="married" <%= profile.marital_status === 'married' ? 'selected' : '' %>>Married</option>

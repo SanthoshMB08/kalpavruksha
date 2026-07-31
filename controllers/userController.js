@@ -23,8 +23,8 @@ exports.dashboard = async (req, res) => {
       minAge: req.query.minAge,
       maxAge: req.query.maxAge
     };
-    const [profiles, religions, castes, languages, afterSearchAds] = await Promise.all([
-      Profile.search(filters),
+    const [searchResult, religions, castes, languages, afterSearchAds] = await Promise.all([
+      Profile.search(filters, { page: req.query.page }),
       Profile.distinctValues('religion'),
       Profile.distinctValues('caste'),
       Profile.distinctValues('language'),
@@ -32,7 +32,9 @@ exports.dashboard = async (req, res) => {
     ]);
     res.render('user-dashboard', {
       title: 'Find Your Match',
-      profiles,
+      profiles: searchResult.rows,
+      pageInfo: searchResult,
+      currentQuery: req.query,
       religions,
       castes,
       languages,
@@ -40,10 +42,11 @@ exports.dashboard = async (req, res) => {
       afterSearchAds
     });
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.render('user-dashboard', {
       title: 'Find Your Match',
       profiles: [],
+      pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
       religions: [],
       castes: [],
       languages: [],
@@ -66,13 +69,36 @@ exports.profileModal = async (req, res) => {
   res.render('partials/profile-modal', { profile, layout: false });
 };
 
+// Shared guard: a profile must exist, be unmarried, and be the opposite
+// gender of the logged-in member to be a valid save/interest target. Without
+// this, a user could POST directly to /profile/<any-id>/save for a
+// nonexistent, same-gender, or married profile and it would silently write
+// to the interests table (profileModal already enforced this — save/interest
+// did not).
+async function isValidInterestTarget(req, profileId) {
+  const profile = await Profile.findByIdPublic(profileId);
+  if (!profile) return false;
+  const myGender = req.session.user && req.session.user.gender;
+  if (profile.marital_status === 'married') return false;
+  if (myGender && profile.gender === myGender) return false;
+  return true;
+}
+
 exports.saveProfile = async (req, res) => {
+  if (!(await isValidInterestTarget(req, req.params.id))) {
+    req.flash('error', 'That profile is not available.');
+    return res.redirect('back');
+  }
   await Interest.markSaved(req.session.user.id, req.params.id);
   req.flash('success', 'Profile saved.');
   res.redirect('back');
 };
 
 exports.expressInterest = async (req, res) => {
+  if (!(await isValidInterestTarget(req, req.params.id))) {
+    req.flash('error', 'That profile is not available.');
+    return res.redirect(req.get('Referrer') || '/');
+  }
   await Interest.markInterested(req.session.user.id, req.params.id);
   req.flash('success', 'Interest expressed! The admin has been notified.');
   res.redirect(req.get('Referrer') || '/');

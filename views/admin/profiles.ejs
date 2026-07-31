@@ -9,7 +9,7 @@
   <% const canManage = currentUser.role === 'superadmin'; %>
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
       <div class="panel">
-        <h3><i class="fa-solid fa-address-card"></i> Profiles <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= profiles.length %> &middot; all genders)</span></h3>
+        <h3><i class="fa-solid fa-address-card"></i> Profiles <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= pageInfo.total %> &middot; all genders)</span></h3>
         <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
 
         <form id="filterForm" method="GET" action="/portal/admin-dashboard/profiles" class="search-bar admin-search-bar">
@@ -94,7 +94,7 @@
                     <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
                     <% if (canManage) { %>
                       <a href="/portal/super-secure-dashboard/profiles/<%= p.id %>/edit" class="btn btn-maroon btn-sm">Edit</a>
-                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile?');">
+                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-danger btn-sm" type="submit">Delete</button>
                       </form>
                     <% } %>
@@ -106,6 +106,7 @@
           </tbody>
         </table>
         </div>
+        <%- include('../partials/pagination', { pageInfo, currentQuery }) %>
       </div>
 
   <script>

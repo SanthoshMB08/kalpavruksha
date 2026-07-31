@@ -28,7 +28,7 @@
                     <button type="button" class="row-menu-btn" aria-label="Actions for <%= a.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="row-menu-dropdown">
                       <button type="button" data-open-modal="pwModal-<%= a.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
-                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');">
+                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Remove</button>
                       </form>
                     </div>
@@ -40,7 +40,7 @@
                       <div style="padding:0 24px 24px;">
                         <h3 style="margin-bottom:4px;">Change Password</h3>
                         <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= a.username %></p>
-                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= a.username %>?');">
+                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= a.username %>?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <div class="field">
                             <label class="form-label">New Password</label>
                             <input type="password" name="password" minlength="8" required autofocus>
@@ -70,7 +70,7 @@
             <% if (formErrors && formErrors.length) { %>
               <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
             <% } %>
-            <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST">
+            <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
               <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
               <div class="field"><label class="form-label">Username</label><input type="text" name="username" value="<%= old.username || '' %>" required></div>

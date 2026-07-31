@@ -9,7 +9,7 @@
       <h1>Admin Portal</h1>
       <div class="subtitle">Kalpavruksha Kalyana &mdash; Staff Access</div>
       <% if (error) { %><div class="error-box"><%= error %></div><% } %>
-      <form class="auth-form" action="/portal/admin-login" method="POST">
+      <form class="auth-form" action="/portal/admin-login" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
           <label class="form-label">Username</label>
           <input type="text" name="username" required autofocus>

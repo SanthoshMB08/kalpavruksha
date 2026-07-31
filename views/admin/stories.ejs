@@ -36,10 +36,10 @@
                       <button type="button" class="row-menu-btn" aria-label="Actions for <%= s.couple_names %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                       <div class="row-menu-dropdown">
                         <button type="button" data-open-modal="editStoryModal-<%= s.id %>"><i class="fa-solid fa-pen"></i> Edit</button>
-                        <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST">
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <button type="submit"><i class="fa-solid <%= s.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i> <%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
                         </form>
-                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');">
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
                         </form>
                       </div>
@@ -50,7 +50,7 @@
                         <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
                         <div style="padding:0 24px 24px;">
                           <h3 style="margin-bottom:16px;">Edit Success Story</h3>
-                          <form class="form-grid" action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST">
+                          <form class="form-grid" action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="field">
                               <label class="form-label">Couple Names</label>
                               <input type="text" name="couple_names" value="<%= s.couple_names %>" required>
@@ -84,7 +84,7 @@
           <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
           <div style="padding:0 24px 24px;">
             <h3 style="margin-bottom:16px;"><i class="fa-solid fa-heart"></i> Add New Success Story</h3>
-            <form class="form-grid" action="<%= portalHome %>/stories" method="POST">
+            <form class="form-grid" action="<%= portalHome %>/stories" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="field"><label class="form-label">Couple Names</label><input type="text" name="couple_names" placeholder="e.g. Shivaraj &amp; Basavi" required></div>
               <div class="field"><label class="form-label">Display Order</label><input type="number" name="display_order" value="0" min="0"></div>
               <div class="field full"><label class="form-label">Story Text</label><textarea name="story_text" rows="3" placeholder="Share a short quote from the couple..." required></textarea></div>

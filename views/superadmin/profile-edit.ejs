@@ -13,7 +13,7 @@
     <% if (errors && errors.length) { %>
       <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
     <% } %>
-    <form class="form-grid" action="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" method="POST" enctype="multipart/form-data">
+    <form class="form-grid" action="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
       <div class="field"><label class="form-label">Replace Photo 1 <span class="field-tip" data-tip="Leave empty to keep the current photo.">?</span></label><input type="file" name="profile_image" accept="image/*"></div>
       <div class="field"><label class="form-label">Replace Photo 2</label><input type="file" name="profile_image_2" accept="image/*"></div>

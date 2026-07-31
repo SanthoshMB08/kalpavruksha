@@ -16,7 +16,7 @@
       <% if (errors && errors.length) { %>
         <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
       <% } %>
-      <form class="form-grid" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data">
+      <form class="form-grid" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
         <div class="field"><label class="form-label">Profile Photo (1)</label>
           <input type="file" name="profile_image" accept="image/*" required></div>

@@ -84,6 +84,25 @@ const Advertisement = {
 
   async deleteById(id) {
     await pool.query('DELETE FROM advertisements WHERE id = ?', [id]);
+  },
+
+  // Reactivating an EXPIRED ad needs a new expiry date supplied by the admin
+  // (see toggleActive's AD_EXPIRED guard above) — this sets that new expiry
+  // and activates in one step, claiming the placement's slot the same way
+  // toggleActive does.
+  async reactivateWithNewExpiry(id, expiresAt) {
+    const [rows] = await pool.query('SELECT placement FROM advertisements WHERE id = ?', [id]);
+    const ad = rows[0];
+    if (!ad) {
+      const err = new Error('Ad not found.');
+      err.code = 'AD_NOT_FOUND';
+      throw err;
+    }
+    await pool.query(
+      'UPDATE advertisements SET is_active = FALSE WHERE placement = ? AND is_active = TRUE AND id <> ?',
+      [ad.placement, id]
+    );
+    await pool.query('UPDATE advertisements SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
   }
 };
 

@@ -1,0 +1,24 @@
+<% if (typeof pageInfo !== 'undefined' && pageInfo.totalPages > 1) {
+  const qs = typeof currentQuery !== 'undefined' ? currentQuery : {};
+  function pageLink(n) {
+    const params = new URLSearchParams(qs);
+    params.set('page', n);
+    return '?' + params.toString();
+  }
+%>
+  <div class="pagination-controls">
+    <a
+      href="<%= pageInfo.page > 1 ? pageLink(pageInfo.page - 1) : '#' %>"
+      class="btn btn-outline-gold btn-sm <%= pageInfo.page <= 1 ? 'disabled' : '' %>"
+      <%= pageInfo.page <= 1 ? 'aria-disabled="true" tabindex="-1"' : '' %>
+    ><i class="fa-solid fa-chevron-left"></i> Prev</a>
+
+    <span class="pagination-status">Page <%= pageInfo.page %> of <%= pageInfo.totalPages %> &middot; <%= pageInfo.total %> total</span>
+
+    <a
+      href="<%= pageInfo.page < pageInfo.totalPages ? pageLink(pageInfo.page + 1) : '#' %>"
+      class="btn btn-outline-gold btn-sm <%= pageInfo.page >= pageInfo.totalPages ? 'disabled' : '' %>"
+      <%= pageInfo.page >= pageInfo.totalPages ? 'aria-disabled="true" tabindex="-1"' : '' %>
+    >Next <i class="fa-solid fa-chevron-right"></i></a>
+  </div>
+<% } %>

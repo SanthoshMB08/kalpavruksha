@@ -190,7 +190,22 @@ SELECT * FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM success_stories);
 
 -- ----------------------------------------------------------------------------
--- 6. INDEXES
+-- 6. CONTACT MESSAGES (home page "Get in touch" form -- previously discarded
+--    with no persistence at all; now saved so enquiries are never silently
+--    lost, and can be reviewed from the Super Admin portal)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  mobile VARCHAR(15) NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_contact_messages_unread ON contact_messages (is_read, created_at DESC);
+
+-- ----------------------------------------------------------------------------
+-- 7. INDEXES
 -- ----------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON profiles (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_marital_status ON profiles (marital_status);

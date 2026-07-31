@@ -185,13 +185,39 @@ scripts/          one-off maintenance scripts (storage migration, etc.)
   unless you attach a persistent volume — see Setup step 5, Option C.
 - The `/portal/...` routes are unlisted, not authenticated by obscurity alone —
   real role-based session middleware (`middleware/auth.js`) guards every route.
-- The contact form on the home page currently just shows a confirmation flash
-  message; wire it up to email/CRM as needed.
 - The logo files in `public/assets/logo/` are placeholders (a simple diya
   emblem + wordmark in the site's existing colors) — swap them for real
   designed artwork whenever it's ready.
 
 ## Recent updates
+
+**Security & reliability hardening:**
+- **CSRF protection** on every form (`csrf-csrf`, double-submit cookie pattern).
+- **Rate limiting** on all three login forms (member/admin/super admin) and
+  registration — 10 attempts per 15 min per IP+username, 429 response.
+- **Security headers** via `helmet` (clickjacking, MIME-sniffing, HSTS in production).
+- **Session cookies** now set `httpOnly`, `sameSite: 'lax'`, and `secure` in production.
+- App now **refuses to start** if `SESSION_SECRET` is missing, instead of
+  silently running with a hardcoded fallback secret.
+- **Structured logging** via `pino`/`pino-http` — JSON logs in production,
+  pretty-printed in development, every request/error correlated by request ID.
+- **`GET /health`** — unauthenticated endpoint that checks real DB
+  connectivity, for uptime monitors and hosting-platform health checks.
+- **Graceful shutdown** (SIGTERM/SIGINT drain the Postgres pool cleanly).
+- **Pagination** on profile search (member + admin) and the admin members
+  list — previously a hardcoded `LIMIT 200` / unbounded full-table pulls.
+- **Contact form** now actually saves to the database (`contact_messages`
+  table) and shows up on a new Super Admin "Contact Messages" page, instead
+  of being silently discarded.
+- Fixed a validation gap where `/profile/:id/save` and `/profile/:id/express-interest`
+  didn't check the target profile's gender/marital status server-side (the
+  profile-detail modal already did; the direct POST routes didn't).
+
+**Advertisement expiry UX:** reactivating an ad now behaves differently
+depending on whether it's actually expired — if it's still within its
+original expiry window, "Activate" instantly turns it back on with the same
+expiry (same as before). If it's expired, "Activate" opens a small form
+asking for a new expiry date/time before reactivating.
 
 **Admin/Super Admin UX:** "Create User" / "Create Sub-Admin" / "Upload
 Advertisement" now open in a modal instead of sitting inline on the page

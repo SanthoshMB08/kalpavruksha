@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Advertisement = require('../models/Advertisement');
 const SuccessStory = require('../models/SuccessStory');
+const ContactMessage = require('../models/ContactMessage');
 
 exports.showLogin = (req, res) => {
   res.render('superadmin/login', { title: 'Super Admin Login', error: null });
@@ -29,7 +30,7 @@ exports.login = async (req, res) => {
     };
     res.redirect('/portal/super-secure-dashboard');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.render('superadmin/login', { title: 'Super Admin Login', error: 'Something went wrong.' });
   }
 };
@@ -58,7 +59,7 @@ exports.dashboard = async (req, res) => {
       storyCount
     });
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.render('superadmin/dashboard', {
       title: 'Super Admin Overview',
       active: 'overview',
@@ -101,7 +102,7 @@ exports.createAdmin = async (req, res) => {
     req.flash('success', `Admin account "${username}" created.`);
     res.redirect('/portal/super-secure-dashboard/admins');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not create admin account.');
     res.redirect('/portal/super-secure-dashboard/admins');
   }
@@ -130,7 +131,7 @@ exports.changeAdminPassword = async (req, res) => {
     await User.updatePassword(req.params.id, passwordHash);
     req.flash('success', `Password updated for "${target.username}".`);
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not update password.');
   }
   res.redirect('/portal/super-secure-dashboard/admins');
@@ -166,7 +167,7 @@ exports.updateProfile = async (req, res) => {
     req.flash('success', 'Profile updated.');
     res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not update profile.');
     res.redirect(`/portal/super-secure-dashboard/profiles/${req.params.id}/edit`);
   }
@@ -204,7 +205,7 @@ exports.createAd = async (req, res) => {
     req.flash('success', 'Advertisement uploaded. It has taken over the single slot for this location.');
     res.redirect('/portal/super-secure-dashboard/ads');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not upload advertisement.');
     res.redirect('/portal/super-secure-dashboard/ads');
   }
@@ -217,9 +218,33 @@ exports.toggleAd = async (req, res) => {
     if (err.code === 'AD_EXPIRED') {
       req.flash('error', err.message);
     } else {
-      console.error(err);
+      req.log.error(err);
       req.flash('error', 'Could not update advertisement status.');
     }
+  }
+  res.redirect('/portal/super-secure-dashboard/ads');
+};
+
+// Reactivating an ad whose old expiry has already passed — the admin sets a
+// new expiry date/time in the same step, rather than the plain toggle above
+// which just rejects the request (see AD_EXPIRED in toggleActive).
+exports.reactivateAd = async (req, res) => {
+  const { expires_at } = req.body;
+  if (!expires_at) {
+    req.flash('error', 'Please set a new expiry date/time to reactivate this advertisement.');
+    return res.redirect('/portal/super-secure-dashboard/ads');
+  }
+  const expiresAt = new Date(expires_at);
+  if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+    req.flash('error', 'Expiry must be a valid date/time in the future.');
+    return res.redirect('/portal/super-secure-dashboard/ads');
+  }
+  try {
+    await Advertisement.reactivateWithNewExpiry(req.params.id, expiresAt);
+    req.flash('success', 'Advertisement reactivated with the new expiry.');
+  } catch (err) {
+    req.log.error(err);
+    req.flash('error', 'Could not reactivate advertisement.');
   }
   res.redirect('/portal/super-secure-dashboard/ads');
 };
@@ -243,13 +268,29 @@ exports.storiesPage = async (req, res) => {
   });
 };
 
+exports.messagesPage = async (req, res) => {
+  const messages = await ContactMessage.listAll();
+  res.render('superadmin/messages', { title: 'Contact Messages', active: 'messages', messages });
+};
+
+exports.markMessageRead = async (req, res) => {
+  await ContactMessage.markRead(req.params.id);
+  res.redirect('/portal/super-secure-dashboard/messages');
+};
+
+exports.deleteMessage = async (req, res) => {
+  await ContactMessage.deleteById(req.params.id);
+  req.flash('success', 'Message deleted.');
+  res.redirect('/portal/super-secure-dashboard/messages');
+};
+
 exports.createStory = async (req, res) => {
   const { couple_names, story_text, display_order } = req.body;
   try {
     await SuccessStory.create({ couple_names, story_text, display_order, created_by: req.session.user.id });
     req.flash('success', 'Success story added.');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not add the success story.');
   }
   res.redirect('/portal/super-secure-dashboard/stories');
@@ -261,7 +302,7 @@ exports.updateStory = async (req, res) => {
     await SuccessStory.update(req.params.id, { couple_names, story_text, display_order });
     req.flash('success', 'Success story updated.');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not update the success story.');
   }
   res.redirect('/portal/super-secure-dashboard/stories');

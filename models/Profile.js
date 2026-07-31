@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { normalizePagination, buildPageMeta } = require('../utils/pagination');
 
 const PUBLIC_FIELDS = `
   id, full_name, gender, image_name, image_name_2, caste, subcaste, language, occupation,
@@ -26,7 +27,7 @@ const UPDATABLE_COLUMNS = [
   'jathaka_pdf_name', 'biodata_pdf_name', 'marital_status'
 ];
 
-function buildSearchQuery(filters = {}, fieldSet, { includeMarried = false } = {}) {
+function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
   const clauses = [];
   const params = [];
 
@@ -70,24 +71,35 @@ function buildSearchQuery(filters = {}, fieldSet, { includeMarried = false } = {
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-  const sql = `SELECT ${fieldSet} FROM profiles ${where} ORDER BY created_at DESC LIMIT 200`;
-  return { sql, params };
+  return { where, params };
+}
+
+async function runPaginatedSearch(filters, fieldSet, opts, pagination) {
+  const { where, params } = buildWhereClause(filters, opts);
+  const { page, perPage, offset } = normalizePagination(pagination);
+
+  const countSql = `SELECT COUNT(*)::int AS total FROM profiles ${where}`;
+  const dataSql = `SELECT ${fieldSet} FROM profiles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+
+  const [[countRows], [rows]] = await Promise.all([
+    pool.query(countSql, params),
+    pool.query(dataSql, [...params, perPage, offset])
+  ]);
+
+  return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
 }
 
 const Profile = {
   // Regular-user search: privacy-safe field set, gender-locked, married profiles hidden.
-  async search(filters = {}) {
-    const { sql, params } = buildSearchQuery(filters, PUBLIC_FIELDS, { includeMarried: false });
-    const [rows] = await pool.query(sql, params);
-    return rows;
+  // Returns { rows, total, page, perPage, totalPages } instead of a bare array.
+  async search(filters = {}, pagination = {}) {
+    return runPaginatedSearch(filters, PUBLIC_FIELDS, { includeMarried: false }, pagination);
   },
 
   // Admin / Super Admin search: full field set, married profiles included so
   // staff can still find and manage them.
-  async searchFull(filters = {}) {
-    const { sql, params } = buildSearchQuery(filters, FULL_FIELDS, { includeMarried: true });
-    const [rows] = await pool.query(sql, params);
-    return rows;
+  async searchFull(filters = {}, pagination = {}) {
+    return runPaginatedSearch(filters, FULL_FIELDS, { includeMarried: true }, pagination);
   },
 
   async findByIdPublic(id) {
@@ -100,9 +112,16 @@ const Profile = {
     return rows[0];
   },
 
-  async listAllFull() {
-    const [rows] = await pool.query(`SELECT ${FULL_FIELDS} FROM profiles ORDER BY created_at DESC`);
-    return rows;
+  // Paginated (was: no LIMIT at all, pulled the entire table on every admin
+  // page load — fine at a few hundred profiles, degrades as the member base
+  // grows).
+  async listAllFull(pagination = {}) {
+    const { page, perPage, offset } = normalizePagination(pagination);
+    const [[countRows], [rows]] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS total FROM profiles'),
+      pool.query(`SELECT ${FULL_FIELDS} FROM profiles ORDER BY created_at DESC LIMIT ? OFFSET ?`, [perPage, offset])
+    ]);
+    return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
   },
 
   async create(data) {

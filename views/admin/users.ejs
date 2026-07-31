@@ -26,10 +26,10 @@
                   <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
                   <td data-label="Action" class="row-actions">
                     <div class="row-actions-inner">
-                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-gold btn-sm" type="submit">Approve Profile</button>
                       </form>
-                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-danger btn-sm" type="submit">Deny Profile</button>
                       </form>
                     </div>
@@ -67,7 +67,7 @@
                       <button type="button" class="row-menu-btn" aria-label="Actions for <%= m.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                       <div class="row-menu-dropdown">
                         <button type="button" data-open-modal="pwModal-<%= m.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
-                        <form action="/portal/admin-dashboard/users/<%= m.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete user &quot;<%= m.username %>&quot;? This cannot be undone.');">
+                        <form action="/portal/admin-dashboard/users/<%= m.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete user &quot;<%= m.username %>&quot;? This cannot be undone.');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <button type="submit" class="danger"><i class="fa-solid fa-user-xmark"></i> Delete User</button>
                         </form>
                       </div>
@@ -79,7 +79,7 @@
                         <div style="padding:0 24px 24px;">
                           <h3 style="margin-bottom:4px;">Change Password</h3>
                           <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= m.username %></p>
-                          <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= m.username %>?');">
+                          <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= m.username %>?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="field">
                               <label class="form-label">New Password</label>
                               <input type="password" name="password" minlength="8" required autofocus>
@@ -97,6 +97,7 @@
             </tbody>
           </table>
           </div>
+          <%- include('../partials/pagination', { pageInfo, currentQuery }) %>
         <% } %>
       </div>
 
@@ -110,7 +111,7 @@
             <% if (formErrors && formErrors.length) { %>
               <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
             <% } %>
-            <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST">
+            <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="field">
                 <label class="form-label">Full Name</label>
                 <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="Letters only, no numbers" required>

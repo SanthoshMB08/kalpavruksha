@@ -29,10 +29,10 @@
                   <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
                   <td data-label="Action" class="row-actions">
                     <div class="row-actions-inner">
-                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-gold btn-sm" type="submit">Approve</button>
                       </form>
-                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST">
+                      <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-danger btn-sm" type="submit">Deny</button>
                       </form>
                     </div>

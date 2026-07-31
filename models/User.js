@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { normalizePagination, buildPageMeta } = require('../utils/pagination');
 
 const User = {
   async findByUsername(username) {
@@ -37,12 +38,18 @@ const User = {
   },
 
   // Approved members only — used by the admin "manage users" list (password resets etc).
-  async listApprovedUsers() {
-    const [rows] = await pool.query(
-      `SELECT id, name, mobile_number, username, gender, status, created_at
-       FROM users WHERE role = 'user' AND status = 'approved' ORDER BY created_at DESC`
-    );
-    return rows;
+  // Paginated (was: no LIMIT, pulled every approved member on every page load).
+  async listApprovedUsers(pagination = {}) {
+    const { page, perPage, offset } = normalizePagination(pagination);
+    const [[countRows], [rows]] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS total FROM users WHERE role = 'user' AND status = 'approved'"),
+      pool.query(
+        `SELECT id, name, mobile_number, username, gender, status, created_at
+         FROM users WHERE role = 'user' AND status = 'approved' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [perPage, offset]
+      )
+    ]);
+    return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
   },
 
   async updateStatus(id, status) {

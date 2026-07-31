@@ -33,7 +33,7 @@ exports.login = async (req, res) => {
     if (user.role === 'superadmin') return res.redirect('/portal/super-secure-dashboard');
     return res.redirect('/portal/admin-dashboard');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     return res.render('admin/login', { title: 'Admin Login', error: 'Something went wrong.' });
   }
 };
@@ -58,7 +58,7 @@ exports.dashboard = async (req, res) => {
       totalProfiles
     });
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.render('admin/dashboard', {
       title: 'Admin Overview',
       active: 'overview',
@@ -72,11 +72,31 @@ exports.dashboard = async (req, res) => {
 // --- User management page: pending approvals, active members, direct creation ---
 exports.userManagement = async (req, res) => {
   try {
-    const [pending, members] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
-    res.render('admin/users', { title: 'User Management', active: 'users', pending, members, formErrors: [], old: {} });
+    const [pending, membersResult] = await Promise.all([
+      User.listPending(),
+      User.listApprovedUsers({ page: req.query.page })
+    ]);
+    res.render('admin/users', {
+      title: 'User Management',
+      active: 'users',
+      pending,
+      members: membersResult.rows,
+      pageInfo: membersResult,
+      currentQuery: req.query,
+      formErrors: [],
+      old: {}
+    });
   } catch (err) {
-    console.error(err);
-    res.render('admin/users', { title: 'User Management', active: 'users', pending: [], members: [], formErrors: [], old: {} });
+    req.log.error(err);
+    res.render('admin/users', {
+      title: 'User Management',
+      active: 'users',
+      pending: [],
+      members: [],
+      pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
+      formErrors: [],
+      old: {}
+    });
   }
 };
 
@@ -99,12 +119,13 @@ exports.createUserDirect = async (req, res) => {
   const errors = validationResult(req);
   const { name, mobile_number, username, password, gender } = req.body;
   if (!errors.isEmpty()) {
-    const [pending, members] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
+    const [pending, membersResult] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
     return res.render('admin/users', {
       title: 'User Management',
       active: 'users',
       pending,
-      members,
+      members: membersResult.rows,
+      pageInfo: membersResult,
       formErrors: errors.array().map((e) => e.msg),
       old: { name, mobile_number, username, gender }
     });
@@ -120,7 +141,7 @@ exports.createUserDirect = async (req, res) => {
     req.flash('success', `User "${username}" created and activated instantly.`);
     res.redirect('/portal/admin-dashboard/users');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not create user.');
     res.redirect('/portal/admin-dashboard/users');
   }
@@ -143,7 +164,7 @@ exports.changeUserPassword = async (req, res) => {
     await User.updatePassword(req.params.id, passwordHash);
     req.flash('success', `Password updated for "${target.username}".`);
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not update password.');
   }
   res.redirect('/portal/admin-dashboard/users');
@@ -161,7 +182,7 @@ exports.deleteUser = async (req, res) => {
     await User.deleteById(req.params.id);
     req.flash('success', `User "${target.username}" was deleted.`);
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not delete user.');
   }
   res.redirect('/portal/admin-dashboard/users');
@@ -181,13 +202,24 @@ exports.listProfiles = async (req, res) => {
     maritalStatus: req.query.maritalStatus
   };
   const hasFilters = Object.values(filters).some((v) => v !== undefined && v !== '');
-  const [profiles, religions, castes, languages] = await Promise.all([
-    hasFilters ? Profile.searchFull(filters) : Profile.listAllFull(),
+  const pagination = { page: req.query.page };
+  const [searchResult, religions, castes, languages] = await Promise.all([
+    hasFilters ? Profile.searchFull(filters, pagination) : Profile.listAllFull(pagination),
     Profile.distinctValues('religion'),
     Profile.distinctValues('caste'),
     Profile.distinctValues('language')
   ]);
-  res.render('admin/profiles', { title: 'All Profiles', active: 'profiles', profiles, religions, castes, languages, filters });
+  res.render('admin/profiles', {
+    title: 'All Profiles',
+    active: 'profiles',
+    profiles: searchResult.rows,
+    pageInfo: searchResult,
+    currentQuery: req.query,
+    religions,
+    castes,
+    languages,
+    filters
+  });
 };
 
 exports.showNewProfileForm = (req, res) => {
@@ -229,7 +261,7 @@ exports.createProfile = async (req, res) => {
     req.flash('success', 'Profile uploaded successfully.');
     res.redirect('/portal/admin-dashboard/profiles');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not save profile. Please check the form and try again.');
     res.redirect('/portal/admin-dashboard/profiles/new');
   }
@@ -261,7 +293,7 @@ exports.updateProfilePhotos = async (req, res) => {
     await Profile.updateFields(req.params.id, data);
     req.flash('success', 'Profile photo(s) updated.');
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     req.flash('error', 'Could not update photos.');
   }
   res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);
@@ -310,7 +342,7 @@ exports.activityFeed = async (req, res) => {
     if (offset === 0) payload.badgeCount = await Interest.countRecent(24);
     res.json(payload);
   } catch (err) {
-    console.error(err);
+    req.log.error(err);
     res.status(500).json({ items: [], hasMore: false, badgeCount: 0 });
   }
 };

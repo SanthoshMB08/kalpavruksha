@@ -38,16 +38,43 @@
                   <div class="row-menu">
                     <button type="button" class="row-menu-btn" aria-label="Actions for <%= ad.ad_title %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="row-menu-dropdown">
-                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST">
-                        <button type="submit" <%= (!ad.is_active && expired) ? 'disabled title="Expired — edit expiry to reactivate"' : '' %>>
-                          <i class="fa-solid <%= ad.is_active ? 'fa-toggle-off' : 'fa-toggle-on' %>"></i> <%= ad.is_active ? 'Deactivate' : 'Activate' %>
-                        </button>
-                      </form>
-                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');">
+                      <% if (ad.is_active) { %>
+                        <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="submit"><i class="fa-solid fa-toggle-off"></i> Deactivate</button>
+                        </form>
+                      <% } else if (expired) { %>
+                        <button type="button" data-open-modal="reactivateModal-<%= ad.id %>"><i class="fa-solid fa-toggle-on"></i> Activate</button>
+                      <% } else { %>
+                        <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="submit"><i class="fa-solid fa-toggle-on"></i> Activate</button>
+                        </form>
+                      <% } %>
+                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
                       </form>
                     </div>
                   </div>
+
+                  <% if (!ad.is_active && expired) { %>
+                    <div class="modal-overlay" id="reactivateModal-<%= ad.id %>">
+                      <div class="modal-box modal-narrow">
+                        <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
+                        <div style="padding:0 24px 24px;">
+                          <h3 style="margin-bottom:4px;">Reactivate Advertisement</h3>
+                          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">"<%= ad.ad_title %>" expired on <%= new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) %>. Set a new expiry to bring it back live.</p>
+                          <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/reactivate" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <div class="field">
+                              <label class="form-label">New Expiry Date/Time</label>
+                              <input type="datetime-local" name="expires_at" required>
+                            </div>
+                            <div class="field" style="margin-top:16px;">
+                              <button type="submit" class="btn btn-maroon btn-block">Activate with New Expiry</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  <% } %>
                 </td>
               </tr>
             <% }) %>
@@ -64,7 +91,7 @@
           <div style="padding:0 24px 24px;">
             <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bullhorn"></i> Upload New Advertisement</h3>
             <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">Ads can be placed in several spots on the home page, plus one banner slot shown right after a member searches for matches — never mixed in with member profiles.</p>
-            <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data">
+            <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="field"><label class="form-label">Ad Title</label><input type="text" name="ad_title" required></div>
               <div class="field"><label class="form-label">Placement</label>
                 <select name="placement" required>
