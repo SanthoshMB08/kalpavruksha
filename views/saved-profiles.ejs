@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('partials/head') %>
 </head>
 <body>
   <%- include('partials/header') %>
   <main class="match-feed" style="max-width:1100px; margin:0 auto; padding:36px 24px;">
-    <a href="/dashboard" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to search</a>
-    <h2 style="margin:16px 0 4px;">My Profiles</h2>
-    <p style="color:#8a7156; font-size:0.85rem; margin-bottom:20px;">Profiles you've saved for later and profiles you've expressed interest in are kept separate.</p>
+    <a href="/dashboard" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; <%= t('saved.backToSearch') %></a>
+    <h2 style="margin:16px 0 4px;"><%= t('saved.title') %></h2>
+    <p style="color:#8a7156; font-size:0.85rem; margin-bottom:20px;"><%= t('saved.subtitle') %></p>
 
     <div class="profile-tabs">
       <a href="/saved-profiles?tab=saved" class="profile-tab <%= tab === 'saved' ? 'active' : '' %>">
-        <i class="fa-solid fa-bookmark"></i> Saved (<%= saved.length %>)
+        <i class="fa-solid fa-bookmark"></i> <%= t('saved.tabSaved') %> (<%= savedCount %>)
       </a>
       <a href="/saved-profiles?tab=interested" class="profile-tab <%= tab === 'interested' ? 'active' : '' %>">
-        <i class="fa-solid fa-heart"></i> Interested (<%= interested.length %>)
+        <i class="fa-solid fa-heart"></i> <%= t('saved.tabInterested') %> (<%= interestedCount %>)
       </a>
     </div>
 
@@ -23,9 +23,9 @@
     <% if (list.length === 0) { %>
       <div class="empty-state">
         <% if (tab === 'interested') { %>
-          You haven't expressed interest in any profiles yet.
+          <%= t('saved.emptyInterested') %>
         <% } else { %>
-          You haven't saved any profiles yet.
+          <%= t('saved.emptySaved') %>
         <% } %>
       </div>
     <% } else { %>
@@ -36,27 +36,39 @@
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>
               <div class="meta">
-                <div><strong>Caste:</strong> <%= p.caste %></div>
-                <div><strong>Occupation:</strong> <%= p.occupation %></div>
+                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= p.caste %></div>
+                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= p.occupation %></div>
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); width:100%;" onclick="openProfileModal(<%= p.id %>)">View Details</button>
+              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); flex:1;" data-open-profile-id="<%= p.id %>"><%= t('dashboard.viewDetails') %></button>
+              <button
+                type="button"
+                class="btn-whatsapp"
+                data-whatsapp-share
+                data-share-name="<%= p.full_name %>"
+                data-share-age="<%= p.age %>"
+                data-share-caste="<%= p.caste %>"
+                data-share-occupation="<%= p.occupation %>"
+                aria-label="Share on WhatsApp"
+                title="Share on WhatsApp"
+              ><i class="fa-brands fa-whatsapp"></i></button>
             </div>
           </div>
         <% }) %>
       </div>
+      <%- include('partials/pagination', { pageInfo, currentQuery }) %>
     <% } %>
   </main>
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box" id="modalBox">
-      <div class="modal-close"><button onclick="closeProfileModal()">&times;</button></div>
+      <div class="modal-close"><button data-close-profile-modal>&times;</button></div>
       <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
     </div>
   </div>
 
-  <script>
+  <script nonce="<%= nonce %>">
     function openProfileModal(id) {
       const overlay = document.getElementById('modalOverlay');
       const content = document.getElementById('modalContent');
@@ -73,7 +85,14 @@
     document.getElementById('modalOverlay').addEventListener('click', function (e) {
       if (e.target === this) closeProfileModal();
     });
+    document.querySelectorAll('[data-open-profile-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openProfileModal(btn.getAttribute('data-open-profile-id')); });
+    });
+    document.querySelectorAll('[data-close-profile-modal]').forEach(function (btn) {
+      btn.addEventListener('click', closeProfileModal);
+    });
   </script>
+  <%- include('partials/whatsapp-share-script') %>
 
   <%- include('partials/footer') %>
 </body>

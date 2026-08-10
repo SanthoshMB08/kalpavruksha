@@ -7,7 +7,7 @@
   <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
 
       <div class="stat-cards">
-        <div class="stat-card"><div class="value"><%= pending.length %></div><div class="label">Pending Approvals</div></div>
+        <div class="stat-card"><div class="value"><%= pendingTotal %></div><div class="label">Pending Approvals</div></div>
         <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
         <div class="stat-card"><div class="value"><%= recentInterests.length %></div><div class="label">Recent Interests</div></div>
       </div>

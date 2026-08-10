@@ -29,8 +29,8 @@
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  mobile_number VARCHAR(15) UNIQUE NOT NULL,
-  username VARCHAR(50) UNIQUE NOT NULL,
+  mobile_number VARCHAR(15) NOT NULL,
+  username VARCHAR(50) NOT NULL,
   password VARCHAR(255) NOT NULL,
   role VARCHAR(10) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
   status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
@@ -41,6 +41,28 @@ CREATE TABLE IF NOT EXISTS users (
 -- rows created before this column existed will have gender = NULL and the
 -- app prompts to fill it in on next login.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10) NULL CHECK (gender IN ('male', 'female'));
+
+-- Soft delete: Delete User sets this instead of removing the row, so it's
+-- reversible from the Super Admin Trash page. Filtered out of every normal
+-- listing/login query.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+
+-- Account lockout (User + Admin roles only — Super Admin is exempt and is
+-- who unlocks a locked account, so it never locks itself out).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP NULL;
+
+-- mobile_number/username were originally plain UNIQUE columns. Converted to
+-- partial unique indexes scoped to non-deleted rows, so a soft-deleted
+-- user's mobile/username becomes available again for a new registration
+-- without waiting on a permanent purge from the Trash page.
+DO $$ BEGIN
+  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_mobile_number_key;
+  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_username_key;
+EXCEPTION WHEN undefined_object THEN NULL;
+END $$;
+CREATE UNIQUE INDEX IF NOT EXISTS users_mobile_number_active_key ON users (mobile_number) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_active_key ON users (username) WHERE deleted_at IS NULL;
 
 -- ----------------------------------------------------------------------------
 -- 2. PROFILES
@@ -88,6 +110,16 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS marital_status VARCHAR(20) NOT NUL
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS image_name_2 VARCHAR(255) NULL;
 -- bio-data PDF, separate from the jathaka document
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS biodata_pdf_name VARCHAR(255) NULL;
+
+-- Soft delete: Delete Profile sets this instead of removing the row, so it's
+-- reversible from the Super Admin Trash page. Filtered out of every normal
+-- listing/search query.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+
+-- Speeds up the duplicate-profile check on creation (same phone number, or
+-- same name + date of birth, among active profiles).
+CREATE INDEX IF NOT EXISTS idx_profiles_phone_active ON profiles (phone_number) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_name_dob_active ON profiles (full_name, date_of_birth) WHERE deleted_at IS NULL;
 
 -- ----------------------------------------------------------------------------
 -- 3. INTERESTS

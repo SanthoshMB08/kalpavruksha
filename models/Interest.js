@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { normalizePagination, buildPageMeta } = require('../utils/pagination');
 
 const Interest = {
   // Marks a profile as "saved" for a user without touching is_interested.
@@ -43,30 +44,48 @@ const Interest = {
     return result.insertId;
   },
 
-  async listSavedByUser(userId) {
-    const [rows] = await pool.query(
-      `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
-              p.occupation,
-              DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
-              i.saved_at
-       FROM interests i JOIN profiles p ON p.id = i.profile_id
-       WHERE i.user_id = ? AND i.is_saved = TRUE ORDER BY i.saved_at DESC`,
-      [userId]
-    );
-    return rows;
+  async listSavedByUser(userId, pagination = {}) {
+    const { page, perPage, offset } = normalizePagination(pagination);
+    const [[countRows], [rows]] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS total FROM interests WHERE user_id = ? AND is_saved = TRUE', [userId]),
+      pool.query(
+        `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
+                p.occupation,
+                DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
+                i.saved_at
+         FROM interests i JOIN profiles p ON p.id = i.profile_id
+         WHERE i.user_id = ? AND i.is_saved = TRUE ORDER BY i.saved_at DESC LIMIT ? OFFSET ?`,
+        [userId, perPage, offset]
+      )
+    ]);
+    return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
   },
 
-  async listInterestedByUser(userId) {
-    const [rows] = await pool.query(
-      `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
-              p.occupation,
-              DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
-              i.interested_at
-       FROM interests i JOIN profiles p ON p.id = i.profile_id
-       WHERE i.user_id = ? AND i.is_interested = TRUE ORDER BY i.interested_at DESC`,
-      [userId]
-    );
-    return rows;
+  async countSavedByUser(userId) {
+    const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM interests WHERE user_id = ? AND is_saved = TRUE', [userId]);
+    return rows[0].total;
+  },
+
+  async listInterestedByUser(userId, pagination = {}) {
+    const { page, perPage, offset } = normalizePagination(pagination);
+    const [[countRows], [rows]] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS total FROM interests WHERE user_id = ? AND is_interested = TRUE', [userId]),
+      pool.query(
+        `SELECT p.id, p.full_name, p.image_name, p.caste, p.subcaste, p.language,
+                p.occupation,
+                DATE_PART('year', AGE(CURRENT_DATE, p.date_of_birth)) AS age,
+                i.interested_at
+         FROM interests i JOIN profiles p ON p.id = i.profile_id
+         WHERE i.user_id = ? AND i.is_interested = TRUE ORDER BY i.interested_at DESC LIMIT ? OFFSET ?`,
+        [userId, perPage, offset]
+      )
+    ]);
+    return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
+  },
+
+  async countInterestedByUser(userId) {
+    const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM interests WHERE user_id = ? AND is_interested = TRUE', [userId]);
+    return rows[0].total;
   },
 
   // Recent "Express Interest" activity for the admin activity stream.

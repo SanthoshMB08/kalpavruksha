@@ -5,6 +5,7 @@ const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const SuccessStory = require('../models/SuccessStory');
 const { streamProfilePdf } = require('../utils/profilePdf');
+const { checkLogin } = require('../utils/accountLockout');
 
 exports.showLogin = (req, res) => {
   res.render('admin/login', { title: 'Admin Login', error: null });
@@ -17,9 +18,20 @@ exports.login = async (req, res) => {
     if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
       return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials.' });
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials.' });
+
+    // Lockout applies to 'admin' role only — a superadmin logging in through
+    // this same portal route stays exempt, same as /super-secure-login.
+    if (user.role === 'admin') {
+      const result = await checkLogin(user, password);
+      if (result.outcome !== 'ok') {
+        if (result.outcome === 'locked_now') req.log.warn({ userId: user.id }, 'Admin account locked after repeated failed login attempts');
+        return res.render('admin/login', { title: 'Admin Login', error: result.message });
+      }
+    } else {
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials.' });
+      }
     }
 
     req.session.user = {
@@ -45,15 +57,16 @@ exports.logout = (req, res) => {
 // --- Overview page: at-a-glance stats + recent activity only ---
 exports.dashboard = async (req, res) => {
   try {
-    const [pending, recentInterests, totalProfiles] = await Promise.all([
-      User.listPending(),
+    const [pendingResult, recentInterests, totalProfiles] = await Promise.all([
+      User.listPending({ perPage: 5 }),
       Interest.recentExpressed(8),
       Profile.count()
     ]);
     res.render('admin/dashboard', {
       title: 'Admin Overview',
       active: 'overview',
-      pending,
+      pending: pendingResult.rows,
+      pendingTotal: pendingResult.total,
       recentInterests,
       totalProfiles
     });
@@ -63,6 +76,7 @@ exports.dashboard = async (req, res) => {
       title: 'Admin Overview',
       active: 'overview',
       pending: [],
+      pendingTotal: 0,
       recentInterests: [],
       totalProfiles: 0
     });
@@ -72,14 +86,15 @@ exports.dashboard = async (req, res) => {
 // --- User management page: pending approvals, active members, direct creation ---
 exports.userManagement = async (req, res) => {
   try {
-    const [pending, membersResult] = await Promise.all([
-      User.listPending(),
+    const [pendingResult, membersResult] = await Promise.all([
+      User.listPending({ page: req.query.pendingPage }),
       User.listApprovedUsers({ page: req.query.page })
     ]);
     res.render('admin/users', {
       title: 'User Management',
       active: 'users',
-      pending,
+      pending: pendingResult.rows,
+      pendingPageInfo: pendingResult,
       members: membersResult.rows,
       pageInfo: membersResult,
       currentQuery: req.query,
@@ -92,6 +107,7 @@ exports.userManagement = async (req, res) => {
       title: 'User Management',
       active: 'users',
       pending: [],
+      pendingPageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
       members: [],
       pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
       formErrors: [],
@@ -119,11 +135,12 @@ exports.createUserDirect = async (req, res) => {
   const errors = validationResult(req);
   const { name, mobile_number, username, password, gender } = req.body;
   if (!errors.isEmpty()) {
-    const [pending, membersResult] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
+    const [pendingResult, membersResult] = await Promise.all([User.listPending(), User.listApprovedUsers()]);
     return res.render('admin/users', {
       title: 'User Management',
       active: 'users',
-      pending,
+      pending: pendingResult.rows,
+      pendingPageInfo: pendingResult,
       members: membersResult.rows,
       pageInfo: membersResult,
       formErrors: errors.array().map((e) => e.msg),
@@ -172,6 +189,19 @@ exports.changeUserPassword = async (req, res) => {
 
 // Admin/Super Admin can permanently delete a member (role='user') account.
 // Their saved/interested rows cascade-delete with them (see interests FK).
+// Super Admin only — unlocks a locked member account immediately, ahead of
+// the automatic lockout window expiring on its own.
+exports.unlockUser = async (req, res) => {
+  const target = await User.findById(req.params.id);
+  if (!target) {
+    req.flash('error', 'Account not found.');
+    return res.redirect('/portal/admin-dashboard/users');
+  }
+  await User.unlockAccount(req.params.id);
+  req.flash('success', `"${target.username}" has been unlocked.`);
+  res.redirect('/portal/admin-dashboard/users');
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const target = await User.findById(req.params.id);
@@ -237,6 +267,34 @@ exports.createProfile = async (req, res) => {
     });
   }
   try {
+    // Duplicate detection. Same phone number among active profiles is
+    // treated as a hard block — in practice two different people don't
+    // share a phone number here. Same name+DOB is a much weaker signal
+    // (names genuinely coincide), so it's a warning the admin can
+    // acknowledge and resubmit past via a hidden confirm_duplicate field,
+    // not an outright block.
+    const duplicatePhone = await Profile.findDuplicateByPhone(req.body.phone_number);
+    if (duplicatePhone) {
+      return res.render('admin/profile-form', {
+        title: 'Upload New Profile',
+        active: 'profiles',
+        errors: [`A profile with this phone number already exists: "${duplicatePhone.full_name}" (#${duplicatePhone.id}).`],
+        old: req.body
+      });
+    }
+    if (req.body.confirm_duplicate !== '1') {
+      const possibleDup = await Profile.findPossibleDuplicateByNameDob(req.body.full_name, req.body.date_of_birth);
+      if (possibleDup) {
+        return res.render('admin/profile-form', {
+          title: 'Upload New Profile',
+          active: 'profiles',
+          duplicateWarning: `A profile with the same name and date of birth already exists: "${possibleDup.full_name}" (#${possibleDup.id}). If this is a different person, submit again to continue.`,
+          errors: [],
+          old: req.body
+        });
+      }
+    }
+
     const files = req.files || {};
     const image = files.profile_image ? files.profile_image[0].filename : null;
     const image2 = files.profile_image_2 ? files.profile_image_2[0].filename : null;

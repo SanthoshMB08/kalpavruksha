@@ -15,8 +15,10 @@
     <% } %>
     <form class="form-grid" action="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-      <div class="field"><label class="form-label">Replace Photo 1 <span class="field-tip" data-tip="Leave empty to keep the current photo.">?</span></label><input type="file" name="profile_image" accept="image/*"></div>
-      <div class="field"><label class="form-label">Replace Photo 2</label><input type="file" name="profile_image_2" accept="image/*"></div>
+      <div class="field"><label class="form-label">Replace Photo 1 <span class="field-tip" data-tip="Leave empty to keep the current photo.">?</span></label><input type="file" name="profile_image" accept="image/*">
+        <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
+      <div class="field"><label class="form-label">Replace Photo 2</label><input type="file" name="profile_image_2" accept="image/*">
+        <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
 
       <div class="field"><label class="form-label">Full Name</label><input type="text" name="full_name" value="<%= profile.full_name %>" pattern="[A-Za-z\s.'-]+" required></div>
       <div class="field"><label class="form-label">Gender</label>
@@ -90,7 +92,7 @@
       </div>
       <div class="field">
         <label class="form-label">Nakshatra</label>
-        <select name="nakshatra" id="nakshatra" required>
+        <select name="nakshatra" id="nakshatra" data-current-nakshatra="<%= profile.nakshatra %>" required>
           <option value="<%= profile.nakshatra %>"><%= profile.nakshatra %></option>
         </select>
       </div>
@@ -103,16 +105,18 @@
       </div>
 
       <div class="field full"><label class="form-label">Replace Jathaka PDF <span class="field-tip" data-tip="Only Super Admin can re-attach this document.">?</span></label>
-        <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+        <input type="file" name="jathaka_pdf" accept="application/pdf">
+        <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
 
       <div class="field full"><label class="form-label">Replace Bio-Data PDF <span class="field-tip" data-tip="Leave empty to keep the existing file.">?</span></label>
-        <input type="file" name="biodata_pdf" accept="application/pdf"></div>
+        <input type="file" name="biodata_pdf" accept="application/pdf">
+        <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
 
       <div class="field full"><button type="submit" class="btn btn-gold">Save Changes</button></div>
     </form>
   </div>
 
-  <script>
+  <script nonce="<%= nonce %>">
 const rashiNakshatras = {
   Mesha: ["Ashwini", "Bharani", "Krittika"],
   Vrishabha: ["Krittika", "Rohini", "Mrigashira"],
@@ -130,7 +134,7 @@ const rashiNakshatras = {
 
 const rashiSelect = document.getElementById("rashi");
 const nakshatraSelect = document.getElementById("nakshatra");
-const currentNakshatra = <%- JSON.stringify(profile.nakshatra || '') %>;
+const currentNakshatra = nakshatraSelect.getAttribute("data-current-nakshatra") || "";
 
 function fillNakshatras(selectedRashi, preselect) {
   nakshatraSelect.innerHTML = '<option value="">Select Nakshatra</option>';

@@ -2,7 +2,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="<%= nonce %>">
 (function () {
   var bellBtn = document.getElementById('notifBellBtn');
   var panel = document.getElementById('notifPanel');
@@ -101,5 +101,17 @@
   // it's visible at a glance (Instagram-style).
   loadMore();
 })();
+
+// Delegated confirm() for destructive form submissions — replaces
+// onsubmit="return confirm('...')" attributes, which CSP's script-src no
+// longer allows now that it's nonce-based instead of 'unsafe-inline'. Any
+// <form data-confirm="message"> gets this behavior automatically.
+document.addEventListener('submit', function (e) {
+  var form = e.target.closest('form[data-confirm]');
+  if (form && !window.confirm(form.getAttribute('data-confirm'))) {
+    e.preventDefault();
+  }
+});
 </script>
+<%- include('whatsapp-share-script') %>
 

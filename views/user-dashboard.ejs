@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('partials/head') %>
 </head>
@@ -10,61 +10,61 @@
     <form id="filterForm" method="GET" action="/dashboard" class="search-bar">
       <div class="search-input-group">
         <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-        <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city...">
+        <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="<%= t('dashboard.searchPlaceholder') %>">
       </div>
       <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
-        <i class="fa-solid fa-sliders"></i> Filters
+        <i class="fa-solid fa-sliders"></i> <%= t('dashboard.filters') %>
       </button>
-      <button type="submit" class="btn btn-gold search-submit-btn">Search</button>
+      <button type="submit" class="btn btn-gold search-submit-btn"><%= t('dashboard.search') %></button>
 
       <div class="filter-panel" id="filterPanel">
         <div class="filter-panel-grid">
           <div class="filter-group">
-            <label>Caste</label>
+            <label><%= t('dashboard.caste') %></label>
             <input type="text" name="caste" id="casteInput" autocomplete="off"
-                   value="<%= filters.caste || '' %>" placeholder="Type to search...">
+                   value="<%= filters.caste || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
             <div class="filter-dropdown-list" id="casteList">
               <% castes.forEach(function(c) { %><div data-target="casteInput" data-value="<%= c %>"><%= c %></div><% }) %>
             </div>
           </div>
 
           <div class="filter-group">
-            <label>Language</label>
+            <label><%= t('dashboard.language') %></label>
             <input type="text" name="language" id="languageInput" autocomplete="off"
-                   value="<%= filters.language || '' %>" placeholder="Type to search...">
+                   value="<%= filters.language || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
             <div class="filter-dropdown-list" id="languageList">
               <% languages.forEach(function(l) { %><div data-target="languageInput" data-value="<%= l %>"><%= l %></div><% }) %>
             </div>
           </div>
 
           <div class="filter-group">
-            <label>Age Range</label>
+            <label><%= t('dashboard.ageRange') %></label>
             <div class="age-range-row">
-              <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
+              <input type="number" name="minAge" min="18" max="90" placeholder="<%= t('dashboard.minAge') %>" value="<%= filters.minAge || '' %>">
               <span>to</span>
-              <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+              <input type="number" name="maxAge" min="18" max="90" placeholder="<%= t('dashboard.maxAge') %>" value="<%= filters.maxAge || '' %>">
             </div>
           </div>
 
           <div class="filter-group">
-            <label>Religion</label>
+            <label><%= t('dashboard.religion') %></label>
             <input type="text" name="religion" id="religionInput" autocomplete="off"
-                   value="<%= filters.religion || '' %>" placeholder="Type to search...">
+                   value="<%= filters.religion || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
             <div class="filter-dropdown-list" id="religionList">
               <% religions.forEach(function(r) { %><div data-target="religionInput" data-value="<%= r %>"><%= r %></div><% }) %>
             </div>
           </div>
 
           <div class="filter-group">
-            <label>Sub-caste</label>
-            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+            <label><%= t('dashboard.subcaste') %></label>
+            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="<%= t('dashboard.subcastePlaceholder') %>">
           </div>
 
         </div>
 
         <div class="filter-panel-actions">
-          <a href="/dashboard" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear All</a>
-          <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
+          <a href="/dashboard" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('dashboard.clearAll') %></a>
+          <button type="submit" class="btn btn-gold btn-sm"><%= t('dashboard.applyFilters') %></button>
         </div>
       </div>
     </form>
@@ -72,8 +72,8 @@
 
   <main class="match-feed match-feed-full">
     <div class="match-feed-header">
-      <h2>Your Matches</h2>
-      <span style="color:#8a7156; font-size:0.85rem;"><%= pageInfo.total %> profile(s) found</span>
+      <h2><%= t('dashboard.yourMatches') %></h2>
+      <span style="color:#8a7156; font-size:0.85rem;"><%= pageInfo.total %> <%= t('dashboard.profilesFound') %></span>
     </div>
 
     <% if (afterSearchAds && afterSearchAds.length) { %>
@@ -90,7 +90,7 @@
     <% if (profiles.length === 0) { %>
       <div class="empty-state">
         <div style="font-size:2rem;"><i class="fa-solid fa-magnifying-glass"></i></div>
-        <p>No matches found for these filters. Try widening your search.</p>
+        <p><%= t('dashboard.noResults') %></p>
       </div>
     <% } else { %>
       <div class="profile-grid">
@@ -102,16 +102,27 @@
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>
               <div class="meta">
-                <div><strong>Caste:</strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
-                <div><strong>Language:</strong> <%= p.language %></div>
-                <div><strong>Occupation:</strong> <%= p.occupation %></div>
+                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
+                <div><strong><%= t('dashboard.fieldLanguage') %></strong> <%= p.language %></div>
+                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= p.occupation %></div>
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" onclick="openProfileModal(<%= p.id %>)">View Details</button>
+              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" data-open-profile-id="<%= p.id %>"><%= t('dashboard.viewDetails') %></button>
               <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="btn btn-gold" style="width:100%;">Express Interest</button>
+                <button type="submit" class="btn btn-gold" style="width:100%;"><%= t('dashboard.expressInterest') %></button>
               </form>
+              <button
+                type="button"
+                class="btn-whatsapp"
+                data-whatsapp-share
+                data-share-name="<%= p.full_name %>"
+                data-share-age="<%= p.age %>"
+                data-share-caste="<%= p.caste %><%= p.subcaste ? ' (' + p.subcaste + ')' : '' %>"
+                data-share-occupation="<%= p.occupation %>"
+                aria-label="Share on WhatsApp"
+                title="Share on WhatsApp"
+              ><i class="fa-brands fa-whatsapp"></i></button>
             </div>
           </div>
         <% }) %>
@@ -122,12 +133,12 @@
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box" id="modalBox">
-      <div class="modal-close"><button onclick="closeProfileModal()">&times;</button></div>
+      <div class="modal-close"><button data-close-profile-modal>&times;</button></div>
       <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
     </div>
   </div>
 
-  <script>
+  <script nonce="<%= nonce %>">
     // Filter panel toggle (YouTube/LinkedIn style filter menu)
     var filterToggleBtn = document.getElementById('filterToggleBtn');
     var filterPanel = document.getElementById('filterPanel');
@@ -188,6 +199,13 @@
     document.getElementById('modalOverlay').addEventListener('click', function (e) {
       if (e.target === this) closeProfileModal();
     });
+    document.querySelectorAll('[data-open-profile-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openProfileModal(btn.getAttribute('data-open-profile-id')); });
+    });
+    document.querySelectorAll('[data-close-profile-modal]').forEach(function (btn) {
+      btn.addEventListener('click', closeProfileModal);
+    });
   </script>
+  <%- include('partials/whatsapp-share-script') %>
 </body>
 </html>

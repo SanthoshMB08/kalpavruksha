@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
+
+      <div class="panel">
+        <h3><i class="fa-solid fa-user-xmark"></i> Deleted Users</h3>
+        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Restore recovers the account exactly as it was. Permanently deleting cannot be undone.</p>
+        <% if (deletedUsers.length === 0) { %>
+          <div class="empty-state">No deleted users.</div>
+        <% } else { %>
+          <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Deleted</th><th>Actions</th></tr></thead>
+            <tbody>
+              <% deletedUsers.forEach(function(u) { %>
+                <tr>
+                  <td data-label="Name"><%= u.name %></td>
+                  <td data-label="Username"><%= u.username %></td>
+                  <td data-label="Mobile"><%= u.mobile_number %></td>
+                  <td data-label="Deleted"><%= new Date(u.deleted_at).toLocaleString('en-IN') %></td>
+                  <td data-label="Actions" class="row-actions">
+                    <div class="row-actions-inner">
+                      <form action="/portal/super-secure-dashboard/trash/users/<%= u.id %>/restore" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-clock-rotate-left"></i> Restore</button>
+                      </form>
+                      <form action="/portal/super-secure-dashboard/trash/users/<%= u.id %>/purge" method="POST" data-confirm="Permanently delete &quot;<%= u.username %>&quot;? This cannot be undone — the account and all its data will be gone forever."><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-danger btn-sm" type="submit"><i class="fa-solid fa-trash"></i> Delete Forever</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+          </div>
+          <%- include('../partials/pagination', { pageInfo: usersPageInfo, currentQuery, pageParam: 'usersPage' }) %>
+        <% } %>
+      </div>
+
+      <div class="panel">
+        <h3><i class="fa-solid fa-address-card"></i> Deleted Profiles</h3>
+        <% if (deletedProfiles.length === 0) { %>
+          <div class="empty-state">No deleted profiles.</div>
+        <% } else { %>
+          <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Photo</th><th>Name</th><th>Gender</th><th>Deleted</th><th>Actions</th></tr></thead>
+            <tbody>
+              <% deletedProfiles.forEach(function(p) { %>
+                <tr>
+                  <td data-label="Photo"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb" alt="<%= p.full_name %>"></td>
+                  <td data-label="Name"><%= p.full_name %></td>
+                  <td data-label="Gender"><%= p.gender === 'male' ? 'Male' : 'Female' %></td>
+                  <td data-label="Deleted"><%= new Date(p.deleted_at).toLocaleString('en-IN') %></td>
+                  <td data-label="Actions" class="row-actions">
+                    <div class="row-actions-inner">
+                      <form action="/portal/super-secure-dashboard/trash/profiles/<%= p.id %>/restore" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-clock-rotate-left"></i> Restore</button>
+                      </form>
+                      <form action="/portal/super-secure-dashboard/trash/profiles/<%= p.id %>/purge" method="POST" data-confirm="Permanently delete this profile? This cannot be undone — the profile and its photos will be gone forever."><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-danger btn-sm" type="submit"><i class="fa-solid fa-trash"></i> Delete Forever</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+          </div>
+          <%- include('../partials/pagination', { pageInfo: profilesPageInfo, currentQuery, pageParam: 'profilesPage' }) %>
+        <% } %>
+      </div>
+      <%- include('../partials/panel-ui-script') %>
+  <%- include('../partials/portal-shell-close') %>
+</body>
+</html>

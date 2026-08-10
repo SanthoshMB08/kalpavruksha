@@ -94,10 +94,22 @@
                     <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
                     <% if (canManage) { %>
                       <a href="/portal/super-secure-dashboard/profiles/<%= p.id %>/edit" class="btn btn-maroon btn-sm">Edit</a>
-                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" data-confirm="Permanently delete this profile?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-danger btn-sm" type="submit">Delete</button>
                       </form>
                     <% } %>
+                    <button
+                      type="button"
+                      class="btn-whatsapp"
+                      data-whatsapp-share
+                      data-share-name="<%= p.full_name %>"
+                      data-share-age="<%= p.age %>"
+                      data-share-caste="<%= p.caste %>"
+                      data-share-extra="<%= p.city %>"
+                      data-share-link="/portal/admin-dashboard/profiles/<%= p.id %>"
+                      aria-label="Share on WhatsApp"
+                      title="Share on WhatsApp"
+                    ><i class="fa-brands fa-whatsapp"></i></button>
                   </div>
                 </td>
               </tr>
@@ -109,7 +121,7 @@
         <%- include('../partials/pagination', { pageInfo, currentQuery }) %>
       </div>
 
-  <script>
+  <script nonce="<%= nonce %>">
     var filterToggleBtn = document.getElementById('filterToggleBtn');
     var filterPanel = document.getElementById('filterPanel');
     if (filterToggleBtn && filterPanel) {

@@ -16,12 +16,20 @@
       <% if (errors && errors.length) { %>
         <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
       <% } %>
+      <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %>
+        <div class="form-errors" style="background:#fff8e6; border-color:#f0d999; color:#8a6d1f;">
+          <div><i class="fa-solid fa-triangle-exclamation"></i> <%= duplicateWarning %></div>
+        </div>
+      <% } %>
       <form class="form-grid" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %><input type="hidden" name="confirm_duplicate" value="1"><% } %>
 
         <div class="field"><label class="form-label">Profile Photo (1)</label>
-          <input type="file" name="profile_image" accept="image/*" required></div>
+          <input type="file" name="profile_image" accept="image/*" required>
+          <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
         <div class="field"><label class="form-label">Profile Photo (2) <span class="field-tip" data-tip="Optional — up to two photos per profile.">?</span></label>
-          <input type="file" name="profile_image_2" accept="image/*"></div>
+          <input type="file" name="profile_image_2" accept="image/*">
+          <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
 
         <div class="field"><label class="form-label">Full Name <span class="field-tip" data-tip="Letters only, no numbers.">?</span></label><input type="text" name="full_name" value="<%= old.full_name || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only" required></div>
         <div class="field"><label class="form-label">Gender</label>
@@ -105,9 +113,11 @@
   </select>
 </div>
         <div class="field full"><label class="form-label">Jathaka PDF (optional)</label>
-          <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+          <input type="file" name="jathaka_pdf" accept="application/pdf">
+          <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
         <div class="field full"><label class="form-label">Bio-Data PDF (optional) <span class="field-tip" data-tip="A ready-made bio-data document, separate from the jathaka.">?</span></label>
-          <input type="file" name="biodata_pdf" accept="application/pdf"></div>
+          <input type="file" name="biodata_pdf" accept="application/pdf">
+          <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
 
         <div class="field full">
           <button type="submit" class="btn btn-gold">Save Profile</button>
@@ -116,7 +126,7 @@
     </div>
   <%- include('../partials/portal-shell-close') %>
 
-  <script>
+  <script nonce="<%= nonce %>">
 const rashiNakshatras = {
   Mesha: ["Ashwini", "Bharani", "Krittika"],
   Vrishabha: ["Krittika", "Rohini", "Mrigashira"],

@@ -20,6 +20,7 @@ router.post('/admin-dashboard/users/:id/reject', isAdmin, doubleCsrfProtection, 
 router.post('/admin-dashboard/users/create-direct', isAdmin, doubleCsrfProtection, memberCreateValidators, adminController.createUserDirect);
 router.post('/admin-dashboard/users/:id/password', isAdmin, doubleCsrfProtection, adminController.changeUserPassword);
 router.post('/admin-dashboard/users/:id/delete', isAdmin, doubleCsrfProtection, adminController.deleteUser);
+router.post('/admin-dashboard/users/:id/unlock', isSuperAdmin, doubleCsrfProtection, adminController.unlockUser);
 
 router.get('/admin-dashboard/profiles', isAdmin, adminController.listProfiles);
 router.get('/admin-dashboard/profiles/new', isAdmin, adminController.showNewProfileForm);

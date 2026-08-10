@@ -106,9 +106,23 @@ exports.expressInterest = async (req, res) => {
 
 exports.savedProfiles = async (req, res) => {
   const tab = req.query.tab === 'interested' ? 'interested' : 'saved';
-  const [saved, interested] = await Promise.all([
-    Interest.listSavedByUser(req.session.user.id),
-    Interest.listInterestedByUser(req.session.user.id)
+  const userId = req.session.user.id;
+  const [activeResult, otherCount] = await Promise.all([
+    tab === 'interested' ? Interest.listInterestedByUser(userId, { page: req.query.page }) : Interest.listSavedByUser(userId, { page: req.query.page }),
+    tab === 'interested' ? Interest.countSavedByUser(userId) : Interest.countInterestedByUser(userId)
   ]);
-  res.render('saved-profiles', { title: 'Saved Profiles', saved, interested, tab });
+  const saved = tab === 'saved' ? activeResult.rows : [];
+  const interested = tab === 'interested' ? activeResult.rows : [];
+  const savedCount = tab === 'saved' ? activeResult.total : otherCount;
+  const interestedCount = tab === 'interested' ? activeResult.total : otherCount;
+  res.render('saved-profiles', {
+    title: 'Saved Profiles',
+    saved,
+    interested,
+    savedCount,
+    interestedCount,
+    pageInfo: activeResult,
+    currentQuery: req.query,
+    tab
+  });
 };

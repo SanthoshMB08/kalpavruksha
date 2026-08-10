@@ -16,6 +16,7 @@ router.get('/super-secure-dashboard', isSuperAdmin, superAdminController.dashboa
 router.get('/super-secure-dashboard/admins', isSuperAdmin, superAdminController.adminsPage);
 router.post('/super-secure-dashboard/admins', isSuperAdmin, doubleCsrfProtection, userCreateValidators, superAdminController.createAdmin);
 router.post('/super-secure-dashboard/admins/:id/remove', isSuperAdmin, doubleCsrfProtection, superAdminController.removeAdmin);
+router.post('/super-secure-dashboard/admins/:id/unlock', isSuperAdmin, doubleCsrfProtection, superAdminController.unlockAdmin);
 router.post('/super-secure-dashboard/admins/:id/password', isSuperAdmin, doubleCsrfProtection, superAdminController.changeAdminPassword);
 
 // Full profile edit — Super Admin only (all fields incl. gender + re-attach jathaka doc)
@@ -45,5 +46,11 @@ router.post('/super-secure-dashboard/stories/:id/delete', isSuperAdmin, doubleCs
 router.get('/super-secure-dashboard/messages', isSuperAdmin, superAdminController.messagesPage);
 router.post('/super-secure-dashboard/messages/:id/read', isSuperAdmin, doubleCsrfProtection, superAdminController.markMessageRead);
 router.post('/super-secure-dashboard/messages/:id/delete', isSuperAdmin, doubleCsrfProtection, superAdminController.deleteMessage);
+
+router.get('/super-secure-dashboard/trash', isSuperAdmin, superAdminController.trashPage);
+router.post('/super-secure-dashboard/trash/users/:id/restore', isSuperAdmin, doubleCsrfProtection, superAdminController.restoreUser);
+router.post('/super-secure-dashboard/trash/users/:id/purge', isSuperAdmin, doubleCsrfProtection, superAdminController.purgeUser);
+router.post('/super-secure-dashboard/trash/profiles/:id/restore', isSuperAdmin, doubleCsrfProtection, superAdminController.restoreProfile);
+router.post('/super-secure-dashboard/trash/profiles/:id/purge', isSuperAdmin, doubleCsrfProtection, superAdminController.purgeProfile);
 
 module.exports = router;

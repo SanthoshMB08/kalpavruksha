@@ -52,7 +52,7 @@ async function streamProfilePdf(res, profile) {
     try {
       const photoBuffer = await fetchAsBuffer(photoUrl);
       doc.image(photoBuffer, 40, topY, { width: 130, height: 150, fit: [130, 150] });
-    } catch (e) { /* missing/corrupt/unsupported image — skip silently */ }
+    } catch { /* missing/corrupt/unsupported image — skip silently */ }
   }
 
   const infoX = 190;

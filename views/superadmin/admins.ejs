@@ -18,8 +18,9 @@
           <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Actions</th></tr></thead>
           <tbody>
             <% admins.forEach(function(a) { %>
+              <% const isLocked = a.locked_until && new Date(a.locked_until) > new Date(); %>
               <tr>
-                <td data-label="Name"><%= a.name %></td>
+                <td data-label="Name"><%= a.name %> <% if (isLocked) { %><span class="badge badge-rejected" title="Locked until <%= new Date(a.locked_until).toLocaleString('en-IN') %>">Locked</span><% } %></td>
                 <td data-label="Username"><%= a.username %></td>
                 <td data-label="Mobile"><%= a.mobile_number %></td>
                 <td data-label="Since"><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
@@ -28,7 +29,12 @@
                     <button type="button" class="row-menu-btn" aria-label="Actions for <%= a.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="row-menu-dropdown">
                       <button type="button" data-open-modal="pwModal-<%= a.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
-                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" onsubmit="return confirm('Remove this admin account?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <% if (isLocked) { %>
+                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/unlock" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="submit"><i class="fa-solid fa-lock-open"></i> Unlock Account</button>
+                        </form>
+                      <% } %>
+                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" data-confirm="Remove this admin account?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Remove</button>
                       </form>
                     </div>
@@ -40,7 +46,7 @@
                       <div style="padding:0 24px 24px;">
                         <h3 style="margin-bottom:4px;">Change Password</h3>
                         <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= a.username %></p>
-                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" onsubmit="return confirm('Reset password for <%= a.username %>?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" data-confirm="Reset password for <%= a.username %>?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <div class="field">
                             <label class="form-label">New Password</label>
                             <input type="password" name="password" minlength="8" required autofocus>
@@ -59,6 +65,7 @@
           </tbody>
         </table>
         </div>
+        <%- include('../partials/pagination', { pageInfo, currentQuery }) %>
       </div>
 
       <!-- Create Sub-Admin modal -->
@@ -82,7 +89,7 @@
       </div>
 
       <% if (formErrors && formErrors.length) { %>
-        <script>document.addEventListener('DOMContentLoaded', function () {
+        <script nonce="<%= nonce %>">document.addEventListener('DOMContentLoaded', function () {
           var m = document.getElementById('createAdminModal');
           if (m) m.classList.add('open');
         });</script>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('partials/head') %>
 </head>
@@ -8,8 +8,8 @@
 
   <div class="auth-wrap">
     <div class="auth-card">
-      <h1>Create Your Profile</h1>
-      <div class="subtitle">Join a community built on trust and tradition</div>
+      <h1><%= t('register.title') %></h1>
+      <div class="subtitle"><%= t('register.subtitle') %></div>
 
       <% if (errors && errors.length) { %>
         <div class="error-box">
@@ -19,27 +19,27 @@
 
       <form class="auth-form" action="/register" method="POST" id="registerForm"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
-          <label class="form-label">Full Name</label>
+          <label class="form-label"><%= t('register.name') %></label>
           <input type="text" name="name" value="<%= old.name || '' %>" required>
         </div>
         <div class="field">
-          <label class="form-label">Mobile Number</label>
+          <label class="form-label"><%= t('register.mobile') %></label>
           <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required>
         </div>
         <div class="field">
-          <label class="form-label">Username</label>
+          <label class="form-label"><%= t('register.username') %></label>
           <input type="text" name="username" value="<%= old.username || '' %>" required>
         </div>
         <div class="field">
-          <label class="form-label">Gender <span class="field-tip" data-tip="You'll only be matched with members of the opposite gender.">?</span></label>
+          <label class="form-label"><%= t('register.gender') %> <span class="field-tip" data-tip="You'll only be matched with members of the opposite gender.">?</span></label>
           <select name="gender" required>
-            <option value="">Select Gender</option>
-            <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
-            <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
+            <option value=""><%= t('register.selectGender') %></option>
+            <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>><%= t('register.genderMale') %></option>
+            <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>><%= t('register.genderFemale') %></option>
           </select>
         </div>
         <div class="field">
-          <label class="form-label">Password</label>
+          <label class="form-label"><%= t('register.password') %></label>
           <input type="password" name="password" id="password" required>
           <ul class="pw-checklist" id="pwChecklist">
             <li data-rule="length"><i class="fa-solid fa-xmark rule-icon"></i><span>At least 8 characters</span></li>
@@ -58,16 +58,16 @@
           I agree to the <a href="/privacy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Privacy Policy</a>
         </label>
 
-        <button type="submit" class="btn btn-gold btn-block" id="submitBtn" disabled>Register</button>
+        <button type="submit" class="btn btn-gold btn-block" id="submitBtn" disabled><%= t('register.submit') %></button>
       </form>
 
-      <div class="auth-footer-link">Already have an account? <a href="/login" style="color:var(--maroon-800); font-weight:700;">Login</a></div>
+      <div class="auth-footer-link"><%= t('register.haveAccount') %> <a href="/login" style="color:var(--maroon-800); font-weight:700;"><%= t('register.loginLink') %></a></div>
     </div>
   </div>
 
   <%- include('partials/footer') %>
 
-  <script>
+  <script nonce="<%= nonce %>">
     const pw = document.getElementById('password');
     const terms = document.getElementById('terms');
     const privacy = document.getElementById('privacy');

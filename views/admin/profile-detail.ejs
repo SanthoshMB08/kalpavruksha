@@ -28,9 +28,22 @@
             <a href="<%= fileUrl('biodata', profile.biodata_pdf_name) %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Bio-Data PDF</a>
           <% } %>
           <a href="/portal/admin-dashboard/profiles/<%= profile.id %>/pdf" class="btn btn-gold btn-sm"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
+          <button
+            type="button"
+            class="btn-whatsapp"
+            data-whatsapp-share
+            data-share-name="<%= profile.full_name %>"
+            data-share-age="<%= profile.age %>"
+            data-share-caste="<%= profile.caste %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
+            data-share-occupation="<%= profile.occupation %>"
+            data-share-extra="<%= profile.city %>, <%= profile.state %>"
+            data-share-link="/portal/admin-dashboard/profiles/<%= profile.id %>"
+            aria-label="Share on WhatsApp"
+            title="Share on WhatsApp"
+          ><i class="fa-brands fa-whatsapp"></i></button>
           <% if (currentUser.role === 'superadmin') { %>
             <a href="/portal/super-secure-dashboard/profiles/<%= profile.id %>/edit" class="btn btn-maroon btn-sm">Edit Profile</a>
-            <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this profile? This cannot be undone.');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/delete" method="POST" data-confirm="Permanently delete this profile? This cannot be undone."><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit" class="btn btn-danger btn-sm">Delete Profile</button>
             </form>
           <% } %>

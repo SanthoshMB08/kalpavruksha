@@ -28,7 +28,8 @@ const UPDATABLE_COLUMNS = [
 ];
 
 function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
-  const clauses = [];
+  // Soft-deleted profiles are never returned by a search, in any context.
+  const clauses = ['deleted_at IS NULL'];
   const params = [];
 
   if (filters.religion) {
@@ -70,7 +71,7 @@ function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
     clauses.push("marital_status = 'unmarried'");
   }
 
-  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const where = `WHERE ${clauses.join(' AND ')}`;
   return { where, params };
 }
 
@@ -103,12 +104,14 @@ const Profile = {
   },
 
   async findByIdPublic(id) {
-    const [rows] = await pool.query(`SELECT ${PUBLIC_FIELDS} FROM profiles WHERE id = ?`, [id]);
+    const [rows] = await pool.query(`SELECT ${PUBLIC_FIELDS} FROM profiles WHERE id = ? AND deleted_at IS NULL`, [id]);
     return rows[0];
   },
 
+  // Unfiltered by design — Super Admin's edit page and the Trash page both
+  // need to be able to load a soft-deleted profile.
   async findByIdFull(id) {
-    const [rows] = await pool.query(`SELECT ${FULL_FIELDS} FROM profiles WHERE id = ?`, [id]);
+    const [rows] = await pool.query(`SELECT ${FULL_FIELDS}, deleted_at FROM profiles WHERE id = ?`, [id]);
     return rows[0];
   },
 
@@ -118,10 +121,36 @@ const Profile = {
   async listAllFull(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS total FROM profiles'),
-      pool.query(`SELECT ${FULL_FIELDS} FROM profiles ORDER BY created_at DESC LIMIT ? OFFSET ?`, [perPage, offset])
+      pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NULL'),
+      pool.query(
+        `SELECT ${FULL_FIELDS} FROM profiles WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [perPage, offset]
+      )
     ]);
     return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
+  },
+
+  // --- Duplicate detection (checked on create, before inserting) ---
+
+  // Same phone number among active profiles is treated as a hard duplicate —
+  // in practice two different people don't share a phone number here.
+  async findDuplicateByPhone(phone) {
+    const [rows] = await pool.query(
+      'SELECT id, full_name FROM profiles WHERE phone_number = ? AND deleted_at IS NULL LIMIT 1',
+      [phone]
+    );
+    return rows[0] || null;
+  },
+
+  // Same name + date of birth is a much weaker signal (names coincide) —
+  // surfaced as a warning the admin can acknowledge and proceed past, not a
+  // hard block.
+  async findPossibleDuplicateByNameDob(fullName, dob) {
+    const [rows] = await pool.query(
+      'SELECT id, full_name FROM profiles WHERE full_name = ? AND date_of_birth = ? AND deleted_at IS NULL LIMIT 1',
+      [fullName, dob]
+    );
+    return rows[0] || null;
   },
 
   async create(data) {
@@ -170,21 +199,47 @@ const Profile = {
     await pool.query(`UPDATE profiles SET ${sets.join(', ')} WHERE id = ?`, params);
   },
 
+  // --- Soft delete / Trash ---
+
   async deleteById(id) {
-    await pool.query('DELETE FROM profiles WHERE id = ?', [id]);
+    await pool.query('UPDATE profiles SET deleted_at = NOW() WHERE id = ?', [id]);
+  },
+
+  async restoreById(id) {
+    await pool.query('UPDATE profiles SET deleted_at = NULL WHERE id = ?', [id]);
+  },
+
+  // Only allowed on rows already soft-deleted — a real safety backstop
+  // against ever hard-deleting an active profile by accident.
+  async purgeById(id) {
+    await pool.query('DELETE FROM profiles WHERE id = ? AND deleted_at IS NOT NULL', [id]);
+  },
+
+  async listDeleted(pagination = {}) {
+    const { page, perPage, offset } = normalizePagination(pagination);
+    const [[countRows], [rows]] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NOT NULL'),
+      pool.query(
+        `SELECT id, full_name, gender, image_name, deleted_at FROM profiles
+         WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT ? OFFSET ?`,
+        [perPage, offset]
+      )
+    ]);
+    return { rows, ...buildPageMeta(countRows[0].total, page, perPage) };
   },
 
   async distinctValues(column) {
     const allowed = ['religion', 'caste', 'language'];
     if (!allowed.includes(column)) return [];
     const [rows] = await pool.query(
-      `SELECT DISTINCT ${column} AS value FROM profiles WHERE ${column} IS NOT NULL AND ${column} != '' ORDER BY ${column} ASC`
+      `SELECT DISTINCT ${column} AS value FROM profiles
+       WHERE ${column} IS NOT NULL AND ${column} != '' AND deleted_at IS NULL ORDER BY ${column} ASC`
     );
     return rows.map((r) => r.value);
   },
 
   async count() {
-    const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM profiles');
+    const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NULL');
     return rows[0].total;
   }
 };

@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const { checkLogin } = require('../utils/accountLockout');
 
 exports.showRegister = (req, res) => {
   res.render('register', { title: 'Register', errors: [], old: {} });
@@ -56,9 +57,11 @@ exports.login = async (req, res) => {
     if (!user || user.role !== 'user') {
       return res.render('login', { title: 'Login', error: 'Invalid username or password.' });
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.render('login', { title: 'Login', error: 'Invalid username or password.' });
+
+    const result = await checkLogin(user, password);
+    if (result.outcome !== 'ok') {
+      if (result.outcome === 'locked_now') req.log.warn({ userId: user.id }, 'Account locked after repeated failed login attempts');
+      return res.render('login', { title: 'Login', error: result.message });
     }
 
     req.session.user = {

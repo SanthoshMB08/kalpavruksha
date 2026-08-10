@@ -39,7 +39,7 @@
                         <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <button type="submit"><i class="fa-solid <%= s.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i> <%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
                         </form>
-                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" onsubmit="return confirm('Delete this success story?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" data-confirm="Delete this success story?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
                         </form>
                       </div>

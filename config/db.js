@@ -1,5 +1,7 @@
 const { Pool, types } = require('pg');
+const fs = require('fs');
 require('dotenv').config();
+const logger = require('../utils/logger');
 
 // The app was originally written against mysql2, which (with dateStrings:true)
 // returns DATE/TIME/TIMESTAMP columns as plain strings like "1995-06-15".
@@ -13,14 +15,47 @@ types.setTypeParser(1184, (val) => val); // timestamptz
 types.setTypeParser(1266, (val) => val); // timetz
 
 if (!process.env.DATABASE_URL) {
-  console.warn(
-    'Warning: DATABASE_URL is not set. Set it to your Supabase Postgres connection string in .env'
-  );
+  logger.warn('DATABASE_URL is not set. Set it to your Postgres connection string in .env');
+}
+
+// SSL configuration:
+//   DB_SSL=false                    -> no TLS at all (only for a genuinely non-TLS local/
+//                                      self-hosted Postgres — never use this against a
+//                                      real managed provider over the public internet)
+//   DB_SSL_CA_PATH=/...             -> validates against a specific CA bundle (needed by
+//                                      a few providers/self-hosted setups with private CAs)
+//   DB_SSL_REJECT_UNAUTHORIZED=true/false -> override the default verification behavior
+//   (default)                       -> validate in production; allow self-signed/local certs
+//                                      in development so local Supabase/pgBouncer/SSL setups
+//                                      work without needing a custom CA bundle.
+function buildSslConfig() {
+  if (process.env.DB_SSL === 'false') return false;
+
+  const explicitRejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED;
+  const rejectUnauthorized = explicitRejectUnauthorized === 'true'
+    ? true
+    : explicitRejectUnauthorized === 'false'
+      ? false
+      : process.env.NODE_ENV === 'production'
+        ? true
+        : false;
+
+  if (process.env.DB_SSL_CA_PATH) {
+    return { rejectUnauthorized, ca: fs.readFileSync(process.env.DB_SSL_CA_PATH, 'utf8') };
+  }
+
+  if (explicitRejectUnauthorized) {
+    logger.warn(`Using Postgres TLS rejectUnauthorized=${rejectUnauthorized} because DB_SSL_REJECT_UNAUTHORIZED was explicitly set`);
+  } else if (process.env.NODE_ENV !== 'production') {
+    logger.warn('Using relaxed Postgres TLS validation in development so self-signed/local certificates work');
+  }
+
+  return { rejectUnauthorized };
 }
 
 const pgPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+  ssl: buildSslConfig(),
   max: 20, // max simultaneous connections in the pool
   idleTimeoutMillis: 30000, // close idle connections after 30s
   connectionTimeoutMillis: 5000, // fail fast if the DB is unreachable, rather than hanging
@@ -28,7 +63,7 @@ const pgPool = new Pool({
 });
 
 pgPool.on('error', (err) => {
-  console.error('Unexpected Postgres pool error:', err);
+  logger.error({ err }, 'Unexpected Postgres pool error');
 });
 
 // Converts mysql-style '?' positional placeholders to Postgres-style $1, $2, ...

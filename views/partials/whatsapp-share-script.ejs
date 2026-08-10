@@ -1,0 +1,24 @@
+<script nonce="<%= nonce %>">
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-whatsapp-share]');
+  if (!btn) return;
+
+  var name = btn.getAttribute('data-share-name') || '';
+  var age = btn.getAttribute('data-share-age') || '';
+  var caste = btn.getAttribute('data-share-caste') || '';
+  var occupation = btn.getAttribute('data-share-occupation') || '';
+  var extra = btn.getAttribute('data-share-extra') || '';
+  var rawLink = btn.getAttribute('data-share-link');
+  var link = rawLink ? new URL(rawLink, window.location.origin).href : window.location.origin;
+
+  var lines = [name + (age ? ', ' + age + ' yrs' : '')];
+  if (caste) lines.push(caste);
+  if (occupation) lines.push(occupation);
+  if (extra) lines.push(extra);
+  lines.push('');
+  lines.push('View more: ' + link);
+
+  var url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
+  window.open(url, '_blank', 'noopener');
+});
+</script>

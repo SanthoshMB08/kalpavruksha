@@ -16,4 +16,15 @@
   <form action="/profile/<%= profile.id %>/express-interest" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="btn btn-gold btn-block">Express Interest</button>
   </form>
+  <button
+    type="button"
+    class="btn-whatsapp"
+    data-whatsapp-share
+    data-share-name="<%= profile.full_name %>"
+    data-share-age="<%= profile.age %>"
+    data-share-caste="<%= profile.caste %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
+    data-share-occupation="<%= profile.occupation %>"
+    aria-label="Share on WhatsApp"
+    title="Share on WhatsApp"
+  ><i class="fa-brands fa-whatsapp"></i></button>
 </div>

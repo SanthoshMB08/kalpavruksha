@@ -42,13 +42,13 @@ exports.logout = (req, res) => {
 // --- Overview page: stats + quick links only ---
 exports.dashboard = async (req, res) => {
   try {
-    const [userCounts, totalProfiles, adminCount, adCount, storyCount] = await Promise.all([
+    const [userCounts, totalProfiles, adCount, storyCount] = await Promise.all([
       User.counts(),
       Profile.count(),
-      User.listAll({ role: 'admin' }).then((r) => r.length),
       Advertisement.listAll().then((r) => r.length),
       SuccessStory.listAll().then((r) => r.length)
     ]);
+    const adminCount = userCounts.total_admins;
     res.render('superadmin/dashboard', {
       title: 'Super Admin Overview',
       active: 'overview',
@@ -74,19 +74,29 @@ exports.dashboard = async (req, res) => {
 
 // --- Sub-admin (staff) management page ---
 exports.adminsPage = async (req, res) => {
-  const admins = await User.listAll({ role: 'admin' });
-  res.render('superadmin/admins', { title: 'Sub-Admin Management', active: 'admins', admins, formErrors: [], old: {} });
+  const adminsResult = await User.listAll({ role: 'admin' }, { page: req.query.page });
+  res.render('superadmin/admins', {
+    title: 'Sub-Admin Management',
+    active: 'admins',
+    admins: adminsResult.rows,
+    pageInfo: adminsResult,
+    currentQuery: req.query,
+    formErrors: [],
+    old: {}
+  });
 };
 
 exports.createAdmin = async (req, res) => {
   const errors = validationResult(req);
   const { name, mobile_number, username, password } = req.body;
   if (!errors.isEmpty()) {
-    const admins = await User.listAll({ role: 'admin' });
+    const adminsResult = await User.listAll({ role: 'admin' });
     return res.render('superadmin/admins', {
       title: 'Sub-Admin Management',
       active: 'admins',
-      admins,
+      admins: adminsResult.rows,
+      pageInfo: adminsResult,
+      currentQuery: req.query,
       formErrors: errors.array().map((e) => e.msg),
       old: { name, mobile_number, username }
     });
@@ -111,6 +121,17 @@ exports.createAdmin = async (req, res) => {
 exports.removeAdmin = async (req, res) => {
   await User.deleteById(req.params.id);
   req.flash('success', 'Admin account removed.');
+  res.redirect('/portal/super-secure-dashboard/admins');
+};
+
+exports.unlockAdmin = async (req, res) => {
+  const target = await User.findById(req.params.id);
+  if (!target) {
+    req.flash('error', 'Account not found.');
+    return res.redirect('/portal/super-secure-dashboard/admins');
+  }
+  await User.unlockAccount(req.params.id);
+  req.flash('success', `"${target.username}" has been unlocked.`);
   res.redirect('/portal/super-secure-dashboard/admins');
 };
 
@@ -282,6 +303,47 @@ exports.deleteMessage = async (req, res) => {
   await ContactMessage.deleteById(req.params.id);
   req.flash('success', 'Message deleted.');
   res.redirect('/portal/super-secure-dashboard/messages');
+};
+
+// --- Trash: soft-deleted users + profiles, restore or permanently purge ---
+exports.trashPage = async (req, res) => {
+  const [deletedUsers, deletedProfiles] = await Promise.all([
+    User.listDeleted({ page: req.query.usersPage }),
+    Profile.listDeleted({ page: req.query.profilesPage })
+  ]);
+  res.render('superadmin/trash', {
+    title: 'Trash',
+    active: 'trash',
+    deletedUsers: deletedUsers.rows,
+    usersPageInfo: deletedUsers,
+    deletedProfiles: deletedProfiles.rows,
+    profilesPageInfo: deletedProfiles,
+    currentQuery: req.query
+  });
+};
+
+exports.restoreUser = async (req, res) => {
+  await User.restoreById(req.params.id);
+  req.flash('success', 'User restored.');
+  res.redirect('/portal/super-secure-dashboard/trash');
+};
+
+exports.purgeUser = async (req, res) => {
+  await User.purgeById(req.params.id);
+  req.flash('success', 'User permanently deleted.');
+  res.redirect('/portal/super-secure-dashboard/trash');
+};
+
+exports.restoreProfile = async (req, res) => {
+  await Profile.restoreById(req.params.id);
+  req.flash('success', 'Profile restored.');
+  res.redirect('/portal/super-secure-dashboard/trash');
+};
+
+exports.purgeProfile = async (req, res) => {
+  await Profile.purgeById(req.params.id);
+  req.flash('success', 'Profile permanently deleted.');
+  res.redirect('/portal/super-secure-dashboard/trash');
 };
 
 exports.createStory = async (req, res) => {

@@ -1,8 +1,9 @@
 <% if (typeof pageInfo !== 'undefined' && pageInfo.totalPages > 1) {
   const qs = typeof currentQuery !== 'undefined' ? currentQuery : {};
+  const paramName = typeof pageParam !== 'undefined' ? pageParam : 'page';
   function pageLink(n) {
     const params = new URLSearchParams(qs);
-    params.set('page', n);
+    params.set(paramName, n);
     return '?' + params.toString();
   }
 %>

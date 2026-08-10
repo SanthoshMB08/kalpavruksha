@@ -49,7 +49,7 @@
                           <button type="submit"><i class="fa-solid fa-toggle-on"></i> Activate</button>
                         </form>
                       <% } %>
-                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" onsubmit="return confirm('Delete this ad?');"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" data-confirm="Delete this ad?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
                       </form>
                     </div>
@@ -104,7 +104,8 @@
               </div>
               <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
               <div class="field"><label class="form-label">Expires On</label><input type="datetime-local" name="expires_at" required></div>
-              <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required></div>
+              <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required>
+                <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
               <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
             </form>
           </div>
