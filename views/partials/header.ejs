@@ -24,16 +24,24 @@
       <a href="/saved-profiles"><%= t('nav.savedProfiles') %></a>
     <% } %>
     <div class="nav-actions nav-actions-mobile">
-      <div class="lang-toggle lang-toggle-mobile">
-        <a href="/lang/en" class="<%= currentLang === 'en' ? 'active' : '' %>">EN</a>
-        <a href="/lang/kn" class="<%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
+      <div class="nav-lang-switch" role="group" aria-label="Language">
+        <a href="/lang/en" class="nav-lang-switch-option <%= currentLang === 'en' ? 'active' : '' %>">EN</a>
+        <a href="/lang/kn" class="nav-lang-switch-option <%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
       </div>
       <% if (currentUser) { %>
-        <span style="color:#f5d576; font-size:0.85rem;"><%= t('nav.hello') %>, <%= currentUser.name %></span>
-        <a href="/logout" class="btn btn-outline-gold btn-sm"><%= t('nav.logout') %></a>
+        <div class="nav-user-chip">
+          <span class="nav-user-chip-avatar"><i class="fa-solid fa-user"></i></span>
+          <div class="nav-user-chip-meta">
+            <span class="nav-user-chip-label"><%= t('nav.hello') %></span>
+            <span class="nav-user-chip-name"><%= currentUser.name %></span>
+          </div>
+        </div>
+        <a href="/logout" class="btn btn-outline-gold btn-block"><i class="fa-solid fa-arrow-right-from-bracket"></i> <%= t('nav.logout') %></a>
       <% } else { %>
-        <a href="/login" class="btn btn-outline-gold"><%= t('nav.login') %></a>
-        <a href="/register" class="btn btn-gold"><%= t('nav.registerNow') %></a>
+        <div class="nav-auth-buttons">
+          <a href="/login" class="btn btn-outline-gold btn-block"><%= t('nav.login') %></a>
+          <a href="/register" class="btn btn-gold btn-block"><%= t('nav.registerNow') %></a>
+        </div>
       <% } %>
     </div>
   </nav>

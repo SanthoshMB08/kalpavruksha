@@ -632,14 +632,118 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
    font-size: 0.95rem;
   }
   .navbar nav a:hover { color: var(--cream-50); background: rgba(255,255,255,0.04); }
+
+  /* Bottom drawer section — language switch + auth actions */
   .nav-actions-mobile {
    display: flex;
    flex-direction: column;
-   align-items: flex-start;
-   gap: 12px;
+   align-items: stretch;
+   gap: 14px;
    width: 100%;
-   padding: 14px 0 4px;
+   margin-top: 8px;
+   padding: 18px 0 4px;
+   border-top: 1px solid rgba(245,213,118,0.16);
   }
+
+  /* Compact sliding segmented control, replaces the two-pill lang toggle on mobile */
+  .nav-lang-switch {
+   position: relative;
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   width: 100%;
+   padding: 4px;
+   border: 1px solid rgba(245,213,118,0.22);
+   border-radius: 999px;
+   background: rgba(255,255,255,0.06);
+  }
+  .nav-lang-switch::before {
+   content: '';
+   position: absolute;
+   top: 4px;
+   bottom: 4px;
+   left: 4px;
+   width: calc(50% - 4px);
+   border-radius: 999px;
+   background: linear-gradient(180deg, var(--gold-300), var(--gold-500));
+   box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+   transition: transform 260ms var(--ease);
+  }
+  .nav-lang-switch:has(.nav-lang-switch-option:nth-child(2).active)::before {
+   transform: translateX(100%);
+  }
+  .nav-lang-switch-option {
+   position: relative;
+   z-index: 1;
+   text-align: center;
+   padding: 9px 6px;
+   font-size: 0.8rem;
+   font-weight: 700;
+   line-height: 1;
+   color: var(--gold-300);
+   border: 0;
+   margin: 0;
+   border-radius: 999px;
+  }
+  .nav-lang-switch-option.active { color: var(--maroon-900); }
+
+  /* Auth buttons — full width, clearly ranked (Register primary, Login secondary) */
+  .nav-auth-buttons {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   width: 100%;
+  }
+  .nav-actions-mobile .btn {
+   padding: 13px 18px;
+   font-size: 0.88rem;
+   text-align: center;
+  }
+  .nav-actions-mobile .btn-block i { margin-right: 6px; }
+
+  /* Signed-in user chip */
+  .nav-user-chip {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   width: 100%;
+   padding: 10px 12px;
+   border-radius: 12px;
+   background: rgba(255,255,255,0.06);
+   border: 1px solid rgba(245,213,118,0.16);
+  }
+  .nav-user-chip-avatar {
+   display: grid;
+   place-items: center;
+   flex-shrink: 0;
+   width: 34px;
+   height: 34px;
+   border-radius: 999px;
+   background: rgba(245,213,118,0.16);
+   color: var(--gold-300);
+   font-size: 0.85rem;
+  }
+  .nav-user-chip-meta {
+   display: flex;
+   flex-direction: column;
+   min-width: 0;
+   line-height: 1.3;
+  }
+  .nav-user-chip-label {
+   font-size: 0.66rem;
+   font-weight: 700;
+   letter-spacing: 0.09em;
+   text-transform: uppercase;
+   color: rgba(245,213,118,0.7);
+  }
+  .nav-user-chip-name {
+   font-size: 0.92rem;
+   font-weight: 700;
+   color: var(--cream-50);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+  }
+
   body.nav-drawer-locked { overflow: hidden; }
 }
 
@@ -1310,9 +1414,5 @@ input[type="file"] { width: 100%; }
   color: var(--maroon-900);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
 }
-.lang-toggle-mobile {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(245,213,118,0.2);
-  margin: 0;
-}
+
 
