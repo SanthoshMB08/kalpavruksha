@@ -230,10 +230,36 @@ app.use((err, req, res, next) => {
     return;
   }
 
+  // Database/infra-class errors (e.g. the DB is unreachable) can't be recovered
+  // by redirecting — session middleware needs the DB on every request, so a
+  // redirect just fails the same way again and again (redirect loop). Show a
+  // static, self-contained page instead of trying to render/redirect further.
+  const isInfraError =
+    err.severity === 'FATAL' ||
+    ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EAI_AGAIN'].includes(err.code) ||
+    /tenant or user|connection.*(closed|terminated|refused)/i.test(err.message || '');
+  if (isInfraError) {
+    req.log.error({ err }, 'Infrastructure error (likely database unreachable) — showing static error page instead of redirecting');
+    return res.status(503).render('service-error');
+  }
+
+  // Never redirect back to the exact URL that just failed — that's how the
+  // loop above happens for any error type, not just infra ones.
+  const referrer = req.get('Referrer');
+  let safeTarget = referrer || '/';
+  try {
+    const referrerPath = referrer ? new URL(referrer).pathname : null;
+    if (!referrer || referrerPath === req.originalUrl.split('?')[0]) {
+      safeTarget = null;
+    }
+  } catch {
+    // Malformed Referrer header — treat as absent, same as the empty case above.
+  }
+
   if (err === invalidCsrfTokenError || err.code === 'EBADCSRFTOKEN') {
     req.log.warn({ err }, 'Rejected request with invalid/missing CSRF token');
     flash('error', 'Your session expired or this form was already submitted. Please try again.');
-    return res.redirect(req.get('Referrer') || '/');
+    return safeTarget ? res.redirect(safeTarget) : res.status(400).render('service-error');
   }
   if (err.code === 'LIMIT_FILE_SIZE') {
     // Multer's own message ("File too large") doesn't say which limit — our
@@ -241,7 +267,7 @@ app.use((err, req, res, next) => {
     // specific one for image-vs-PDF; this is the fallback for the rare case
     // where multer's own 15MB ceiling rejects the file first.
     flash('error', err.message !== 'File too large' ? err.message : 'File too large — images must be 5MB or smaller, PDFs 15MB or smaller.');
-    return res.redirect(req.get('Referrer') || '/');
+    return safeTarget ? res.redirect(safeTarget) : res.status(400).render('service-error');
   }
   // Routine user-input problems (bad file type from multer's fileFilter)
   // aren't server errors — log at warn so they don't get buried among (or
@@ -253,7 +279,8 @@ app.use((err, req, res, next) => {
     req.log.error(err);
   }
   flash('error', err.message || 'Something went wrong.');
-  res.redirect(req.get('Referrer') || '/');
+  if (safeTarget) return res.redirect(safeTarget);
+  res.status(500).render('service-error');
 });
 
 app.buildFlashHandler = buildFlashHandler;
