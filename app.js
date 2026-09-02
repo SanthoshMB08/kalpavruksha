@@ -18,6 +18,7 @@ const pinoHttp = require('pino-http');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const crypto = require('crypto');
+const { URL } = require('url');
 const { pool } = require('./config/db');
 const Advertisement = require('./models/Advertisement');
 const { getPublicUrl } = require('./utils/storage');
@@ -247,13 +248,17 @@ app.use((err, req, res, next) => {
   // loop above happens for any error type, not just infra ones.
   const referrer = req.get('Referrer');
   let safeTarget = referrer || '/';
-  try {
-    const referrerPath = referrer ? new URL(referrer).pathname : null;
-    if (!referrer || referrerPath === req.originalUrl.split('?')[0]) {
-      safeTarget = null;
+  if (referrer) {
+    try {
+      const referrerPath = new URL(referrer).pathname;
+      if (referrerPath === req.originalUrl.split('?')[0]) {
+        // The referrer is the exact URL that just failed — redirecting there
+        // would just fail the same way again (the loop this fix exists for).
+        safeTarget = null;
+      }
+    } catch {
+      // Malformed Referrer header — treat as absent; safeTarget stays '/' from above.
     }
-  } catch {
-    // Malformed Referrer header — treat as absent, same as the empty case above.
   }
 
   if (err === invalidCsrfTokenError || err.code === 'EBADCSRFTOKEN') {
