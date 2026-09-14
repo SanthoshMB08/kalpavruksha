@@ -24,7 +24,7 @@ function textField(field, label, { optional = false } = {}) {
 }
 
 
-const OCCUPATION_PATTERN = /^[A-Za-z0-9]{1,148}$/;
+const OCCUPATION_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9 ]{0,146}[A-Za-z0-9])?$/;
 function occupationField(field, label, { optional = false } = {}) {
   let chain = body(field).trim();
   chain = optional ? chain.optional({ checkFalsy: true }) : chain.notEmpty().withMessage(`${label} is required.`);
@@ -82,7 +82,7 @@ const profileValidators = [
   moneyField('father_salary', "Father's salary"),
   nameField('mother_name', "Mother's name"),
   occupationField('mother_occupation', "Mother's occupation"),
-  moneyField('mother_salary', "Mother's salary"),
+  moneyField('mother_salary', "Mother's salary",{ optional: true }),
   intField('total_siblings', 'Total siblings', { optional: true }),
   intField('male_siblings', 'Male siblings', { optional: true }),
   intField('female_siblings', 'Female siblings', { optional: true }),
