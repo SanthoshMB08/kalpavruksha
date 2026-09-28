@@ -60,3 +60,7 @@ exports.terms = (req, res) => {
 exports.privacy = (req, res) => {
   res.render('privacy', { title: 'Privacy Policy' });
 };
+
+exports.cookiePolicy = (req, res) => {
+  res.render('cookie-policy', { title: 'Cookie Policy' });
+};

@@ -1,0 +1,78 @@
+<div class="cookie-banner" id="cookieConsent" hidden>
+  <div class="cookie-banner-inner">
+    <div class="cookie-banner-text">
+      <h3 class="cookie-banner-title">
+        <i class="fa-solid fa-cookie-bite" aria-hidden="true"></i>
+        We value your privacy
+      </h3>
+      <p>
+        We use cookies to keep you signed in, protect your account, remember your preferences, and
+        improve the website. You can accept all cookies or continue with essential cookies only.
+        Read our <a href="/cookie-policy">Cookie Policy</a> and <a href="/privacy">Privacy Policy</a>
+        for full details.
+      </p>
+    </div>
+    <div class="cookie-banner-actions">
+      <button type="button" class="btn btn-outline-gold" data-cookie-choice="essential">Essential Only</button>
+      <button type="button" class="btn btn-gold" data-cookie-choice="all">Accept All</button>
+    </div>
+  </div>
+</div>
+<script nonce="<%= nonce %>">
+  (function () {
+    var CONSENT_COOKIE = 'cookie_consent';
+    var ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+
+    function readConsent() {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + CONSENT_COOKIE + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    function writeConsent(choice) {
+      var parts = [
+        CONSENT_COOKIE + '=' + encodeURIComponent(choice),
+        'Path=/',
+        'Max-Age=' + ONE_YEAR_SECONDS,
+        'SameSite=Lax'
+      ];
+      if (window.location.protocol === 'https:') parts.push('Secure');
+      document.cookie = parts.join('; ');
+    }
+
+    var banner = document.getElementById('cookieConsent');
+    if (!banner) return;
+
+    function show() {
+      banner.hidden = false;
+      // Force a reflow so the slide-in transition actually plays on the
+      // element that was hidden at parse time.
+      void banner.offsetWidth;
+      banner.classList.add('is-visible');
+    }
+
+    function hide() {
+      banner.classList.remove('is-visible');
+      banner.hidden = true;
+    }
+
+    // Only ask on a first visit, or when the visitor re-opens the banner via
+    // the "Cookie Settings" footer link.
+    if (!readConsent()) {
+      show();
+    }
+
+    banner.querySelectorAll('[data-cookie-choice]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        writeConsent(btn.getAttribute('data-cookie-choice'));
+        hide();
+      });
+    });
+
+    document.querySelectorAll('[data-cookie-settings]').forEach(function (trigger) {
+      trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        show();
+      });
+    });
+  })();
+</script>

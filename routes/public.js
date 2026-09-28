@@ -12,6 +12,7 @@ router.get('/', publicController.home);
 router.post('/contact', doubleCsrfProtection, publicController.contactSubmit);
 router.get('/terms', publicController.terms);
 router.get('/privacy', publicController.privacy);
+router.get('/cookie-policy', publicController.cookiePolicy);
 
 router.get('/register', redirectIfLoggedIn, authController.showRegister);
 router.post(

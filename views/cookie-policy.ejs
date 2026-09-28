@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="legal-page">
+    <a href="javascript:history.back()" class="legal-back">&larr; Back</a>
+    <h1>Cookie Policy</h1>
+    <p class="legal-updated">Last updated: <%= new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+
+    <p>
+      At Kalpavruksha Kalyana, we value your privacy and are committed to protecting your
+      personal information. This Cookie Policy explains what cookies and similar technologies
+      we use, why we use them, and how you can control them. It forms part of our
+      <a href="/privacy">Privacy Policy</a>.
+    </p>
+
+    <section>
+      <h2>1. What Cookies Are</h2>
+      <p>
+        Cookies are small text files placed on your device when you visit a website. They allow a
+        site to remember information about you between page loads, so you do not have to re-enter
+        the same details each time you visit.
+      </p>
+      <p>
+        Similar technologies include web storage APIs such as <strong>localStorage</strong> and
+        <strong>sessionStorage</strong>. We refer to all of these collectively as "cookies" in this
+        policy.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Cookies We Use</h2>
+      <p>We currently use the following cookies on our website:</p>
+      <ul class="legal-list">
+        <li>
+          <strong>kalpavruksha_sid</strong> &mdash; A session cookie that keeps you signed in while
+          you browse the platform. It contains only an opaque session identifier and carries no
+          personal information.
+        </li>
+        <li>
+          <strong>kalpavruksha_csrf</strong> &mdash; A security cookie used to protect forms and
+          sign-in activity against cross-site request forgery (CSRF). It contains a random value
+          only and carries no personal information.
+        </li>
+        <li>
+          <strong>lang</strong> &mdash; Remembers whether you chose to view the site in English or
+          Kannada, so the language does not reset on every visit.
+        </li>
+        <li>
+          <strong>cookie_consent</strong> &mdash; Records your cookie choice (all cookies, or
+          essential cookies only) so we do not ask you again on every visit.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. How We Use Cookies</h2>
+      <p>Our website uses cookies to:</p>
+      <ul class="legal-list">
+        <li>Keep you signed in and remember your preferences.</li>
+        <li>Protect your account and our forms from security threats.</li>
+        <li>Improve website performance and reliability.</li>
+        <li>Analyse website traffic and understand how the site is used.</li>
+        <li>Enhance your overall browsing experience.</li>
+      </ul>
+      <p>
+        We do not use cookies to collect personally identifiable information for advertising
+        purposes, and we do not sell your cookie data to third parties.
+      </p>
+    </section>
+
+    <section>
+      <h2>4. Essential and Non-Essential Cookies</h2>
+      <p>
+        <strong>Essential cookies</strong> are required for the website to function correctly &mdash;
+        for example, signing you in, keeping your session active, and protecting forms from
+        cross-site request forgery. These are always active and cannot be switched off, because the
+        platform would not work without them.
+      </p>
+      <p>
+        <strong>Non-essential cookies</strong> are those used for optional purposes such as traffic
+        analysis and enhanced browsing features. These are only set if you accept them.
+      </p>
+      <p>
+        Kalpavruksha Kalyana does not use advertising, cross-site tracking, or behavioural
+        profiling cookies. If optional analytics or similar features are introduced in future, they
+        will remain switched off until you give your consent.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. Managing Your Cookie Preferences</h2>
+      <p>
+        You may disable cookies through your browser settings, although some features of the
+        website may not function properly if you do so. In particular, blocking essential cookies
+        will prevent you from signing in or submitting any form on the site.
+      </p>
+      <p>
+        To change or withdraw your choice, you can clear the <strong>cookie_consent</strong> cookie
+        in your browser settings &mdash; this will cause the consent banner to appear again the next
+        time you visit, so you can select a different option. You can also re-open this banner at any
+        time using the "Cookie Settings" link in the footer.
+      </p>
+      <p>
+        Most browsers can be configured to block all or specific cookies, or to prompt you before
+        accepting them. Please consult your browser's help documentation for instructions.
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Third-Party Cookies</h2>
+      <p>
+        Some pages may embed content or links from third-party websites, which may set their own
+        cookies under their own privacy policies. We do not control or govern these cookies. We
+        recommend reviewing the privacy policies of any third-party site you visit.
+      </p>
+    </section>
+
+    <section>
+      <h2>7. Your Consent</h2>
+      <p>
+        Where consent is required, it is collected through the cookie banner shown on your first
+        visit to the site. You may withdraw consent at any time using the "Cookie Settings" link in
+        the footer or by clearing your browser cookies for this site.
+      </p>
+    </section>
+
+    <section>
+      <h2>8. Children</h2>
+      <p>
+        Our services are intended only for individuals who are legally eligible to marry under
+        applicable law. We do not knowingly collect personal information or set cookies for the
+        purpose of building profiles on children.
+      </p>
+    </section>
+
+    <section>
+      <h2>9. Changes to This Cookie Policy</h2>
+      <p>
+        We may update this Cookie Policy from time to time. Any changes will be posted on this page
+        with the revised effective date. Continued use of the website after such changes
+        constitutes acceptance of the updated Cookie Policy.
+      </p>
+    </section>
+
+    <section>
+      <h2>10. Contact</h2>
+      <p>
+        For any questions about cookies or this Cookie Policy, please reach out via the Contact
+        section on our home page. For our full privacy practices, please see our
+        <a href="/privacy">Privacy Policy</a>.
+      </p>
+    </section>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
