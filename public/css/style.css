@@ -113,18 +113,44 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 .navbar .brand .glyph { color: var(--gold-400, var(--gold-500)); font-size: 1.4rem; }
 
 /* Desktop/mobile logo swap — two separate image files so each can be
    art-directed for its own space (wide wordmark lockup vs. compact mark),
    rather than just scaling one image down. Breakpoint matches .nav-toggle's
-   900px so the logo switches at the same point the nav collapses. */
-.brand-logo { display: block; height: 52px; width: auto; border-radius: 50%; }
+   900px so the logo switches at the same point the nav collapses.
+   Note: both PNGs ship with a transparent margin around the round badge, so
+   the drawn mark is ~70% of the declared height — sizes below are chosen to
+   give a visible mark of roughly 46px desktop / 38px mobile. */
+.brand-logo { display: block; height: 64px; width: auto; border-radius: 50%; }
 .brand-logo-mobile { display: none; }
 @media (max-width: 900px) {
   .brand-logo-desktop { display: none; }
-  .brand-logo-mobile { display: block; height: 44px; }
+  .brand-logo-mobile { display: block; height: 54px; }
+}
+.brand-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.brand-name-primary {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cream-50);
+  letter-spacing: 0.02em;
+}
+.brand-name-secondary {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gold-300);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 .navbar nav a {
   color: var(--gold-300);
@@ -134,7 +160,7 @@ a { color: inherit; text-decoration: none; }
   transition: color .15s ease;
 }
 .navbar nav a:hover { color: var(--cream-50); }
-.nav-actions { display: flex; align-items: center; gap: 12px; }
+.nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
 .btn {
   display: inline-block;
@@ -501,6 +527,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
   .filter-sidebar { position: static; height: auto; }
   .form-grid, .form-section-card .form-grid { grid-template-columns: 1fr; }
   .contact-form { grid-template-columns: 1fr; }
+  .navbar nav a { margin-left: 18px; font-size: 0.86rem; }
 }
 
 /* ==========================================================================
@@ -568,6 +595,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold-500); 
   .navbar { flex-wrap: nowrap; padding: 12px 18px; justify-content: flex-start; gap: 12px; }
   .nav-toggle { display: grid; place-items: center; order: -1; }
   .navbar .brand { font-size: 1.15rem; }
+  .brand-name-primary { font-size: 1.15rem; }
+  .brand-name-secondary { font-size: 0.58rem; letter-spacing: 0.16em; }
   .nav-actions-desktop { display: none; }
 
   .nav-drawer-overlay.open {
