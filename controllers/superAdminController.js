@@ -5,6 +5,7 @@ const Profile = require('../models/Profile');
 const Advertisement = require('../models/Advertisement');
 const SuccessStory = require('../models/SuccessStory');
 const ContactMessage = require('../models/ContactMessage');
+const profileOptions = require('../utils/profileOptions');
 
 exports.showLogin = (req, res) => {
   res.render('superadmin/login', { title: 'Super Admin Login', error: null });
@@ -163,7 +164,7 @@ exports.changeAdminPassword = async (req, res) => {
 exports.showEditProfileForm = async (req, res) => {
   const profile = await Profile.findByIdFull(req.params.id);
   if (!profile) return res.redirect('/portal/admin-dashboard/profiles');
-  res.render('superadmin/profile-edit', { title: `Edit ${profile.full_name}`, active: 'profiles', profile, errors: [] });
+  res.render('superadmin/profile-edit', { title: `Edit ${profile.full_name}`, active: 'profiles', profile, errors: [], opts: profileOptions });
 };
 
 exports.updateProfile = async (req, res) => {
@@ -174,7 +175,8 @@ exports.updateProfile = async (req, res) => {
       title: `Edit ${profile ? profile.full_name : ''}`,
       active: 'profiles',
       profile: { ...profile, ...req.body, id: req.params.id },
-      errors: errors.array().map((e) => e.msg)
+      errors: errors.array().map((e) => e.msg),
+      opts: profileOptions
     });
   }
   try {
@@ -184,6 +186,11 @@ exports.updateProfile = async (req, res) => {
     if (files.profile_image_2) data.image_name_2 = files.profile_image_2[0].filename;
     if (files.jathaka_pdf) data.jathaka_pdf_name = files.jathaka_pdf[0].filename;
     if (files.biodata_pdf) data.biodata_pdf_name = files.biodata_pdf[0].filename;
+    // Keep the legacy `language` column (still used by the member search
+    // filter) in sync whenever mother_tongue is edited here.
+    if (data.mother_tongue) {
+      data.language = data.mother_tongue === 'Other' ? (data.mother_tongue_other || 'Other') : data.mother_tongue;
+    }
     await Profile.updateFields(req.params.id, data);
     req.flash('success', 'Profile updated.');
     res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);

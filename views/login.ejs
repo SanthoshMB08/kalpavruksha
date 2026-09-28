@@ -11,17 +11,17 @@
       <h1><%= t('login.welcomeBack') %></h1>
       <div class="subtitle"><%= t('login.subtitle') %></div>
 
-      <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+      <% if (error) { %><div class="error-box" role="alert" aria-live="assertive"><%= error %></div><% } %>
 
       <form class="auth-form" action="/login" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
           <label class="form-label"><%= t('login.username') %></label>
-          <input type="text" name="username" required autofocus>
+          <input type="text" name="username" value="<%= (old && old.username) || '' %>" autocomplete="username" required autofocus>
         </div>
         <div class="field">
           <label class="form-label"><%= t('login.password') %></label>
           <div class="password-field">
-            <input type="password" name="password" required>
+            <input type="password" name="password" autocomplete="current-password" required>
             <button type="button" class="password-toggle-btn" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
           </div>
         </div>

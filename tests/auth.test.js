@@ -114,6 +114,23 @@ describe('Member login', () => {
     const token = await getCsrfToken(agent, '/login');
     const res = await agent.post('/login').type('form').send({ username: 'wrongpassuser', password: 'nope', _csrf: token });
     expect(res.text).toMatch(/Invalid username or password/);
+    expect(res.text).toContain('value="wrongpassuser"');
+  });
+
+  it('shows the signed-in member their account details on the private profile page', async () => {
+    const user = await createUser(pool, {
+      name: 'Profile Member',
+      username: 'profilemember',
+      mobile_number: '9000000123'
+    });
+    const agent = request.agent(app);
+    await loginAs(agent, '/login', user.username, user.plainPassword);
+
+    const res = await agent.get('/my-profile');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('Profile Member');
+    expect(res.text).toContain('9000000123');
+    expect(res.text).toContain('contact the admin team');
   });
 });
 

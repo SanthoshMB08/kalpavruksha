@@ -1,6 +1,7 @@
 const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const Advertisement = require('../models/Advertisement');
+const User = require('../models/User');
 
 // Gender-based matching is mandatory: a male member only ever sees female
 // profiles and vice versa. This is enforced here, not left to the user to pick.
@@ -53,6 +54,30 @@ exports.dashboard = async (req, res) => {
       filters: {},
       afterSearchAds: []
     });
+  }
+};
+
+exports.myProfile = async (req, res) => {
+  try {
+    const [user, profile] = await Promise.all([
+      User.findMemberById(req.session.user.id),
+      Profile.findByUserId(req.session.user.id)
+    ]);
+
+    if (!user) {
+      req.flash('error', 'Your account details could not be loaded. Please contact the administrator.');
+      return res.redirect('/');
+    }
+
+    res.render('my-profile', {
+      title: 'My Profile',
+      user,
+      profile
+    });
+  } catch (err) {
+    req.log.error(err);
+    req.flash('error', 'Could not load your profile right now. Please try again.');
+    res.redirect('/');
   }
 };
 

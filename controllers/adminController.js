@@ -252,8 +252,41 @@ exports.listProfiles = async (req, res) => {
   });
 };
 
+const profileOptions = require('../utils/profileOptions');
+
 exports.showNewProfileForm = (req, res) => {
-  res.render('admin/profile-form', { title: 'Upload New Profile', active: 'profiles', errors: [], old: {} });
+  res.render('admin/profile-form', { title: 'Upload New Profile', active: 'profiles', errors: [], old: {}, opts: profileOptions });
+};
+
+// GET /admin-dashboard/profiles/check-mobile?mobile=9876543210
+// Looks up an existing member account by phone number so the "add profile"
+// form can auto-fill Name/Gender instead of the admin re-typing them, and
+// warn if that account is already linked to a profile. Purely a UX
+// convenience — createProfile() below re-does this lookup itself and never
+// trusts anything the client sends back from this endpoint.
+exports.checkMobile = async (req, res) => {
+  const mobile = String(req.query.mobile || '').trim();
+  if (!/^[6-9][0-9]{9}$/.test(mobile)) {
+    return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' });
+  }
+  try {
+    const user = await User.findByMobile(mobile);
+    if (!user || user.role !== 'user') {
+      return res.json({ exists: false });
+    }
+    const existingProfile = await Profile.findByUserId(user.id);
+    res.json({
+      exists: true,
+      name: user.name,
+      gender: user.gender,
+      alreadyHasProfile: !!existingProfile,
+      existingProfileName: existingProfile ? existingProfile.full_name : null,
+      existingProfileId: existingProfile ? existingProfile.id : null
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: 'Could not check that number right now.' });
+  }
 };
 
 exports.createProfile = async (req, res) => {
@@ -263,7 +296,8 @@ exports.createProfile = async (req, res) => {
       title: 'Upload New Profile',
       active: 'profiles',
       errors: errors.array().map((e) => e.msg),
-      old: req.body
+      old: req.body,
+      opts: profileOptions
     });
   }
   try {
@@ -279,7 +313,8 @@ exports.createProfile = async (req, res) => {
         title: 'Upload New Profile',
         active: 'profiles',
         errors: [`A profile with this phone number already exists: "${duplicatePhone.full_name}" (#${duplicatePhone.id}).`],
-        old: req.body
+        old: req.body,
+        opts: profileOptions
       });
     }
     if (req.body.confirm_duplicate !== '1') {
@@ -290,7 +325,8 @@ exports.createProfile = async (req, res) => {
           active: 'profiles',
           duplicateWarning: `A profile with the same name and date of birth already exists: "${possibleDup.full_name}" (#${possibleDup.id}). If this is a different person, submit again to continue.`,
           errors: [],
-          old: req.body
+          old: req.body,
+          opts: profileOptions
         });
       }
     }
@@ -306,17 +342,65 @@ exports.createProfile = async (req, res) => {
       return res.redirect('/portal/admin-dashboard/profiles/new');
     }
 
+    // Every profile is linked to a login account. Re-check the phone number
+    // here rather than trusting whatever the check-mobile AJAX call told the
+    // browser earlier — the client could have tampered with a hidden field.
+    const existingUser = await User.findByMobile(req.body.phone_number);
+    let userId;
+    let linkedExisting = false;
+    if (existingUser && existingUser.role === 'user') {
+      userId = existingUser.id;
+      linkedExisting = true;
+    } else {
+      const password = req.body.password || '';
+      const confirmPassword = req.body.confirm_password || '';
+      const passwordOk = password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+      if (!passwordOk) {
+        return res.render('admin/profile-form', {
+          title: 'Upload New Profile',
+          active: 'profiles',
+          errors: ['No existing account found for this number — set a password (8+ characters, with an uppercase letter, a lowercase letter, and a number) to create one.'],
+          old: req.body,
+          opts: profileOptions
+        });
+      }
+      if (password !== confirmPassword) {
+        return res.render('admin/profile-form', {
+          title: 'Upload New Profile',
+          active: 'profiles',
+          errors: ['Password and Confirm Password do not match.'],
+          old: req.body,
+          opts: profileOptions
+        });
+      }
+      const passwordHash = await bcrypt.hash(password, 12);
+      const username = await User.generateUniqueUsername(req.body.full_name, req.body.gender);
+      userId = await User.create({
+        name: req.body.full_name,
+        mobile_number: req.body.phone_number,
+        username,
+        passwordHash,
+        role: 'user',
+        status: 'approved',
+        gender: req.body.gender
+      });
+    }
+
     await Profile.create({
       ...req.body,
       image_name: image,
       image_name_2: image2,
       jathaka_pdf_name: jathaka,
       biodata_pdf_name: biodata,
-      marital_status: 'unmarried',
+      // `language` is a legacy column still used by the member search filter;
+      // the form now collects the richer `mother_tongue` field instead, so
+      // derive the old column from that rather than asking for it twice.
+      language: (req.body.mother_tongue === 'Other' ? req.body.mother_tongue_other : req.body.mother_tongue) || req.body.mother_tongue || 'Other',
+      user_id: userId,
       created_by: req.session.user.id
     });
 
-    req.flash('success', 'Profile uploaded successfully.');
+    req.flash('success', linkedExisting ? 'Profile uploaded and linked to the existing account.' : 'Profile uploaded and a new member account was created.');
     res.redirect('/portal/admin-dashboard/profiles');
   } catch (err) {
     req.log.error(err);
@@ -334,7 +418,7 @@ exports.deleteProfile = async (req, res) => {
 exports.viewProfileFull = async (req, res) => {
   const profile = await Profile.findByIdFull(req.params.id);
   if (!profile) return res.redirect('/portal/admin-dashboard/profiles');
-  res.render('admin/profile-detail', { title: profile.full_name, active: 'profiles', profile });
+  res.render('admin/profile-detail', { title: profile.full_name, active: 'profiles', profile, opts: profileOptions });
 };
 
 // Admin capability: add/replace up to two profile photos on an existing profile.

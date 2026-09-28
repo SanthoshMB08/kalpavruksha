@@ -15,70 +15,218 @@
     </div>
   </div>
 
-  <div style="max-width:1200px; margin:0 auto;">
-
-    <section class="hero">
-      <div>
+  <!-- ================= Hero Banner + Quick Register ================= -->
+  <section class="hero-banner">
+    <picture>
+      <source media="(max-width: 899px)" srcset="/assets/banner/banner-mobile.jpg">
+      <img src="/assets/banner/banner-desktop.jpg" alt="Kalpavruksha Kalyana — a couple at a temple at sunset" class="hero-banner-img">
+    </picture>
+    <div class="hero-banner-overlay">
+      <div class="hero-banner-text">
         <h1><%= t('home.heroHeadingLine1') %><br><em><%= t('home.heroHeadingLine2') %></em></h1>
         <p><%= t('home.heroSubtitle') %></p>
-        <% if (currentUser) { %>
-          <div style="display:flex; gap:14px;">
-            <a href="/dashboard" class="btn btn-gold"><%= t('home.ctaFindMatch') %></a>
-            <a href="/saved-profiles" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('home.ctaSavedProfiles') %></a>
-          </div>
-        <% } else if (!currentUser) { %>
-          <div style="display:flex; gap:14px;">
-            <a href="/register" class="btn btn-gold"><%= t('home.ctaRegister') %></a>
-            <a href="/login" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('home.alreadyMember') %></a>
-          </div>
-        <% } %>
-        <div style="margin-top:26px; font-size:0.85rem; color:#8a7156;"><%= totalProfiles %>+ <%= t('home.verifiedProfiles') %></div>
+        <span class="hero-banner-badge"><i class="fa-solid fa-shield-heart"></i> <%= totalProfiles %>+ <%= t('home.verifiedProfiles') %></span>
       </div>
-      <div class="hero-frame">
-        <img src="assets/image_8ead9b73.png?q=80&w=800&auto=format&fit=crop" alt="Traditional Indian couple in wedding attire">
-      </div>
-    </section>
 
-    <section class="split-grid" id="about">
+      <% if (!currentUser) { %>
+      <div class="hero-register-card">
+        <h3>Register Free</h3>
+        <div class="subtitle">Find your perfect life partner today</div>
+        <form action="/register" method="GET">
+          <div class="field">
+            <label>Name</label>
+            <input type="text" name="name" placeholder="Enter your name" required>
+          </div>
+          <div class="field">
+            <label>Mobile Number</label>
+            <input type="text" name="mobile_number" placeholder="10-digit mobile number" pattern="[6-9][0-9]{9}" maxlength="10" required>
+          </div>
+          <div class="field">
+            <label>I am a</label>
+            <select name="gender" required>
+              <option value="">Select</option>
+              <option value="male">Groom</option>
+              <option value="female">Bride</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-gold">Register Free</button>
+        </form>
+        <div class="fine-print">By continuing, you agree to our <a href="/terms" style="color:var(--maroon-800);">Terms</a> &amp; <a href="/privacy" style="color:var(--maroon-800);">Privacy Policy</a></div>
+      </div>
+      <% } else { %>
+      <div class="hero-register-card">
+        <h3><%= t('home.ctaFindMatch') %></h3>
+        <div class="subtitle">Welcome back, <%= currentUser.name %></div>
+        <a href="/dashboard" class="btn btn-gold" style="display:block; text-align:center; margin-bottom:10px;"><%= t('home.ctaFindMatch') %></a>
+        <a href="/saved-profiles" class="btn btn-outline-gold" style="display:block; text-align:center; border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('home.ctaSavedProfiles') %></a>
+        <a href="/my-profile" class="home-profile-link"><i class="fa-solid fa-user"></i> View my profile</a>
+        <p class="home-admin-note">For profile changes, please contact our admin team.</p>
+      </div>
+      <% } %>
+    </div>
+  </section>
+
+  <% if (!currentUser) { %>
+  <!-- ================= Search + Filter (leads to Register) ================= -->
+  <div class="home-search-wrap">
+    <form class="home-search-bar" action="/register" method="GET">
+      <div class="home-search-bar-title"><i class="fa-solid fa-magnifying-glass"></i> Search for Your Life Partner</div>
+      <div class="home-search-grid">
+        <div class="field">
+          <label>Looking For</label>
+          <select name="gender">
+            <option value="">Bride / Groom</option>
+            <option value="female">Bride</option>
+            <option value="male">Groom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Age From</label>
+          <select name="ageFrom">
+            <% for (let a = 18; a <= 60; a++) { %><option value="<%= a %>"><%= a %></option><% } %>
+          </select>
+        </div>
+        <div class="field">
+          <label>Age To</label>
+          <select name="ageTo">
+            <% for (let a = 18; a <= 60; a++) { %><option value="<%= a %>" <%= a === 35 ? 'selected' : '' %>><%= a %></option><% } %>
+          </select>
+        </div>
+        <div class="field">
+          <button type="submit" class="btn btn-gold" style="width:100%;"><i class="fa-solid fa-magnifying-glass"></i> Search Now</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ================= How It Works ================= -->
+  <section class="how-it-works">
+    <div class="section-eyebrow">How It Works</div>
+    <h2>Your Journey to Finding the Perfect Life Partner Starts Here</h2>
+    <p>Finding your soulmate should be simple, secure, and meaningful. Our platform connects genuine brides and grooms through verified profiles and smart matching, making your search for a lifelong partner easier than ever.</p>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">1</div>
+        <h3>Create Your Free Profile</h3>
+        <p>Register in just a few minutes by providing your basic details, uploading your photo, and completing your profile.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">2</div>
+        <h3>Discover Compatible Matches</h3>
+        <p>Browse verified profiles and receive personalized recommendations based on your preferences, community, education, profession, location, and more.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">3</div>
+        <h3>Express Interest</h3>
+        <p>Send or receive interests from members you like. Start meaningful conversations once both parties show mutual interest.</p>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ================= Meet Our Brides & Grooms ================= -->
+  <% if (!currentUser && ((featuredBrides && featuredBrides.length) || (featuredGrooms && featuredGrooms.length))) { %>
+  <section class="members-row-section">
+    <div class="section-eyebrow">Recently Joined</div>
+    <h2>Meet Our Brides &amp; Grooms</h2>
+    <% if (featuredGrooms && featuredGrooms.length) { %>
+      <div class="members-row-group">
+        <h4><i class="fa-solid fa-user-tie"></i> Grooms</h4>
+        <div class="members-row">
+          <% featuredGrooms.forEach(function(p) { %>
+            <div class="member-card">
+              <div class="photo-wrap"><img src="<%= fileUrl('profiles', p.image_name) %>" alt="" loading="lazy"></div>
+              <div class="name"><%= p.full_name.split(' ')[0] %>, <%= Math.round(p.age) %></div>
+              <div class="meta"><%= p.city || '' %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+    <% if (featuredBrides && featuredBrides.length) { %>
+      <div class="members-row-group">
+        <h4><i class="fa-solid fa-person-dress"></i> Brides</h4>
+        <div class="members-row">
+          <% featuredBrides.forEach(function(p) { %>
+            <div class="member-card">
+              <div class="photo-wrap"><img src="<%= fileUrl('profiles', p.image_name) %>" alt="" loading="lazy"></div>
+              <div class="name"><%= p.full_name.split(' ')[0] %>, <%= Math.round(p.age) %></div>
+              <div class="meta"><%= p.city || '' %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+    <div style="text-align:center; margin-top:24px;">
+      <a href="/register" class="btn btn-gold">Register Free to View Full Profiles</a>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ================= About Us ================= -->
+  <section class="about-section" id="about">
+    <div class="about-section-inner">
+      <div class="section-eyebrow">About Us</div>
+      <h2 class="about-title">Connecting Hearts with Trust, Tradition &amp; Guidance</h2>
+
+      <p>Welcome to Kalpavruksha Kalyana, a dedicated matrimony platform committed to helping individuals and families find compatible life partners with confidence. Although our matrimony service is newly launched, it is built on a strong foundation of over 20 years of trusted experience in Vedic astrology and spiritual guidance.</p>
+      <p>For more than two decades, we have helped thousands of families through accurate astrological consultations and traditional guidance. Now, we bring that same expertise to the world of matchmaking by combining timeless values with modern technology.</p>
+      <p>We believe that a successful marriage is built on compatibility, mutual respect, shared values, and informed decisions. Our platform offers a secure, user-friendly, and privacy focused environment where genuine brides, grooms, and families can connect and begin their journey toward a happy and fulfilling married life.</p>
+
+      <h3><i class="fa-solid fa-star-and-crescent"></i> Our Expertise</h3>
+      <p>With over 20 years of experience, we specialize in:</p>
+      <ul class="about-list">
+        <li>Horoscope Preparation &amp; Analysis</li>
+        <li>Naming Ceremony (Namakarana)</li>
+        <li>Vastu Consultation</li>
+        <li>Transit (Gochara) Predictions</li>
+        <li>Complete Vedic Astrology Guidance</li>
+        <li>Marriage Compatibility &amp; Horoscope Matching</li>
+        <li>Personalized Astrological Consultation</li>
+      </ul>
+
+      <h3><i class="fa-solid fa-award"></i> Why Choose Us?</h3>
+      <ul class="about-list">
+        <li>20+ Years of Trusted Astrology Experience</li>
+        <li>Verified Member Profiles</li>
+        <li>Easy Search &amp; Smart Matchmaking</li>
+        <li>Community-Based Matchmaking</li>
+        <li>Transparent &amp; Reliable Services</li>
+      </ul>
+
+      <h3><i class="fa-solid fa-bullseye"></i> Our Mission</h3>
+      <p>Our mission is to create meaningful and lasting relationships by combining traditional values, astrological wisdom, and modern matchmaking technology. We strive to help every individual and family find a compatible life partner in a safe, trustworthy, and respectful environment.</p>
+
+      <h3><i class="fa-solid fa-eye"></i> Our Vision</h3>
+      <p>To become one of the most trusted matrimony platforms, known for authenticity, personalized service, and a commitment to helping people build lifelong relationships based on trust, compatibility, and shared values.</p>
+
+      <h3><i class="fa-solid fa-heart"></i> Begin Your Journey Today</h3>
+      <p>Whether you're searching for your soulmate or seeking trusted astrological guidance before marriage, we're here to support you every step of the way. Join Kalpavruksha Kalyana and take the first step toward a happy and meaningful future.</p>
+
+      <div class="about-quote">
+        "We understand that marriage is more than a union of two individuals. It's the coming together of two families. Our platform is dedicated to helping you find a compatible life partner through a secure, reliable, and trusted matchmaking experience."
+        <span class="signature">— Sri Markandayya Mahamunigalu</span>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1200px; margin:0 auto;">
+
+    <% if (sidebarAds && sidebarAds.length) { %>
+    <section class="split-grid">
       <div class="ads-corner">
         <div class="eyebrow">Sponsored</div>
         <h3>Auspicious Ads Corner</h3>
-        <% if (sidebarAds && sidebarAds.length) { %>
-          <% sidebarAds.forEach(function(ad) { %>
-            <div class="ad-slot">
-              <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
-                <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
-              </a>
-            </div>
-          <% }) %>
-        <% } else { %>
-          <div class="ad-slot-empty">Advertisement space reserved for our sponsors.</div>
-        <% } %>
-      </div>
-
-      <div class="about-copy">
-        <h2><%= t('home.trustTitle') %></h2>
-        <p>Every family who joins Kalpavruksha Kalyana goes through a simple verification process before their profile becomes visible to other members. This keeps the community genuine, respectful, and focused on serious, faith-aligned alliances.</p>
-        <p>Our team personally reviews each registration, confirms the details shared, and only then opens the door to matchmaking &mdash; so every connection you make here starts from a place of trust.</p>
-        <div class="verify-steps">
-          <div class="verify-step">
-            <div class="num">1</div>
-            <strong>Register</strong>
-            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Share your basic details securely.</p>
+        <% sidebarAds.forEach(function(ad) { %>
+          <div class="ad-slot">
+            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
+              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
+            </a>
           </div>
-          <div class="verify-step">
-            <div class="num">2</div>
-            <strong>Verify</strong>
-            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Our team reviews and approves your profile.</p>
-          </div>
-          <div class="verify-step">
-            <div class="num">3</div>
-            <strong>Connect</strong>
-            <p style="font-size:0.85rem; color:#6b5638; margin-top:6px;">Search, save, and express interest freely.</p>
-          </div>
-        </div>
+        <% }) %>
       </div>
     </section>
+    <% } %>
 
     <section class="stories-section" id="stories">
       <div class="kalasha-divider"><i class="fa-solid fa-star deco-star" aria-hidden="true"></i> <%= t('home.storiesTitle') %> <i class="fa-solid fa-star deco-star" aria-hidden="true"></i></div>
@@ -102,7 +250,7 @@
         <div class="home-ad-banner-row">
           <% midAds.forEach(function(ad) { %>
             <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
+              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
             </a>
           <% }) %>
         </div>
@@ -111,7 +259,7 @@
 
     <section class="contact-section" id="contact">
       <h2><%= t('home.contactTitle') %></h2>
-      <p style="color:#f5d576; opacity:0.85;">Have a question about registration or verification? Send us a note.</p>
+      <p style="color:var(--gold-300); opacity:0.85;">Have a question about registration or verification? Send us a note.</p>
       <form class="contact-form" action="/contact" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
           <label>Name</label>
@@ -134,7 +282,7 @@
         <div class="home-ad-banner-row">
           <% bottomAds.forEach(function(ad) { %>
             <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
+              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
             </a>
           <% }) %>
         </div>

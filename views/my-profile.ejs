@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="my-profile-page">
+    <div class="my-profile-heading">
+      <span class="section-eyebrow">Account</span>
+      <h1>My Profile</h1>
+      <p>Your account and matrimonial profile details.</p>
+    </div>
+
+    <section class="my-profile-card">
+      <div class="my-profile-account">
+        <span class="my-profile-avatar"><i class="fa-solid fa-user"></i></span>
+        <div>
+          <h2><%= user.name %></h2>
+          <span class="badge badge-approved">Approved member</span>
+        </div>
+      </div>
+      <dl class="my-profile-details">
+        <div><dt>Username</dt><dd><%= user.username %></dd></div>
+        <div><dt>Mobile number</dt><dd><%= user.mobile_number %></dd></div>
+        <div><dt>Gender</dt><dd><%= user.gender === 'male' ? 'Male' : user.gender === 'female' ? 'Female' : '—' %></dd></div>
+      </dl>
+    </section>
+
+    <% if (profile) { %>
+      <section class="my-profile-card">
+        <div class="my-profile-section-heading">
+          <div>
+            <span class="section-eyebrow">Matrimonial profile</span>
+            <h2><%= profile.full_name %><% if (profile.age) { %>, <%= profile.age %><% } %></h2>
+          </div>
+          <% if (profile.image_name) { %>
+            <img class="my-profile-photo" src="<%= fileUrl('profiles', profile.image_name) %>" alt="Profile photo for <%= profile.full_name %>">
+          <% } %>
+        </div>
+        <dl class="my-profile-details">
+          <div><dt>Marital status</dt><dd><%= (profile.marital_status || '—').replace(/_/g, ' ') %></dd></div>
+          <div><dt>Religion</dt><dd><%= profile.religion === 'other' ? (profile.religion_other || 'Other') : (profile.religion || '—') %></dd></div>
+          <div><dt>Caste / Sub-caste</dt><dd><%= profile.caste || '—' %><%= profile.subcaste ? ' / ' + profile.subcaste : '' %></dd></div>
+          <div><dt>Education</dt><dd><%= profile.education || '—' %></dd></div>
+          <div><dt>Occupation</dt><dd><%= profile.occupation === 'Other' ? (profile.occupation_other || 'Other') : (profile.occupation || '—') %></dd></div>
+          <div><dt>Location</dt><dd><%= [profile.city, profile.state, profile.country].filter(Boolean).join(', ') || '—' %></dd></div>
+          <div><dt>Mother tongue</dt><dd><%= profile.mother_tongue === 'Other' ? (profile.mother_tongue_other || 'Other') : (profile.mother_tongue || profile.language || '—') %></dd></div>
+          <div><dt>Date of birth</dt><dd><%= profile.date_of_birth || '—' %><%= profile.time_of_birth ? ' · ' + profile.time_of_birth : '' %></dd></div>
+          <div><dt>Birth place</dt><dd><%= profile.birth_place || '—' %></dd></div>
+          <div><dt>Family type</dt><dd><%= profile.family_type || '—' %></dd></div>
+          <div><dt>Family values</dt><dd><%= profile.family_values || '—' %></dd></div>
+          <div><dt>Family status</dt><dd><%= profile.family_status || '—' %></dd></div>
+          <div><dt>Father</dt><dd><%= profile.father_name || '—' %><%= profile.father_occupation ? ' · ' + profile.father_occupation : '' %></dd></div>
+          <div><dt>Mother</dt><dd><%= profile.mother_name || '—' %><%= profile.mother_occupation ? ' · ' + profile.mother_occupation : '' %></dd></div>
+          <div><dt>Rashi / Nakshatra</dt><dd><%= [profile.rashi, profile.nakshatra].filter(Boolean).join(' / ') || '—' %></dd></div>
+          <div><dt>Annual income</dt><dd><%= profile.annual_income_band || profile.annual_salary || '—' %></dd></div>
+          <div><dt>Address</dt><dd><%= [profile.address, profile.city, profile.state, profile.country].filter(Boolean).join(', ') || '—' %></dd></div>
+        </dl>
+      </section>
+    <% } else { %>
+      <section class="my-profile-card my-profile-empty">
+        <span class="my-profile-empty-icon"><i class="fa-regular fa-address-card"></i></span>
+        <h2>Your matrimonial profile is not available yet</h2>
+        <p>Please contact the admin team if you need help adding or updating your profile.</p>
+      </section>
+    <% } %>
+
+    <aside class="my-profile-help">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <p>Need to change any details? Please <a href="/#contact">contact the admin team</a> and they’ll be happy to help.</p>
+    </aside>
+
+    <div class="my-profile-actions">
+      <a href="/dashboard" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> Find matches</a>
+      <a href="/saved-profiles" class="btn btn-outline-gold my-profile-outline">Saved profiles</a>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

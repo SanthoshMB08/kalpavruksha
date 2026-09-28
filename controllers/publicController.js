@@ -5,10 +5,12 @@ const ContactMessage = require('../models/ContactMessage');
 
 exports.home = async (req, res) => {
   try {
-    const [adsByPlacement, totalProfiles, stories] = await Promise.all([
+    const [adsByPlacement, totalProfiles, stories, featuredBrides, featuredGrooms] = await Promise.all([
       Advertisement.listActiveGroupedByPlacements(['sidebar', 'home_middle', 'home_bottom']),
       Profile.count(),
-      SuccessStory.listActive()
+      SuccessStory.listActive(),
+      Profile.listFeatured('female', 8),
+      Profile.listFeatured('male', 8)
     ]);
     res.render('index', {
       title: 'Kalpavruksha Kalyana',
@@ -16,7 +18,9 @@ exports.home = async (req, res) => {
       midAds: adsByPlacement.home_middle,
       bottomAds: adsByPlacement.home_bottom,
       totalProfiles,
-      stories
+      stories,
+      featuredBrides,
+      featuredGrooms
     });
   } catch (err) {
     req.log.error(err);
@@ -26,7 +30,9 @@ exports.home = async (req, res) => {
       midAds: [],
       bottomAds: [],
       totalProfiles: 0,
-      stories: []
+      stories: [],
+      featuredBrides: [],
+      featuredGrooms: []
     });
   }
 };

@@ -7,6 +7,17 @@
   <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
   <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
+  <%
+    const maritalLabel = (opts.MARITAL_STATUS_OPTIONS.find(function(o){ return o.value === profile.marital_status; }) || {}).label || profile.marital_status;
+    const religionLabel = (opts.RELIGION_OPTIONS.find(function(o){ return o.value === profile.religion; }) || {}).label || profile.religion;
+    const casteDisplay = profile.caste === 'Other' ? (profile.caste_other || 'Other') : profile.caste;
+    const religionDisplay = profile.religion === 'other' ? (profile.religion_other || 'Other') : religionLabel;
+    const employedInLabel = (opts.EMPLOYED_IN_OPTIONS.find(function(o){ return o.value === profile.employed_in; }) || {}).label || profile.employed_in;
+    const employedInDisplay = profile.employed_in === 'other' ? (profile.employed_in_other || 'Others') : employedInLabel;
+    const occupationDisplay = profile.occupation === 'Other' ? (profile.occupation_other || 'Other') : profile.occupation;
+    const childrenLabel = (opts.CHILDREN_OPTIONS.find(function(o){ return o.value === profile.has_children; }) || {}).label;
+    const motherTongueDisplay = profile.mother_tongue === 'Other' ? (profile.mother_tongue_other || 'Other') : profile.mother_tongue;
+  %>
     <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back to all profiles</a>
 
     <div class="panel" style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
@@ -18,11 +29,14 @@
       </div>
       <div>
         <h2><%= profile.full_name %>, <%= profile.age %></h2>
-        <p style="color:#8a7156;"><%= profile.occupation %> &middot; <%= profile.city %>, <%= profile.state %></p>
-        <span class="badge <%= profile.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= profile.marital_status === 'married' ? 'Married' : 'Unmarried' %></span>
+        <p style="color:#8a7156;"><%= occupationDisplay %> &middot; <%= profile.city %>, <%= profile.state %></p>
+        <span class="badge <%= profile.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= maritalLabel %></span>
+        <% if (!profile.user_id) { %>
+          <span class="badge" style="background:#fbe4e4; color:var(--danger);" title="This profile has no linked login account (created before account-linking was added)."><i class="fa-solid fa-triangle-exclamation"></i> No linked account</span>
+        <% } %>
         <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
           <% if (profile.jathaka_pdf_name) { %>
-            <a href="<%= fileUrl('jathaka', profile.jathaka_pdf_name) %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Jathaka PDF</a>
+            <a href="<%= fileUrl('jathaka', profile.jathaka_pdf_name) %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Horoscope PDF</a>
           <% } %>
           <% if (profile.biodata_pdf_name) { %>
             <a href="<%= fileUrl('biodata', profile.biodata_pdf_name) %>" target="_blank" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View Bio-Data PDF</a>
@@ -34,8 +48,8 @@
             data-whatsapp-share
             data-share-name="<%= profile.full_name %>"
             data-share-age="<%= profile.age %>"
-            data-share-caste="<%= profile.caste %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
-            data-share-occupation="<%= profile.occupation %>"
+            data-share-caste="<%= casteDisplay %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
+            data-share-occupation="<%= occupationDisplay %>"
             data-share-extra="<%= profile.city %>, <%= profile.state %>"
             data-share-link="/portal/admin-dashboard/profiles/<%= profile.id %>"
             aria-label="Share on WhatsApp"
@@ -64,10 +78,11 @@
     <div class="panel">
       <h3>Marital Status</h3>
       <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">A profile marked "Married" is hidden from members immediately.</p>
-      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/marital-status" method="POST" style="display:flex; gap:10px; align-items:center;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <form action="/portal/admin-dashboard/profiles/<%= profile.id %>/marital-status" method="POST" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <select name="marital_status">
-          <option value="unmarried" <%= profile.marital_status === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
-          <option value="married" <%= profile.marital_status === 'married' ? 'selected' : '' %>>Married</option>
+          <% opts.MARITAL_STATUS_OPTIONS.forEach(function(o) { %>
+            <option value="<%= o.value %>" <%= profile.marital_status === o.value ? 'selected' : '' %>><%= o.label %></option>
+          <% }) %>
         </select>
         <button type="submit" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Save Status</button>
       </form>
@@ -77,25 +92,57 @@
       <h3>Personal Details</h3>
       <table class="data-table">
         <tr><td><strong>Gender</strong></td><td><%= profile.gender === 'male' ? 'Male' : 'Female' %></td></tr>
-        <tr><td><strong>Religion</strong></td><td><%= profile.religion %></td></tr>
-        <tr><td><strong>Caste / Sub-caste</strong></td><td><%= profile.caste %> / <%= profile.subcaste %></td></tr>
+        <tr><td><strong>Willing to Marry Other Caste</strong></td><td><%= profile.willing_other_caste === 'yes' ? 'Yes' : profile.willing_other_caste === 'no' ? 'No' : '—' %></td></tr>
+        <% if (childrenLabel) { %><tr><td><strong>Children</strong></td><td><%= childrenLabel %><% if (profile.number_of_children) { %> (<%= profile.number_of_children %>)<% } %></td></tr><% } %>
+        <tr><td><strong>Religion</strong></td><td><%= religionDisplay %></td></tr>
+        <tr><td><strong>Caste / Sub-caste</strong></td><td><%= casteDisplay || '—' %> / <%= profile.subcaste || '—' %></td></tr>
         <tr><td><strong>Date of Birth</strong></td><td><%= profile.date_of_birth %> <% if (profile.time_of_birth) { %>(<%= profile.time_of_birth %>)<% } %></td></tr>
-        <tr><td><strong>Rashi / Nakshatra</strong></td><td><%= profile.rashi %> / <%= profile.nakshatra %></td></tr>
-        <tr><td><strong>Language</strong></td><td><%= profile.language %></td></tr>
-        <tr><td><strong>Annual Salary</strong></td><td>₹<%= Number(profile.annual_salary).toLocaleString('en-IN') %></td></tr>
-        <tr><td><strong>Phone</strong></td><td><%= profile.phone_number %></td></tr>
-        <tr><td><strong>Address</strong></td><td><%= profile.address %></td></tr>
+        <% if (profile.birth_place) { %><tr><td><strong>Birth Place</strong></td><td><%= profile.birth_place %></td></tr><% } %>
+        <tr><td><strong>Rashi / Nakshatra</strong></td><td><%= profile.rashi %> / <%= profile.nakshatra %><% if (profile.has_dosh) { %> &middot; Dosh: <%= profile.has_dosh === 'yes' ? 'Yes' : 'No' %><% } %></td></tr>
+        <tr><td><strong>Mother Tongue</strong></td><td><%= motherTongueDisplay || profile.language || '—' %></td></tr>
+        <tr><td><strong>Phone</strong></td><td><%= profile.phone_country_code || '+91' %> <%= profile.phone_number %></td></tr>
+        <tr><td><strong>Address</strong></td><td><%= profile.address %>, <%= profile.city %>, <%= profile.state %><% if (profile.country && profile.country !== 'India') { %>, <%= profile.country %><% } %></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Education &amp; Occupation</h3>
+      <table class="data-table">
+        <% if (profile.education) { %><tr><td><strong>Education</strong></td><td><%= profile.education %></td></tr><% } %>
+        <tr><td><strong>Employed In</strong></td><td><%= employedInDisplay || '—' %></td></tr>
+        <tr><td><strong>Occupation</strong></td><td><%= occupationDisplay || '—' %></td></tr>
+        <% if (profile.company_name) { %><tr><td><strong>Company</strong></td><td><%= profile.company_name %></td></tr><% } %>
+        <% if (profile.designation) { %><tr><td><strong>Designation</strong></td><td><%= profile.designation %></td></tr><% } %>
+        <tr><td><strong>Annual Income</strong></td><td><%= profile.annual_income_band || (profile.annual_salary ? '₹' + Number(profile.annual_salary).toLocaleString('en-IN') : '—') %></td></tr>
       </table>
     </div>
 
     <div class="panel">
       <h3>Family Details</h3>
       <table class="data-table">
-        <tr><td><strong>Father</strong></td><td><%= profile.father_name %> &mdash; <%= profile.father_occupation %> (₹<%= Number(profile.father_salary).toLocaleString('en-IN') %>)</td></tr>
-        <tr><td><strong>Mother</strong></td><td><%= profile.mother_name %> &mdash; <%= profile.mother_occupation %> (₹<%= Number(profile.mother_salary).toLocaleString('en-IN') %>)</td></tr>
-        <tr><td><strong>Siblings</strong></td><td><%= profile.total_siblings %> total (<%= profile.male_siblings %> male, <%= profile.female_siblings %> female)</td></tr>
+        <% if (profile.family_type) { %><tr><td><strong>Family Type</strong></td><td><%= profile.family_type %></td></tr><% } %>
+        <% if (profile.family_values) { %><tr><td><strong>Family Values</strong></td><td><%= profile.family_values %></td></tr><% } %>
+        <% if (profile.family_status) { %><tr><td><strong>Family Status</strong></td><td><%= profile.family_status %></td></tr><% } %>
+        <tr><td><strong>Father</strong></td><td><%= profile.father_name %><% if (profile.father_occupation) { %> &mdash; <%= profile.father_occupation %><% } %><% if (profile.father_salary) { %> (₹<%= Number(profile.father_salary).toLocaleString('en-IN') %>)<% } %></td></tr>
+        <tr><td><strong>Mother</strong></td><td><%= profile.mother_name %><% if (profile.mother_occupation) { %> &mdash; <%= profile.mother_occupation %><% } %><% if (profile.mother_salary) { %> (₹<%= Number(profile.mother_salary).toLocaleString('en-IN') %>)<% } %></td></tr>
+        <% if (profile.num_brothers || profile.num_sisters) { %>
+          <tr><td><strong>Siblings</strong></td><td><%= profile.num_brothers || 0 %> brother(s) (<%= profile.married_brothers || 0 %> married), <%= profile.num_sisters || 0 %> sister(s) (<%= profile.married_sisters || 0 %> married)</td></tr>
+        <% } else if (profile.total_siblings) { %>
+          <tr><td><strong>Siblings</strong></td><td><%= profile.total_siblings %> total (<%= profile.male_siblings %> male, <%= profile.female_siblings %> female)</td></tr>
+        <% } %>
       </table>
     </div>
+
+    <% if (profile.eating_habit || profile.smoking_habit || profile.drinking_habit) { %>
+    <div class="panel">
+      <h3>Habits &amp; Hobbies</h3>
+      <table class="data-table">
+        <% if (profile.eating_habit) { %><tr><td><strong>Eating Habit</strong></td><td><%= profile.eating_habit %></td></tr><% } %>
+        <% if (profile.smoking_habit) { %><tr><td><strong>Smoking Habit</strong></td><td><%= profile.smoking_habit %></td></tr><% } %>
+        <% if (profile.drinking_habit) { %><tr><td><strong>Drinking Habit</strong></td><td><%= profile.drinking_habit %></td></tr><% } %>
+      </table>
+    </div>
+    <% } %>
 
     <div class="panel">
       <h3>Assets &amp; Liabilities</h3>

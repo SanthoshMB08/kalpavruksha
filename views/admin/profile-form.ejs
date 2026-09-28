@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <%- include('../partials/head') %>
-  
 </head>
 
 <body>
@@ -18,106 +17,285 @@
       <% } %>
       <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %>
         <div class="form-errors" style="background:#fff8e6; border-color:#f0d999; color:#8a6d1f;">
-          <div><i class="fa-solid fa-triangle-exclamation"></i> <%= duplicateWarning %></div>
+          <i class="fa-solid fa-triangle-exclamation"></i> <%= duplicateWarning %>
         </div>
       <% } %>
-      <form class="form-grid" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <form id="profileForm" class="form-sectioned" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %><input type="hidden" name="confirm_duplicate" value="1"><% } %>
 
-        <div class="field"><label class="form-label">Profile Photo (1)</label>
-          <input type="file" name="profile_image" accept="image/*" required>
-          <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
-        <div class="field"><label class="form-label">Profile Photo (2) <span class="field-tip" data-tip="Optional — up to two photos per profile.">?</span></label>
-          <input type="file" name="profile_image_2" accept="image/*">
-          <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
+        <!-- ================= Basic Details ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-user"></i> Basic Details</div>
+          <div class="form-grid">
+            <div class="field full" style="background:var(--cream-100); border-radius:var(--radius-md); padding:16px;">
+              <label class="form-label">Phone Number <span class="field-tip" data-tip="Check first — if this person already has a login account, their name and gender will fill in automatically.">?</span></label>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <select name="phone_country_code" id="phoneCountryCode" style="max-width:200px;">
+                  <% opts.COUNTRY_CODES.forEach(function(c) { %>
+                    <option value="<%= c.code %>" <%= (old.phone_country_code || '+91') === c.code && c.iso === 'IN' ? 'selected' : '' %>><%= c.name %> (<%= c.code %>)</option>
+                  <% }) %>
+                </select>
+                <input type="text" name="phone_number" id="phoneNumberInput" value="<%= old.phone_number || '' %>" pattern="[6-9][0-9]{9}" maxlength="10" title="10 digits, starting 6-9" required style="flex:1; min-width:160px;">
+                <button type="button" id="checkMobileBtn" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); white-space:nowrap;">Check Number</button>
+              </div>
+              <div id="mobileCheckResult" style="margin-top:10px; font-size:0.85rem; display:none;"></div>
+            </div>
 
-        <div class="field"><label class="form-label">Full Name <span class="field-tip" data-tip="Letters only, no numbers.">?</span></label><input type="text" name="full_name" value="<%= old.full_name || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only" required></div>
-        <div class="field"><label class="form-label">Gender</label>
-          <select name="gender" required>
-            <option value="">Select</option>
-            <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male (Groom)</option>
-            <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female (Bride)</option>
-          </select>
+            <div class="field"><label class="form-label">Full Name <span class="field-tip" data-tip="Letters only, no numbers.">?</span></label><input type="text" name="full_name" id="fullNameInput" value="<%= old.full_name || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only" required></div>
+            <div class="field"><label class="form-label">Marital Status</label>
+              <select name="marital_status" id="maritalStatusSelect" required>
+                <% opts.MARITAL_STATUS_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= (old.marital_status || 'never_married') === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Date of Birth <span class="field-tip" data-tip="Must be 18 years or older.">?</span></label><input type="date" name="date_of_birth" value="<%= old.date_of_birth || '' %>" required></div>
+            <div class="field"><label class="form-label">Birth Place <span class="field-tip" data-tip="Optional.">?</span></label><input type="text" name="birth_place" value="<%= old.birth_place || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only"></div>
+            <div class="field"><label class="form-label">Gender</label>
+              <select id="genderSelect" required>
+                <option value="">Select</option>
+                <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male (Groom)</option>
+                <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female (Bride)</option>
+              </select>
+              <input type="hidden" name="gender" id="genderValue" value="<%= old.gender || '' %>">
+            </div>
+            <div class="field"><label class="form-label">Willing to Marry Other Caste?</label>
+              <select name="willing_other_caste" required>
+                <option value="">Select</option>
+                <% opts.YES_NO_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= old.willing_other_caste === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field conditional-field" id="hasChildrenField"><label class="form-label">Do you have children?</label>
+              <select name="has_children" id="hasChildrenSelect">
+                <option value="">Select</option>
+                <% opts.CHILDREN_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= old.has_children === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field conditional-field" id="numChildrenField"><label class="form-label">Number of Children</label>
+              <input type="number" name="number_of_children" min="0" max="20" value="<%= old.number_of_children || '' %>">
+            </div>
+          </div>
         </div>
 
-        <div class="field"><label class="form-label">Religion</label>
-          <select name="religion" required>
-            <% const relOld = old.religion || 'Lingayat'; %>
-            <option value="Lingayat" <%= relOld === 'Lingayat' ? 'selected' : '' %>>Lingayat</option>
-            <option value="Hindu" <%= relOld === 'Hindu' ? 'selected' : '' %>>Hindu</option>
-            <option value="Sikh" <%= relOld === 'Sikh' ? 'selected' : '' %>>Sikh</option>
-            <option value="Jain" <%= relOld === 'Jain' ? 'selected' : '' %>>Jain</option>
-            <option value="Buddhist" <%= relOld === 'Buddhist' ? 'selected' : '' %>>Buddhist</option>
-            <option value="Other" <%= relOld === 'Other' ? 'selected' : '' %>>Other</option>
-          </select>
-        </div>
-        <div class="field"><label class="form-label">Caste</label><input type="text" name="caste" value="<%= old.caste || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-        <div class="field"><label class="form-label">Sub-caste</label><input type="text" name="subcaste" value="<%= old.subcaste || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-        <div class="field"><label class="form-label">Language <span class="field-tip" data-tip="e.g. Kannada, Marathi, Hindi">?</span></label>
-          <select name="language" required>
-            <option value="">Select Language</option>
-            <option>Kannada</option><option>Marathi</option><option>Hindi</option>
-            <option>Telugu</option><option>Tamil</option><option>English</option><option>Other</option>
-          </select>
+        <!-- ================= Profile Photos ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-camera"></i> Profile Photos</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Profile Photo (1)</label>
+              <input type="file" name="profile_image" accept="image/*" required></div>
+            <div class="field"><label class="form-label">Profile Photo (2) <span class="field-tip" data-tip="Optional — up to two photos per profile.">?</span></label>
+              <input type="file" name="profile_image_2" accept="image/*"></div>
+          </div>
         </div>
 
-        <div class="field"><label class="form-label">Date of Birth <span class="field-tip" data-tip="Must be 18 years or older.">?</span></label><input type="date" name="date_of_birth" value="<%= old.date_of_birth || '' %>" required></div>
-        <div class="field"><label class="form-label">Time of Birth</label><input type="time" name="time_of_birth" value="<%= old.time_of_birth || '' %>"></div>
+        <!-- ================= Religion Details ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-place-of-worship"></i> Religion Details</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Religion</label>
+              <select name="religion" id="religionSelect" required>
+                <option value="">Select Religion</option>
+                <% opts.RELIGION_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= old.religion === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field conditional-field" id="religionOtherField"><label class="form-label">Please specify religion</label><input type="text" name="religion_other" id="religionOtherInput" value="<%= old.religion_other || '' %>"></div>
 
-        <div class="field"><label class="form-label">Occupation</label><input type="text" name="occupation" value="<%= old.occupation || '' %>" required></div>
-        <div class="field"><label class="form-label">Annual Salary (₹)</label><input type="number" step="1" min="0" name="annual_salary" value="<%= old.annual_salary || '' %>" required></div>
+            <div class="field"><label class="form-label">Caste <span class="field-tip" data-tip="Only available for Hindu, Muslim, and Christian right now — more religions coming soon.">?</span></label>
+              <input type="text" name="caste" id="casteInput" list="casteOptionsList" value="<%= old.caste || '' %>" placeholder="Select a religion first" disabled>
+              <datalist id="casteOptionsList"></datalist>
+            </div>
+            <div class="field conditional-field" id="casteOtherField"><label class="form-label">Please specify caste</label><input type="text" name="caste_other" id="casteOtherInput" value="<%= old.caste_other || '' %>"></div>
+            <div class="field"><label class="form-label">Sub-caste <span class="field-tip" data-tip="Optional.">?</span></label><input type="text" name="subcaste" value="<%= old.subcaste || '' %>"></div>
+          </div>
+        </div>
 
-        <div class="field"><label class="form-label">Phone Number <span class="field-tip" data-tip="10 digits, numbers only.">?</span></label><input type="text" name="phone_number" value="<%= old.phone_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="Exactly 10 digits" required></div>
-        <div class="field"><label class="form-label">City</label><input type="text" name="city" value="<%= old.city || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-        <div class="field"><label class="form-label">State</label><input type="text" name="state" value="<%= old.state || 'Karnataka' %>" pattern="[A-Za-z\s.'-]+" required></div>
+        <!-- ================= Education / Occupation Details ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-graduation-cap"></i> Education / Occupation Details</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Highest Education</label>
+              <input type="text" name="education" list="educationOptionsList" value="<%= old.education || '' %>" placeholder="Type to search...">
+              <datalist id="educationOptionsList"><% opts.EDUCATION_OPTIONS.forEach(function(e) { %><option value="<%= e %>"><% }) %></datalist>
+            </div>
+            <div class="field"><label class="form-label">Employed In</label>
+              <select name="employed_in" id="employedInSelect" required>
+                <option value="">Select</option>
+                <% opts.EMPLOYED_IN_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= old.employed_in === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field conditional-field" id="employedInOtherField"><label class="form-label">Please specify</label><input type="text" name="employed_in_other" id="employedInOtherInput" value="<%= old.employed_in_other || '' %>"></div>
+            <div class="field"><label class="form-label">Occupation</label>
+              <input type="text" name="occupation" id="occupationInput" list="occupationOptionsList" value="<%= old.occupation || '' %>" placeholder="Type to search...">
+              <datalist id="occupationOptionsList"><% opts.OCCUPATION_CATEGORY_OPTIONS.forEach(function(o) { %><option value="<%= o %>"><% }) %></datalist>
+            </div>
+            <div class="field conditional-field" id="occupationOtherField"><label class="form-label">Please specify occupation</label><input type="text" name="occupation_other" id="occupationOtherInput" value="<%= old.occupation_other || '' %>"></div>
+            <div class="field"><label class="form-label">Company Name</label><input type="text" name="company_name" value="<%= old.company_name || '' %>"></div>
+            <div class="field"><label class="form-label">Designation</label><input type="text" name="designation" value="<%= old.designation || '' %>"></div>
+            <div class="field"><label class="form-label">Annual Income</label>
+              <select name="annual_income_band" required>
+                <option value="">Select</option>
+                <% opts.INCOME_BAND_OPTIONS.forEach(function(i) { %>
+                  <option value="<%= i %>" <%= old.annual_income_band === i ? 'selected' : '' %>><%= i %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </div>
 
-        <div class="field full"><label class="form-label">Address</label><textarea name="address" rows="2" required><%= old.address || '' %></textarea></div>
+        <!-- ================= Horoscope Information ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-star-and-crescent"></i> Horoscope Information</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Have Dosh?</label>
+              <select name="has_dosh">
+                <option value="">Select</option>
+                <% opts.YES_NO_OPTIONS.forEach(function(o) { %>
+                  <option value="<%= o.value %>" <%= old.has_dosh === o.value ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Time of Birth <span class="field-tip" data-tip="Optional.">?</span></label><input type="time" name="time_of_birth" value="<%= old.time_of_birth || '' %>"></div>
+            <div class="field">
+              <label class="form-label">Rasi</label>
+              <select name="rashi" id="rashi" required>
+                <option value="">Select Rasi</option>
+                <option value="Mesha">Mesha (Aries)</option>
+                <option value="Vrishabha">Vrishabha (Taurus)</option>
+                <option value="Mithuna">Mithuna (Gemini)</option>
+                <option value="Karka">Karka (Cancer)</option>
+                <option value="Simha">Simha (Leo)</option>
+                <option value="Kanya">Kanya (Virgo)</option>
+                <option value="Tula">Tula (Libra)</option>
+                <option value="Vrischika">Vrischika (Scorpio)</option>
+                <option value="Dhanu">Dhanu (Sagittarius)</option>
+                <option value="Makara">Makara (Capricorn)</option>
+                <option value="Kumbha">Kumbha (Aquarius)</option>
+                <option value="Meena">Meena (Pisces)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="form-label">Nakshatra (Star)</label>
+              <select name="nakshatra" id="nakshatra" required>
+                <option value="">Select Rasi First</option>
+              </select>
+            </div>
+            <div class="field full"><label class="form-label">Horoscope PDF (optional)</label>
+              <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
+            <div class="field full"><label class="form-label">Bio-Data PDF (optional) <span class="field-tip" data-tip="A ready-made bio-data document, separate from the horoscope.">?</span></label>
+              <input type="file" name="biodata_pdf" accept="application/pdf"></div>
+          </div>
+        </div>
 
-        <div class="field"><label class="form-label">Father's Name</label><input type="text" name="father_name" value="<%= old.father_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-        <div class="field"><label class="form-label">Father's Occupation</label><input type="text" name="father_occupation" value="<%= old.father_occupation || '' %>" required></div>
-        <div class="field"><label class="form-label">Father's Salary (₹)</label><input type="number" step="1" min="0" name="father_salary" value="<%= old.father_salary || '' %>" required></div>
+        <!-- ================= Family Details ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-people-roof"></i> Family Details</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Family Type</label>
+              <select name="family_type">
+                <option value="">Select</option>
+                <% opts.FAMILY_TYPE_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_type === f ? 'selected' : '' %>><%= f %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Family Values</label>
+              <select name="family_values">
+                <option value="">Select</option>
+                <% opts.FAMILY_VALUES_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_values === f ? 'selected' : '' %>><%= f %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Family Status</label>
+              <select name="family_status">
+                <option value="">Select</option>
+                <% opts.FAMILY_STATUS_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_status === f ? 'selected' : '' %>><%= f %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Father's Name</label><input type="text" name="father_name" value="<%= old.father_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
+            <div class="field"><label class="form-label">Father's Occupation</label><input type="text" name="father_occupation" value="<%= old.father_occupation || '' %>" required></div>
+            <div class="field"><label class="form-label">Mother's Name</label><input type="text" name="mother_name" value="<%= old.mother_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
+            <div class="field"><label class="form-label">Mother's Occupation</label><input type="text" name="mother_occupation" value="<%= old.mother_occupation || '' %>" required></div>
+            <div class="field full"><small style="color:#a08a6a;">Sibling details (optional)</small></div>
+            <div class="field"><label class="form-label">Number of Brothers</label><input type="number" name="num_brothers" min="0" value="<%= old.num_brothers || 0 %>"></div>
+            <div class="field"><label class="form-label">Married Brothers</label><input type="number" name="married_brothers" min="0" value="<%= old.married_brothers || 0 %>"></div>
+            <div class="field"><label class="form-label">Number of Sisters</label><input type="number" name="num_sisters" min="0" value="<%= old.num_sisters || 0 %>"></div>
+            <div class="field"><label class="form-label">Married Sisters</label><input type="number" name="married_sisters" min="0" value="<%= old.married_sisters || 0 %>"></div>
+          </div>
+        </div>
 
-        <div class="field"><label class="form-label">Mother's Name</label><input type="text" name="mother_name" value="<%= old.mother_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-        <div class="field"><label class="form-label">Mother's Occupation</label><input type="text" name="mother_occupation" value="<%= old.mother_occupation || '' %>" required></div>
-        <div class="field"><label class="form-label">Mother's Salary (₹)</label><input type="number" step="1" min="0" name="mother_salary" value="<%= old.mother_salary || '' %>" required></div>
+        <!-- ================= Location Details ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> Location Details</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Country</label>
+              <input type="text" name="country" id="countryInput" list="countryOptionsList" value="<%= old.country || 'India' %>" required>
+              <datalist id="countryOptionsList"><% opts.COUNTRIES.forEach(function(c) { %><option value="<%= c %>"><% }) %></datalist>
+            </div>
+            <div class="field"><label class="form-label">State <span class="field-tip" data-tip="Indian states — leave blank if outside India.">?</span></label>
+              <input type="text" name="state" list="stateOptionsList" value="<%= old.state || 'Karnataka' %>">
+              <datalist id="stateOptionsList"><% opts.INDIA_STATES.forEach(function(s) { %><option value="<%= s %>"><% }) %></datalist>
+            </div>
+            <div class="field"><label class="form-label">City</label><input type="text" name="city" value="<%= old.city || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
+            <div class="field full"><label class="form-label">Address</label><textarea name="address" rows="2" required><%= old.address || '' %></textarea></div>
+          </div>
+        </div>
 
-        <div class="field"><label class="form-label">Total Siblings</label><input type="number" name="total_siblings" value="<%= old.total_siblings || 0 %>" min="0"></div>
-        <div class="field"><label class="form-label">Male Siblings</label><input type="number" name="male_siblings" value="<%= old.male_siblings || 0 %>" min="0"></div>
-        <div class="field"><label class="form-label">Female Siblings</label><input type="number" name="female_siblings" value="<%= old.female_siblings || 0 %>" min="0"></div>
+        <!-- ================= Habits & Hobbies ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-heart-circle-check"></i> Habits &amp; Hobbies</div>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Eating Habit</label>
+              <select name="eating_habit">
+                <option value="">Select</option>
+                <% opts.EATING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.eating_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Smoking Habit</label>
+              <select name="smoking_habit">
+                <option value="">Select</option>
+                <% opts.SMOKING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.smoking_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Drinking Habit</label>
+              <select name="drinking_habit">
+                <option value="">Select</option>
+                <% opts.DRINKING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.drinking_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label class="form-label">Mother Tongue</label>
+              <select name="mother_tongue" id="motherTongueSelect">
+                <option value="">Select</option>
+                <% opts.MOTHER_TONGUE_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.mother_tongue === o ? 'selected' : '' %>><%= o %></option><% }) %>
+              </select>
+            </div>
+            <div class="field conditional-field" id="motherTongueOtherField"><label class="form-label">Please specify</label><input type="text" name="mother_tongue_other" id="motherTongueOtherInput" value="<%= old.mother_tongue_other || '' %>"></div>
+          </div>
+        </div>
 
-        <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required><%= old.assets || '' %></textarea></div>
-        <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"><%= old.loans || '' %></textarea></div>
+        <!-- ================= Assets ================= -->
+        <div class="form-section-card">
+          <div class="form-section-title"><i class="fa-solid fa-vault"></i> Assets</div>
+          <div class="form-grid">
+            <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required><%= old.assets || '' %></textarea></div>
+            <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"><%= old.loans || '' %></textarea></div>
+          </div>
+        </div>
 
-       <div class="field">
-  <label class="form-label">Rashi</label>
-  <select name="rashi" id="rashi" required>
-    <option value="">Select Rashi</option>
-    <option value="Mesha">Mesha (Aries)</option>
-    <option value="Vrishabha">Vrishabha (Taurus)</option>
-    <option value="Mithuna">Mithuna (Gemini)</option>
-    <option value="Karka">Karka (Cancer)</option>
-    <option value="Simha">Simha (Leo)</option>
-    <option value="Kanya">Kanya (Virgo)</option>
-    <option value="Tula">Tula (Libra)</option>
-    <option value="Vrischika">Vrischika (Scorpio)</option>
-    <option value="Dhanu">Dhanu (Sagittarius)</option>
-    <option value="Makara">Makara (Capricorn)</option>
-    <option value="Kumbha">Kumbha (Aquarius)</option>
-    <option value="Meena">Meena (Pisces)</option>
-  </select>
-</div>
-     <div class="field">
-  <label class="form-label">Nakshatra</label>
-  <select name="nakshatra" id="nakshatra" required>
-    <option value="">Select Rashi First</option>
-  </select>
-</div>
-        <div class="field full"><label class="form-label">Jathaka PDF (optional)</label>
-          <input type="file" name="jathaka_pdf" accept="application/pdf">
-          <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
-        <div class="field full"><label class="form-label">Bio-Data PDF (optional) <span class="field-tip" data-tip="A ready-made bio-data document, separate from the jathaka.">?</span></label>
-          <input type="file" name="biodata_pdf" accept="application/pdf">
-          <small style="color:#a08a6a; font-size:0.75rem;">Max 15MB — PDF only</small></div>
+        <!-- ================= New account (only if phone check found no match) ================= -->
+        <div class="form-section-card conditional-section" id="newAccountBlock">
+          <div class="form-section-title"><i class="fa-solid fa-key"></i> Create Login Account</div>
+          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">No account found for this number — set a login password to create one.</p>
+          <div class="form-grid">
+            <div class="field"><label class="form-label">Password</label><input type="password" name="password" id="newPassword" minlength="8"></div>
+            <div class="field"><label class="form-label">Confirm Password</label><input type="password" name="confirm_password" id="confirmPassword" minlength="8"></div>
+          </div>
+          <small style="color:#a08a6a; font-size:0.75rem;">8+ characters, with an uppercase letter, a lowercase letter, and a number.</small>
+        </div>
 
         <div class="field full">
           <button type="submit" class="btn btn-gold">Save Profile</button>
@@ -127,6 +305,8 @@
   <%- include('../partials/portal-shell-close') %>
 
   <script nonce="<%= nonce %>">
+const CASTE_OPTIONS_BY_RELIGION = <%- JSON.stringify(opts.CASTE_OPTIONS_BY_RELIGION) %>;
+
 const rashiNakshatras = {
   Mesha: ["Ashwini", "Bharani", "Krittika"],
   Vrishabha: ["Krittika", "Rohini", "Mrigashira"],
@@ -147,13 +327,8 @@ const nakshatraSelect = document.getElementById("nakshatra");
 
 rashiSelect.addEventListener("change", function () {
     const selectedRashi = this.value;
-
-    // Clear old options
     nakshatraSelect.innerHTML = '<option value="">Select Nakshatra</option>';
-
     if (!selectedRashi) return;
-
-    // Add new options
     rashiNakshatras[selectedRashi].forEach(function (nakshatra) {
         const option = document.createElement("option");
         option.value = nakshatra;
@@ -161,6 +336,170 @@ rashiSelect.addEventListener("change", function () {
         nakshatraSelect.appendChild(option);
     });
 });
+
+// --- Generic helper: show/hide a conditional field ---
+function toggleConditional(el, show) {
+  if (!el) return;
+  el.classList.toggle('visible', show);
+  el.querySelectorAll('input, select').forEach(function (i) { i.disabled = !show; });
+}
+
+// --- Religion -> Caste cascade ---
+(function () {
+  const religionSelect = document.getElementById('religionSelect');
+  const religionOtherField = document.getElementById('religionOtherField');
+  const casteInput = document.getElementById('casteInput');
+  const casteOptionsList = document.getElementById('casteOptionsList');
+  const casteOtherField = document.getElementById('casteOtherField');
+
+  function updateCaste() {
+    const religion = religionSelect.value;
+    toggleConditional(religionOtherField, religion === 'other');
+    const casteList = CASTE_OPTIONS_BY_RELIGION[religion];
+    casteOptionsList.innerHTML = '';
+    if (casteList) {
+      casteInput.disabled = false;
+      casteInput.placeholder = 'Type to search...';
+      casteList.forEach(function (c) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        casteOptionsList.appendChild(opt);
+      });
+    } else {
+      casteInput.disabled = true;
+      casteInput.value = '';
+      casteInput.placeholder = 'Not available for this religion yet';
+      toggleConditional(casteOtherField, false);
+    }
+  }
+  casteInput.addEventListener('input', function () {
+    toggleConditional(casteOtherField, casteInput.value === 'Other');
+  });
+  religionSelect.addEventListener('change', updateCaste);
+  if (religionSelect.value) updateCaste();
+})();
+
+// --- Marital status -> children question ---
+(function () {
+  const maritalSelect = document.getElementById('maritalStatusSelect');
+  const hasChildrenField = document.getElementById('hasChildrenField');
+  const hasChildrenSelect = document.getElementById('hasChildrenSelect');
+  const numChildrenField = document.getElementById('numChildrenField');
+
+  function updateChildren() {
+    const show = maritalSelect.value && maritalSelect.value !== 'never_married';
+    toggleConditional(hasChildrenField, show);
+    if (!show) { hasChildrenSelect.value = ''; toggleConditional(numChildrenField, false); }
+  }
+  hasChildrenSelect.addEventListener('change', function () {
+    toggleConditional(numChildrenField, hasChildrenSelect.value.startsWith('yes'));
+  });
+  maritalSelect.addEventListener('change', updateChildren);
+  updateChildren();
+})();
+
+// --- Generic select-or-input -> "Other" text reveal ---
+function wireOtherToggle(triggerEl, otherFieldId, otherValue) {
+  const otherField = document.getElementById(otherFieldId);
+  function update() { toggleConditional(otherField, triggerEl.value === otherValue); }
+  triggerEl.addEventListener(triggerEl.tagName === 'SELECT' ? 'change' : 'input', update);
+  update();
+}
+wireOtherToggle(document.getElementById('employedInSelect'), 'employedInOtherField', 'other');
+wireOtherToggle(document.getElementById('occupationInput'), 'occupationOtherField', 'Other');
+wireOtherToggle(document.getElementById('motherTongueSelect'), 'motherTongueOtherField', 'Other');
+
+// --- Phone number check / autofill ---
+(function () {
+  const phoneInput = document.getElementById('phoneNumberInput');
+  const checkBtn = document.getElementById('checkMobileBtn');
+  const resultBox = document.getElementById('mobileCheckResult');
+  const nameInput = document.getElementById('fullNameInput');
+  const genderSelect = document.getElementById('genderSelect');
+  const genderValue = document.getElementById('genderValue');
+  const newAccountBlock = document.getElementById('newAccountBlock');
+  const newPassword = document.getElementById('newPassword');
+  const confirmPassword = document.getElementById('confirmPassword');
+
+  function showResult(html, tone) {
+    resultBox.style.display = 'block';
+    resultBox.style.color = tone === 'error' ? 'var(--danger)' : tone === 'warn' ? '#8a6d1f' : '#1f6b46';
+    resultBox.innerHTML = html;
+  }
+
+  function unlockNameGender() {
+    nameInput.readOnly = false;
+    genderSelect.disabled = false;
+    genderValue.value = genderSelect.value;
+    nameInput.style.background = '';
+    genderSelect.style.background = '';
+  }
+
+  function lockNameGender(name, gender) {
+    nameInput.value = name;
+    genderSelect.value = gender;
+    genderValue.value = gender;
+    nameInput.readOnly = true;
+    genderSelect.disabled = true;
+    nameInput.style.background = '#f3ede0';
+    genderSelect.style.background = '#f3ede0';
+  }
+
+  phoneInput.addEventListener('input', function () {
+    resultBox.style.display = 'none';
+    toggleConditional(newAccountBlock, false);
+    newPassword.required = false;
+    confirmPassword.required = false;
+    unlockNameGender();
+    genderSelect.value = '';
+    genderValue.value = '';
+  });
+  genderSelect.addEventListener('change', function () {
+    genderValue.value = genderSelect.value;
+  });
+
+  checkBtn.addEventListener('click', function () {
+    const mobile = phoneInput.value.trim();
+    if (!/^[6-9][0-9]{9}$/.test(mobile)) {
+      showResult('Enter a valid 10-digit mobile number first.', 'error');
+      return;
+    }
+    checkBtn.disabled = true;
+    checkBtn.textContent = 'Checking...';
+    fetch('/portal/admin-dashboard/profiles/check-mobile?mobile=' + encodeURIComponent(mobile))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Check Number';
+        if (data.error) {
+          showResult(data.error, 'error');
+          return;
+        }
+        if (data.exists) {
+          lockNameGender(data.name, data.gender);
+          toggleConditional(newAccountBlock, false);
+          newPassword.required = false;
+          confirmPassword.required = false;
+          if (data.alreadyHasProfile) {
+            showResult('<i class="fa-solid fa-triangle-exclamation"></i> This account already has a profile: "' + data.existingProfileName + '" (#' + data.existingProfileId + '). Double-check before continuing.', 'warn');
+          } else {
+            showResult('<i class="fa-solid fa-circle-check"></i> Existing account found — Name and Gender filled in and locked to match.', 'ok');
+          }
+        } else {
+          unlockNameGender();
+          toggleConditional(newAccountBlock, true);
+          newPassword.required = true;
+          confirmPassword.required = true;
+          showResult('<i class="fa-solid fa-circle-info"></i> No account found for this number — fill in the details below, then set a password to create one.', 'warn');
+        }
+      })
+      .catch(function () {
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Check Number';
+        showResult('Could not check that number right now. Please try again.', 'error');
+      });
+  });
+})();
 </script>
 </body>
 </html>

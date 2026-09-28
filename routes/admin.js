@@ -24,6 +24,7 @@ router.post('/admin-dashboard/users/:id/unlock', isSuperAdmin, doubleCsrfProtect
 
 router.get('/admin-dashboard/profiles', isAdmin, adminController.listProfiles);
 router.get('/admin-dashboard/profiles/new', isAdmin, adminController.showNewProfileForm);
+router.get('/admin-dashboard/profiles/check-mobile', isAdmin, adminController.checkMobile);
 // CSRF check runs AFTER uploadProfileAssets (multer) — the token lives in the
 // multipart body, which isn't parsed yet when the request first arrives.
 router.post('/admin-dashboard/profiles', isAdmin, uploadProfileAssets, doubleCsrfProtection, profileValidators, adminController.createProfile);

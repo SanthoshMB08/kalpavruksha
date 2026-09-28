@@ -111,6 +111,76 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS image_name_2 VARCHAR(255) NULL;
 -- bio-data PDF, separate from the jathaka document
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS biodata_pdf_name VARCHAR(255) NULL;
 
+-- Every profile is linked to the login account (users row) it belongs to.
+-- Nullable so profiles created before this column existed aren't broken —
+-- new profiles always get one set (either an existing account the admin
+-- looked up by phone, or a brand-new one created in the same step).
+-- ON DELETE SET NULL rather than CASCADE: soft-deleting/purging the user
+-- account should not also destroy the matrimony profile data.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles (user_id);
+
+-- ==========================================================================
+-- Expanded profile form: marital status detail, caste/religion "Other" text,
+-- education/occupation/income, family details, location, habits.
+-- ==========================================================================
+
+-- marital_status widened from unmarried/married to the full set used by the
+-- new form. Existing 'unmarried' rows become 'never_married'; existing
+-- 'married' rows stay 'married'. The member-search "hide from members" rule
+-- (see Profile.search()) changes from "= unmarried" to "!= married", since
+-- divorced/widowed/separated/awaiting-divorce/annulled people are legitimate,
+-- available matches — only "still married" should be hidden.
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_marital_status_check;
+UPDATE profiles SET marital_status = 'never_married' WHERE marital_status = 'unmarried';
+ALTER TABLE profiles ALTER COLUMN marital_status SET DEFAULT 'never_married';
+ALTER TABLE profiles ADD CONSTRAINT profiles_marital_status_check
+  CHECK (marital_status IN ('never_married', 'divorced', 'widowed', 'awaiting_divorce', 'annulled', 'separated', 'married'));
+
+-- Family Status (a broad economic-class band) is the new replacement for
+-- collecting exact parental salary figures, so those become optional.
+ALTER TABLE profiles ALTER COLUMN father_salary DROP NOT NULL;
+ALTER TABLE profiles ALTER COLUMN mother_salary DROP NOT NULL;
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS willing_other_caste VARCHAR(5) NULL CHECK (willing_other_caste IN ('yes', 'no'));
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_country_code VARCHAR(6) NOT NULL DEFAULT '+91';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS religion_other VARCHAR(100) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS caste_other VARCHAR(100) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_children VARCHAR(30) NULL
+  CHECK (has_children IN ('no', 'yes_living_with_me', 'yes_not_living_with_me'));
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS number_of_children INT NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS education VARCHAR(100) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employed_in VARCHAR(50) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employed_in_other VARCHAR(100) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS occupation_other VARCHAR(100) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS company_name VARCHAR(150) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS designation VARCHAR(150) NULL;
+-- Annual income moves from a free-typed number to a fixed set of bands. Kept
+-- as a new column rather than repurposing `annual_salary` so old profiles'
+-- numeric figures aren't destroyed; `annual_salary` is now optional/legacy.
+ALTER TABLE profiles ALTER COLUMN annual_salary DROP NOT NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS annual_income_band VARCHAR(50) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_dosh VARCHAR(5) NULL CHECK (has_dosh IN ('yes', 'no'));
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_type VARCHAR(30) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_values VARCHAR(30) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_status VARCHAR(30) NULL;
+-- Sibling counts move from total/male/female to the brothers/sisters +
+-- married-count shape the new form collects. Old columns are kept (now
+-- optional/legacy) rather than dropped, so no existing data is lost.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS num_brothers INT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS married_brothers INT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS num_sisters INT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS married_sisters INT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS country VARCHAR(100) NOT NULL DEFAULT 'India';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS eating_habit VARCHAR(30) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking_habit VARCHAR(30) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking_habit VARCHAR(30) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_tongue VARCHAR(50) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_tongue_other VARCHAR(50) NULL;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place VARCHAR(150) NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_education ON profiles (education);
+CREATE INDEX IF NOT EXISTS idx_profiles_mother_tongue ON profiles (mother_tongue);
+
 -- Soft delete: Delete Profile sets this instead of removing the row, so it's
 -- reversible from the Super Admin Trash page. Filtered out of every normal
 -- listing/search query.

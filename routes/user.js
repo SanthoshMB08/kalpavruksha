@@ -5,6 +5,7 @@ const { isApprovedUser } = require('../middleware/auth');
 const { doubleCsrfProtection } = require('../middleware/csrf');
 
 router.get('/dashboard', isApprovedUser, userController.dashboard);
+router.get('/my-profile', isApprovedUser, userController.myProfile);
 router.get('/profile/:id/modal', isApprovedUser, userController.profileModal);
 router.post('/profile/:id/save', isApprovedUser, doubleCsrfProtection, userController.saveProfile);
 router.post('/profile/:id/express-interest', isApprovedUser, doubleCsrfProtection, userController.expressInterest);

@@ -4,7 +4,10 @@ const User = require('../models/User');
 const { checkLogin } = require('../utils/accountLockout');
 
 exports.showRegister = (req, res) => {
-  res.render('register', { title: 'Register', errors: [], old: {} });
+  // Prefills from the homepage's quick-register banner form / search bar,
+  // which link here as a plain GET with these as query params.
+  const { name, mobile_number, gender } = req.query;
+  res.render('register', { title: 'Register', errors: [], old: { name, mobile_number, gender } });
 };
 
 exports.register = async (req, res) => {
@@ -47,21 +50,26 @@ exports.register = async (req, res) => {
 };
 
 exports.showLogin = (req, res) => {
-  res.render('login', { title: 'Login', error: null });
+  res.render('login', { title: 'Login', error: null, old: { username: '' } });
 };
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+  const renderLoginError = (error) => res.render('login', {
+    title: 'Login',
+    error,
+    old: { username: username || '' }
+  });
   try {
     const user = await User.findByUsername(username);
     if (!user || user.role !== 'user') {
-      return res.render('login', { title: 'Login', error: 'Invalid username or password.' });
+      return renderLoginError('Invalid username or password.');
     }
 
     const result = await checkLogin(user, password);
     if (result.outcome !== 'ok') {
       if (result.outcome === 'locked_now') req.log.warn({ userId: user.id }, 'Account locked after repeated failed login attempts');
-      return res.render('login', { title: 'Login', error: result.message });
+      return renderLoginError(result.message);
     }
 
     req.session.user = {
@@ -76,15 +84,12 @@ exports.login = async (req, res) => {
     if (user.status === 'pending') return res.redirect('/pending-approval');
     if (user.status === 'rejected') {
       req.session.destroy(() => {});
-      return res.render('login', {
-        title: 'Login',
-        error: 'Your profile was not approved. Please contact support.'
-      });
+      return renderLoginError('Your profile was not approved. Please contact support.');
     }
     return res.redirect('/dashboard');
   } catch (err) {
     req.log.error(err);
-    return res.render('login', { title: 'Login', error: 'Something went wrong. Please try again.' });
+    return renderLoginError('Something went wrong. Please try again.');
   }
 };
 

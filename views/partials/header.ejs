@@ -1,7 +1,7 @@
 <header class="navbar">
   <a href="/" class="brand">
-    <img src="/assets/logo/logo-desktop.svg" alt="Kalpavruksha Kalyana" class="brand-logo brand-logo-desktop">
-    <img src="/assets/logo/logo-mobile.svg" alt="Kalpavruksha Kalyana" class="brand-logo brand-logo-mobile">
+    <img src="/assets/logo/logo-desktop.png" alt="Kalpavruksha Kalyana" class="brand-logo brand-logo-desktop">
+    <img src="/assets/logo/logo-mobile.png" alt="Kalpavruksha Kalyana" class="brand-logo brand-logo-mobile">
   </a>
   <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false"><span class="nav-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span></button>
   <div class="nav-drawer-overlay" id="navDrawerOverlay"></div>
@@ -29,13 +29,14 @@
         <a href="/lang/kn" class="nav-lang-switch-option <%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
       </div>
       <% if (currentUser) { %>
-        <div class="nav-user-chip">
+        <a href="/my-profile" class="nav-user-chip" aria-label="View your profile">
           <span class="nav-user-chip-avatar"><i class="fa-solid fa-user"></i></span>
           <div class="nav-user-chip-meta">
             <span class="nav-user-chip-label"><%= t('nav.hello') %></span>
             <span class="nav-user-chip-name"><%= currentUser.name %></span>
           </div>
-        </div>
+          <span class="nav-user-chip-action">My profile <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
         <a href="/logout" class="btn btn-outline-gold btn-block"><i class="fa-solid fa-arrow-right-from-bracket"></i> <%= t('nav.logout') %></a>
       <% } else { %>
         <div class="nav-auth-buttons">
@@ -51,7 +52,10 @@
       <a href="/lang/kn" class="<%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
     </div>
     <% if (currentUser) { %>
-      <span style="color:#f5d576; font-size:0.85rem;"><%= t('nav.hello') %>, <%= currentUser.name %></span>
+      <a href="/my-profile" class="nav-profile-link" aria-label="View your profile">
+        <span class="nav-profile-avatar"><i class="fa-solid fa-user"></i></span>
+        <span><%= currentUser.name %></span>
+      </a>
       <a href="/logout" class="btn btn-outline-gold btn-sm"><%= t('nav.logout') %></a>
     <% } else { %>
       <a href="/login" class="btn btn-outline-gold"><%= t('nav.login') %></a>

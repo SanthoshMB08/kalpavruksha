@@ -8,23 +8,30 @@ const PUBLIC_FIELDS = `
 `;
 
 const FULL_FIELDS = `
-  id, full_name, gender, image_name, image_name_2, religion, caste, subcaste, date_of_birth,
-  time_of_birth, language, occupation, annual_salary, father_name, father_occupation,
-  father_salary, mother_name, mother_occupation, mother_salary, total_siblings,
-  male_siblings, female_siblings, phone_number, address, city, state, assets,
-  loans, rashi, nakshatra, jathaka_pdf_name, biodata_pdf_name, marital_status, created_by, created_at,
+  id, full_name, gender, image_name, image_name_2, religion, religion_other, caste, caste_other,
+  subcaste, date_of_birth, time_of_birth, birth_place, language, occupation, occupation_other, employed_in,
+  employed_in_other, company_name, designation, annual_salary, annual_income_band,
+  father_name, father_occupation, father_salary, mother_name, mother_occupation, mother_salary,
+  total_siblings, male_siblings, female_siblings, num_brothers, married_brothers, num_sisters, married_sisters,
+  phone_number, phone_country_code, address, city, state, country, assets, loans, rashi, nakshatra, has_dosh,
+  jathaka_pdf_name, biodata_pdf_name, marital_status, willing_other_caste, has_children, number_of_children,
+  education, family_type, family_values, family_status, eating_habit, smoking_habit, drinking_habit,
+  mother_tongue, mother_tongue_other, user_id, created_by, created_at,
   DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
 `;
 
 // Every column a controller is allowed to touch via updateFields(). id,
 // created_by, created_at are never updatable this way.
 const UPDATABLE_COLUMNS = [
-  'full_name', 'gender', 'image_name', 'image_name_2', 'religion', 'caste', 'subcaste',
-  'date_of_birth', 'time_of_birth', 'language', 'occupation', 'annual_salary',
-  'father_name', 'father_occupation', 'father_salary', 'mother_name', 'mother_occupation',
-  'mother_salary', 'total_siblings', 'male_siblings', 'female_siblings', 'phone_number',
-  'address', 'city', 'state', 'assets', 'loans', 'rashi', 'nakshatra',
-  'jathaka_pdf_name', 'biodata_pdf_name', 'marital_status'
+  'full_name', 'gender', 'image_name', 'image_name_2', 'religion', 'religion_other', 'caste', 'caste_other',
+  'subcaste', 'date_of_birth', 'time_of_birth', 'birth_place', 'language', 'occupation', 'occupation_other', 'employed_in',
+  'employed_in_other', 'company_name', 'designation', 'annual_salary', 'annual_income_band',
+  'father_name', 'father_occupation', 'father_salary', 'mother_name', 'mother_occupation', 'mother_salary',
+  'total_siblings', 'male_siblings', 'female_siblings', 'num_brothers', 'married_brothers', 'num_sisters', 'married_sisters',
+  'phone_number', 'phone_country_code', 'address', 'city', 'state', 'country', 'assets', 'loans', 'rashi', 'nakshatra', 'has_dosh',
+  'jathaka_pdf_name', 'biodata_pdf_name', 'marital_status', 'willing_other_caste', 'has_children', 'number_of_children',
+  'education', 'family_type', 'family_values', 'family_status', 'eating_habit', 'smoking_habit', 'drinking_habit',
+  'mother_tongue', 'mother_tongue_other'
 ];
 
 function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
@@ -68,7 +75,7 @@ function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
     clauses.push('marital_status = ?');
     params.push(filters.maritalStatus);
   } else if (!includeMarried) {
-    clauses.push("marital_status = 'unmarried'");
+    clauses.push("marital_status != 'married'");
   }
 
   const where = `WHERE ${clauses.join(' AND ')}`;
@@ -156,26 +163,47 @@ const Profile = {
   async create(data) {
     const [result] = await pool.query(
       `INSERT INTO profiles (
-        full_name, gender, image_name, image_name_2, religion, caste, subcaste, date_of_birth,
-        time_of_birth, language, occupation, annual_salary, father_name,
+        full_name, gender, image_name, image_name_2, religion, religion_other, caste, caste_other, subcaste,
+        date_of_birth, time_of_birth, birth_place, language, occupation, occupation_other, employed_in, employed_in_other,
+        company_name, designation, annual_salary, annual_income_band, father_name,
         father_occupation, father_salary, mother_name, mother_occupation,
         mother_salary, total_siblings, male_siblings, female_siblings,
-        phone_number, address, city, state, assets, loans, rashi, nakshatra,
-        jathaka_pdf_name, biodata_pdf_name, marital_status, created_by
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        num_brothers, married_brothers, num_sisters, married_sisters,
+        phone_number, phone_country_code, address, city, state, country, assets, loans, rashi, nakshatra, has_dosh,
+        jathaka_pdf_name, biodata_pdf_name, marital_status, willing_other_caste, has_children, number_of_children,
+        education, family_type, family_values, family_status, eating_habit, smoking_habit, drinking_habit,
+        mother_tongue, mother_tongue_other, user_id, created_by
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       RETURNING id`,
       [
-        data.full_name, data.gender, data.image_name, data.image_name_2 || null, data.religion, data.caste,
-        data.subcaste, data.date_of_birth, data.time_of_birth || null, data.language,
-        data.occupation, data.annual_salary, data.father_name, data.father_occupation,
-        data.father_salary, data.mother_name, data.mother_occupation, data.mother_salary,
+        data.full_name, data.gender, data.image_name, data.image_name_2 || null, data.religion, data.religion_other || null,
+        data.caste || null, data.caste_other || null, data.subcaste || null,
+        data.date_of_birth, data.time_of_birth || null, data.birth_place || null, data.language,
+        data.occupation || null, data.occupation_other || null, data.employed_in || null, data.employed_in_other || null,
+        data.company_name || null, data.designation || null,
+        data.annual_salary || null, data.annual_income_band || null,
+        data.father_name, data.father_occupation,
+        data.father_salary || null, data.mother_name, data.mother_occupation, data.mother_salary || null,
         data.total_siblings || 0, data.male_siblings || 0, data.female_siblings || 0,
-        data.phone_number, data.address, data.city, data.state, data.assets,
-        data.loans || null, data.rashi, data.nakshatra, data.jathaka_pdf_name || null,
-        data.biodata_pdf_name || null, data.marital_status || 'unmarried', data.created_by || null
+        data.num_brothers || 0, data.married_brothers || 0, data.num_sisters || 0, data.married_sisters || 0,
+        data.phone_number, data.phone_country_code || '+91', data.address, data.city, data.state, data.country || 'India',
+        data.assets, data.loans || null, data.rashi, data.nakshatra, data.has_dosh || null,
+        data.jathaka_pdf_name || null, data.biodata_pdf_name || null, data.marital_status || 'never_married',
+        data.willing_other_caste || null, data.has_children || null, data.number_of_children || null,
+        data.education || null, data.family_type || null, data.family_values || null, data.family_status || null,
+        data.eating_habit || null, data.smoking_habit || null, data.drinking_habit || null,
+        data.mother_tongue || null, data.mother_tongue_other || null,
+        data.user_id || null, data.created_by || null
       ]
     );
     return result.insertId;
+  },
+
+  // Looks up the profile linked to a given login account — used by the
+  // member dashboard/profile pages if they ever need "my own profile".
+  async findByUserId(userId) {
+    const [rows] = await pool.query(`SELECT ${FULL_FIELDS} FROM profiles WHERE user_id = ? AND deleted_at IS NULL`, [userId]);
+    return rows[0] || null;
   },
 
   // Generic, whitelisted partial update. Callers pass only the fields they
@@ -241,6 +269,26 @@ const Profile = {
   async count() {
     const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NULL');
     return rows[0].total;
+  },
+
+  // A handful of recent, available profiles for the public homepage's
+  // "Meet our Brides & Grooms" row — photos are blurred client-side (CSS)
+  // since this is shown to signed-out visitors, not matched members.
+  async listFeatured(genderFilter, limit = 8) {
+    const params = [];
+    let where = "deleted_at IS NULL AND marital_status != 'married'";
+    if (genderFilter) {
+      where += ' AND gender = ?';
+      params.push(genderFilter);
+    }
+    params.push(limit);
+    const [rows] = await pool.query(
+      `SELECT id, full_name, gender, image_name, city,
+              DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
+       FROM profiles WHERE ${where} ORDER BY created_at DESC LIMIT ?`,
+      params
+    );
+    return rows;
   }
 };
 

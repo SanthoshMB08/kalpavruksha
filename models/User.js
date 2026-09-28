@@ -22,6 +22,14 @@ const User = {
     return rows[0];
   },
 
+  async findMemberById(id) {
+    const [rows] = await pool.query(
+      "SELECT id, name, mobile_number, username, gender, status FROM users WHERE id = $1 AND role = 'user' AND deleted_at IS NULL",
+      [id]
+    );
+    return rows[0] || null;
+  },
+
   // Registration uniqueness check — only checks active accounts, since a
   // soft-deleted user's mobile/username is intentionally free to reuse (see
   // the partial unique indexes in schema.sql).
@@ -33,6 +41,17 @@ const User = {
     return rows.length > 0;
   },
 
+  // Used by the admin "add profile" form's phone-number check/autofill step:
+  // an existing account (any role) is linked to the new profile instead of
+  // creating a duplicate. Soft-deleted accounts don't count as "existing".
+  async findByMobile(mobile) {
+    const [rows] = await pool.query(
+      'SELECT id, name, gender, username, role FROM users WHERE mobile_number = ? AND deleted_at IS NULL',
+      [mobile]
+    );
+    return rows[0] || null;
+  },
+
   async create({ name, mobile_number, username, passwordHash, role = 'user', status = 'pending', gender = null }) {
     const [result] = await pool.query(
       `INSERT INTO users (name, mobile_number, username, password, role, status, gender)
@@ -40,6 +59,29 @@ const User = {
       [name, mobile_number, username, passwordHash, role, status, gender]
     );
     return result.insertId;
+  },
+
+  // Derives a login username from name + gender when the admin's "add
+  // profile" flow creates a brand-new account and never collected one
+  // explicitly. Retries with a fresh random suffix on the rare collision.
+  async generateUniqueUsername(name, gender) {
+    const base = String(name || 'member')
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, '')
+      .trim()
+      .split(/\s+/)[0] || 'member';
+    const genderTag = gender === 'female' ? 'f' : gender === 'male' ? 'm' : '';
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const suffix = Math.floor(1000 + Math.random() * 9000);
+      const candidate = `${base}${genderTag}${suffix}`.slice(0, 50);
+      const [rows] = await pool.query(
+        'SELECT id FROM users WHERE username = ? AND deleted_at IS NULL',
+        [candidate]
+      );
+      if (rows.length === 0) return candidate;
+    }
+    // Astronomically unlikely fallback — timestamp guarantees uniqueness.
+    return `${base}${genderTag}${Date.now()}`.slice(0, 50);
   },
 
   async listPending(pagination = {}) {
