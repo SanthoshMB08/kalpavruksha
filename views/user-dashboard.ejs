@@ -6,74 +6,183 @@
 <body>
   <%- include('partials/header') %>
 
-  <div class="search-bar-wrap">
-    <form id="filterForm" method="GET" action="/dashboard" class="search-bar">
-      <div class="search-input-group">
-        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-        <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="<%= t('dashboard.searchPlaceholder') %>">
-      </div>
-      <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
-        <i class="fa-solid fa-sliders"></i> <%= t('dashboard.filters') %>
-      </button>
-      <button type="submit" class="btn btn-gold search-submit-btn"><%= t('dashboard.search') %></button>
+  <%
+    // Builds a /dashboard URL with one filter dropped, so every chip and the
+    // Reset link stay plain <a href> — works with JS off, no pushState needed.
+    function withoutParams(drop) {
+      const p = new URLSearchParams();
+      for (const k of Object.keys(currentQuery || {})) {
+        if (k === 'page' || (Array.isArray(drop) ? drop.includes(k) : k === drop)) continue;
+        const v = currentQuery[k];
+        if (v !== undefined && v !== null && v !== '') p.set(k, v);
+      }
+      const qs = p.toString();
+      return '/dashboard' + (qs ? '?' + qs : '');
+    }
 
-      <div class="filter-panel" id="filterPanel">
-        <div class="filter-panel-grid">
-          <div class="filter-group">
-            <label><%= t('dashboard.caste') %></label>
-            <input type="text" name="caste" id="casteInput" autocomplete="off"
-                   value="<%= filters.caste || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
-            <div class="filter-dropdown-list" id="casteList">
-              <% castes.forEach(function(c) { %><div data-target="casteInput" data-value="<%= c %>"><%= c %></div><% }) %>
-            </div>
+    const isMale = (currentUser && currentUser.gender === 'male');
+
+    // The create-profile form only publishes a caste list for some religions
+    // and disables the field for the rest. Mirror that rule exactly, so the
+    // filter can never offer a religion+caste combination that a profile
+    // could not be created with.
+    const casteList = (casteOptionsByReligion || {})[filters.religion] || null;
+
+    // Sub-caste is free text on the profile form, so there is no canonical list
+    // to copy — and with no fixed set, a closed dropdown would only ever offer
+    // what is already in the database. The field is therefore typeable, with
+    // the values in use offered as suggestions.
+    const subcasteList = subcasteOptions || [];
+
+    // Option maps are injected into a <script> block, so any "<" in a
+    // admin-entered string has to be neutralised or the payload could close
+    // the tag early.
+    const safeJson = (obj) => JSON.stringify(obj || {}).replace(/</g, '\\u003c');
+
+    // Every applied filter, in reading order, for the chip row.
+    const chips = [];
+    if (filters.keyword) chips.push({ key: 'keyword', label: t('dashboard.keyword'), value: filters.keyword });
+    if (filters.religion) chips.push({ key: 'religion', label: t('dashboard.religion'), value: filters.religion });
+    if (filters.caste) chips.push({ key: 'caste', label: t('dashboard.caste'), value: filters.caste });
+    if (filters.subcaste) chips.push({ key: 'subcaste', label: t('dashboard.subcaste'), value: filters.subcaste });
+    if (filters.language) chips.push({ key: 'language', label: t('dashboard.language'), value: filters.language });
+    if (filters.minAge || filters.maxAge) {
+      chips.push({
+        key: ['minAge', 'maxAge'],
+        label: t('dashboard.ageRange'),
+        value: (filters.minAge || 18) + '–' + (filters.maxAge || 90)
+      });
+    }
+  %>
+
+  <div class="search-console">
+    <div class="search-console-inner">
+      <form id="filterForm" method="GET" action="/dashboard" class="fc-form" autocomplete="off" novalidate>
+
+        <!-- Row 1 — free-text search + the auto/locked-in "looking for" context -->
+        <div class="fc-topline">
+          <div class="fc-search">
+            <i class="fa-solid fa-magnifying-glass fc-search-icon" aria-hidden="true"></i>
+            <input
+              type="search"
+              name="keyword"
+              id="fcKeyword"
+              value="<%= filters.keyword || '' %>"
+              placeholder="<%= t('dashboard.searchPlaceholder') %>"
+              aria-label="<%= t('dashboard.searchPlaceholder') %>">
+            <kbd class="fc-kbd" aria-hidden="true">/</kbd>
           </div>
-
-          <div class="filter-group">
-            <label><%= t('dashboard.language') %></label>
-            <input type="text" name="language" id="languageInput" autocomplete="off"
-                   value="<%= filters.language || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
-            <div class="filter-dropdown-list" id="languageList">
-              <% languages.forEach(function(l) { %><div data-target="languageInput" data-value="<%= l %>"><%= l %></div><% }) %>
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label><%= t('dashboard.ageRange') %></label>
-            <div class="age-range-row">
-              <input type="number" name="minAge" min="18" max="90" placeholder="<%= t('dashboard.minAge') %>" value="<%= filters.minAge || '' %>">
-              <span>to</span>
-              <input type="number" name="maxAge" min="18" max="90" placeholder="<%= t('dashboard.maxAge') %>" value="<%= filters.maxAge || '' %>">
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label><%= t('dashboard.religion') %></label>
-            <input type="text" name="religion" id="religionInput" autocomplete="off"
-                   value="<%= filters.religion || '' %>" placeholder="<%= t('dashboard.typeToSearch') %>">
-            <div class="filter-dropdown-list" id="religionList">
-              <% religions.forEach(function(r) { %><div data-target="religionInput" data-value="<%= r %>"><%= r %></div><% }) %>
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label><%= t('dashboard.subcaste') %></label>
-            <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="<%= t('dashboard.subcastePlaceholder') %>">
-          </div>
-
+          <span class="fc-locked" title="<%= t('dashboard.lookingFor') %>">
+            <i class="fa-solid fa-venus-mars" aria-hidden="true"></i>
+            <%= t('dashboard.lookingFor') %>
+            <strong><%= isMale ? t('dashboard.bride') : t('dashboard.groom') %></strong>
+          </span>
+          <button type="submit" class="btn btn-gold fc-submit">
+            <span class="fc-submit-label"><i class="fa-solid fa-magnifying-glass"></i> <%= t('dashboard.search') %></span>
+            <span class="fc-submit-busy"><span class="fc-spinner" aria-hidden="true"></span> <%= t('dashboard.searching') %></span>
+          </button>
         </div>
 
-        <div class="filter-panel-actions">
-          <a href="/dashboard" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('dashboard.clearAll') %></a>
-          <button type="submit" class="btn btn-gold btn-sm"><%= t('dashboard.applyFilters') %></button>
+        <!-- Row 2 — the real controls. Religion/caste/language are closed
+             dropdowns of exactly the list the create-profile form offers;
+             sub-caste is free text on that form, so it is typed here too, with
+             the values already in use offered as suggestions. -->
+        <div class="fc-grid">
+
+          <div class="fc-field<%= filters.religion ? ' is-set' : '' %>">
+            <label for="fcReligion"><%= t('dashboard.religion') %></label>
+            <div class="fc-select">
+              <select name="religion" id="fcReligion">
+                <option value=""><%= t('dashboard.anyReligion') %></option>
+                <% religionOptions.forEach(function (o) { %>
+                  <option value="<%= o.value %>" <%= String(filters.religion) === String(o.value) ? 'selected' : '' %>><%= o.label %></option>
+                <% }) %>
+              </select>
+              <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <div class="fc-field<%= !filters.religion ? ' is-locked' : (filters.caste ? ' is-set' : '') %>">
+            <label for="fcCaste"><%= t('dashboard.caste') %></label>
+            <div class="fc-select">
+              <select name="caste" id="fcCaste"
+                      data-any="<%= t('dashboard.anyCaste') %>"
+                      data-ask="<%= t('dashboard.pickCaste') %>"
+                      <%= casteList ? '' : 'disabled' %>>
+                <option value=""><%= casteList ? t('dashboard.anyCaste') : t('dashboard.pickCaste') %></option>
+                <% (casteList || []).forEach(function (c) { %>
+                  <option value="<%= c %>" <%= String(filters.caste) === String(c) ? 'selected' : '' %>><%= c %></option>
+                <% }) %>
+              </select>
+              <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <div class="fc-field<%= filters.subcaste ? ' is-set' : '' %>">
+            <label for="fcSubcaste"><%= t('dashboard.subcaste') %></label>
+            <div class="fc-select">
+              <input type="text" name="subcaste" id="fcSubcaste" list="fcSubcasteList" class="fc-input"
+                     value="<%= filters.subcaste || '' %>"
+                     placeholder="<%= t('dashboard.subcastePlaceholder') %>"
+                     autocomplete="off" spellcheck="false">
+              <datalist id="fcSubcasteList">
+                <% subcasteList.forEach(function (s) { %><option value="<%= s %>"><% }) %>
+              </datalist>
+            </div>
+          </div>
+
+          <div class="fc-field<%= filters.language ? ' is-set' : '' %>">
+            <label for="fcLanguage"><%= t('dashboard.language') %></label>
+            <div class="fc-select">
+              <select name="language" id="fcLanguage">
+                <option value=""><%= t('dashboard.anyLanguage') %></option>
+                <% languageOptions.forEach(function (l) { %>
+                  <option value="<%= l %>" <%= String(filters.language) === String(l) ? 'selected' : '' %>><%= l %></option>
+                <% }) %>
+              </select>
+              <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <div class="fc-field fc-field-age<%= (filters.minAge || filters.maxAge) ? ' is-set' : '' %>">
+            <label for="fcAgeMin"><%= t('dashboard.ageRange') %></label>
+            <div class="fc-age">
+              <input type="number" name="minAge" id="fcAgeMin" min="18" max="90" step="1"
+                     value="<%= filters.minAge || '' %>" placeholder="18" inputmode="numeric">
+              <span class="fc-age-dash" aria-hidden="true">&ndash;</span>
+              <input type="number" name="maxAge" id="fcAgeMax" min="18" max="90" step="1"
+                     value="<%= filters.maxAge || '' %>" placeholder="90" inputmode="numeric">
+              <span class="fc-age-hint"><%= t('dashboard.ageHint') %></span>
+            </div>
+          </div>
         </div>
-      </div>
-    </form>
+
+        <!-- Row 3 — what's actually narrowing the results, each one removable -->
+        <div class="fc-foot">
+          <div class="fc-chips" id="fcChips">
+            <span class="fc-chips-title"><i class="fa-solid fa-filter" aria-hidden="true"></i> <%= t('dashboard.activeFilters') %></span>
+            <% if (chips.length === 0) { %>
+              <span class="fc-chips-empty"><%= t('dashboard.noActiveFilters') %></span>
+            <% } %>
+            <% chips.forEach(function (c) { %>
+              <a class="fc-chip" href="<%= withoutParams(c.key) %>" title="<%= t('dashboard.removeFilter') %>">
+                <span class="fc-chip-label"><%= c.label %></span>
+                <span class="fc-chip-value"><%= c.value %></span>
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                <span class="sr-only"><%= t('dashboard.removeFilter') %></span>
+              </a>
+            <% }) %>
+          </div>
+          <a class="fc-reset" href="/dashboard"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <%= t('dashboard.clearAll') %></a>
+        </div>
+      </form>
+    </div>
   </div>
 
   <main class="match-feed match-feed-full">
     <div class="match-feed-header">
       <h2><%= t('dashboard.yourMatches') %></h2>
-      <span style="color:#8a7156; font-size:0.85rem;"><%= pageInfo.total %> <%= t('dashboard.profilesFound') %></span>
+      <span class="result-count"><%= pageInfo.total %> <%= t('dashboard.profilesFound') %></span>
     </div>
 
     <% if (afterSearchAds && afterSearchAds.length) { %>
@@ -139,48 +248,151 @@
   </div>
 
   <script nonce="<%= nonce %>">
-    // Filter panel toggle (YouTube/LinkedIn style filter menu)
-    var filterToggleBtn = document.getElementById('filterToggleBtn');
-    var filterPanel = document.getElementById('filterPanel');
-    if (filterToggleBtn && filterPanel) {
-      filterToggleBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        filterPanel.classList.toggle('open');
-      });
-      document.addEventListener('click', function (e) {
-        if (!filterPanel.contains(e.target) && e.target !== filterToggleBtn) {
-          filterPanel.classList.remove('open');
+    (function () {
+      var form = document.getElementById('filterForm');
+      if (!form) return;
+
+      var AGE_MIN = 18;
+      var AGE_MAX = 90;
+
+      var religionSel = document.getElementById('fcReligion');
+      var casteSel = document.getElementById('fcCaste');
+      var subcasteInput = document.getElementById('fcSubcaste');
+      var keywordInput = document.getElementById('fcKeyword');
+      var ageMinNum = document.getElementById('fcAgeMin');
+      var ageMaxNum = document.getElementById('fcAgeMax');
+
+      // The create-form caste lists, shipped to the browser so picking a
+      // religion can narrow the caste dropdown without a round trip. This is
+      // the same map views/admin/profile.ejs uses, so the filter can never
+      // offer a religion+caste pair a profile could not be created with.
+      var CASTES_BY_RELIGION = <%- safeJson(casteOptionsByReligion) %>;
+
+      // --- Shared helpers -----------------------------------------------------
+
+      function markSet(el) {
+        var field = el && el.closest ? el.closest('.fc-field') : null;
+        if (field) field.classList.add('is-set');
+      }
+
+      function markUnset(el) {
+        var field = el && el.closest ? el.closest('.fc-field') : null;
+        if (field) field.classList.remove('is-set');
+      }
+
+      function replaceOptions(sel, options, blankLabel) {
+        if (!sel) return '';
+        var keep = sel.value;
+        sel.innerHTML = '';
+        var blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = blankLabel;
+        sel.appendChild(blank);
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          sel.appendChild(o);
+        });
+        // A value that is no longer on offer can't stay selected.
+        sel.value = options.indexOf(keep) === -1 ? '' : keep;
+        if (sel.value) markSet(sel); else markUnset(sel);
+        return sel.value;
+      }
+
+      // --- Religion -> caste --------------------------------------------------
+
+      function syncCaste() {
+        if (!casteSel) return '';
+        var religion = religionSel ? religionSel.value : '';
+        var list = CASTES_BY_RELIGION[religion] || null;
+        var field = casteSel.closest('.fc-field');
+
+        // Same rule as the create form: no religion chosen, or a religion with
+        // no published caste list, means the field is closed. Submitting a
+        // disabled control is impossible, so a stale caste can't leak through.
+        if (!list) {
+          replaceOptions(casteSel, [], casteSel.dataset.ask || '');
+          casteSel.disabled = true;
+        } else {
+          replaceOptions(casteSel, list, casteSel.dataset.any || '');
+          casteSel.disabled = false;
         }
-      });
-    }
+        if (field) field.classList.toggle('is-locked', casteSel.disabled);
+        return casteSel.value;
+      }
 
-    // Type-to-filter scroll-down dropdowns for Religion / Caste / Language
-    function wireDropdown(inputId, listId) {
-      const input = document.getElementById(inputId);
-      const list = document.getElementById(listId);
-      if (!input || !list) return;
+      // --- Age range: two number boxes ----------------------------------------
 
-      input.addEventListener('focus', () => list.classList.add('open'));
-      input.addEventListener('input', () => {
-        const q = input.value.toLowerCase();
-        list.querySelectorAll('div').forEach((item) => {
-          item.style.display = item.textContent.toLowerCase().includes(q) ? 'block' : 'none';
-        });
-        list.classList.add('open');
+      // Typing is deliberately *not* submitted on every keystroke — a single
+      // digit would fire a search. Clamp into range and keep the two in order
+      // so the value the user ends up submitting is the value they see.
+      function normaliseAges() {
+        if (!ageMinNum || !ageMaxNum) return;
+        var lo = parseInt(ageMinNum.value, 10);
+        var hi = parseInt(ageMaxNum.value, 10);
+        lo = isNaN(lo) ? null : Math.min(AGE_MAX, Math.max(AGE_MIN, lo));
+        hi = isNaN(hi) ? null : Math.min(AGE_MAX, Math.max(AGE_MIN, hi));
+        if (lo !== null && hi !== null && lo > hi) { var swap = lo; lo = hi; hi = swap; }
+        ageMinNum.value = lo === null ? '' : lo;
+        ageMaxNum.value = hi === null ? '' : hi;
+        if (lo === null && hi === null) markUnset(ageMinNum);
+        else markSet(ageMinNum);
+      }
+
+      // --- Wiring -------------------------------------------------------------
+
+      // A real choice in a dropdown is a complete decision, so it searches
+      // straight away. Everything typed is exempt: the keyword box, the age
+      // number boxes and the sub-caste box all need a deliberate Search, or a
+      // half-typed word or a single digit would fire a search.
+      form.addEventListener('change', function (e) {
+        var el = e.target;
+
+        if (el === ageMinNum || el === ageMaxNum) { normaliseAges(); return; }
+        if (el === religionSel) { syncCaste(); markSet(religionSel); form.requestSubmit(); return; }
+        if (el === casteSel) { markSet(el); form.requestSubmit(); }
+        if (el === subcasteInput) { el.value.trim() ? markSet(el) : markUnset(el); }
       });
-      list.querySelectorAll('div').forEach((item) => {
-        item.addEventListener('click', () => {
-          input.value = item.getAttribute('data-value');
-          list.classList.remove('open');
-        });
+
+      // The is-set edge is driven off the current value, not just the change
+      // event, so clearing the box with the keyboard's own Clear button also
+      // drops the highlight instead of leaving a filled-looking empty filter.
+      if (subcasteInput) {
+        var syncSubcaste = function () {
+          subcasteInput.value.trim() ? markSet(subcasteInput) : markUnset(subcasteInput);
+        };
+        subcasteInput.addEventListener('input', syncSubcaste);
+        subcasteInput.addEventListener('search', syncSubcaste);
+      }
+
+      [ageMinNum, ageMaxNum].forEach(function (n) {
+        if (n) n.addEventListener('blur', normaliseAges);
       });
-      document.addEventListener('click', (e) => {
-        if (!input.contains(e.target) && !list.contains(e.target)) list.classList.remove('open');
+
+      form.addEventListener('submit', function () {
+        normaliseAges();
+        form.classList.add('is-busy');
       });
-    }
-    wireDropdown('religionInput', 'religionList');
-    wireDropdown('casteInput', 'casteList');
-    wireDropdown('languageInput', 'languageList');
+
+      // "/" jumps to the search box, the way every other search page behaves.
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+        var tag = document.activeElement && document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        if (keywordInput) keywordInput.focus();
+      });
+
+      // --- Initial paint ------------------------------------------------------
+      // The server already rendered the correct caste list for the selected
+      // religion, so this only re-syncs the open/closed state and the highlight.
+      syncCaste();
+      Array.prototype.forEach.call(form.querySelectorAll('.fc-field'), function (field) {
+        var control = field.querySelector('select, input');
+        if (control && control.value) field.classList.add('is-set');
+      });
+    })();
 
     // Profile details modal — fetched without disturbing scroll position on the grid
     function openProfileModal(id) {

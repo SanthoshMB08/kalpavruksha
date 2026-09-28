@@ -2,6 +2,7 @@ const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const Advertisement = require('../models/Advertisement');
 const User = require('../models/User');
+const profileOptions = require('../utils/profileOptions');
 
 // Gender-based matching is mandatory: a male member only ever sees female
 // profiles and vice versa. This is enforced here, not left to the user to pick.
@@ -12,33 +13,67 @@ function oppositeGender(gender) {
 }
 
 exports.dashboard = async (req, res) => {
+  // Age inputs are strings off the query string. Clamp them once, here, so the
+  // view, the chips and the SQL all agree on the same range.
+  const parseAge = (v) => {
+    const n = parseInt(v, 10);
+    if (Number.isNaN(n)) return null;
+    return Math.min(90, Math.max(18, n));
+  };
+  const minAge = parseAge(req.query.minAge);
+  const maxAge = parseAge(req.query.maxAge);
+
+  // Sub-caste is typed, so it arrives with whatever spacing the member used. A
+  // box holding only spaces is an empty filter, not a search for "   ".
+  const subcaste = typeof req.query.subcaste === 'string' ? req.query.subcaste.trim() : req.query.subcaste;
+
+  // The canonical dropdown contents are the same lists the create-profile form
+  // offers, so what a member can filter by is exactly what staff can record.
+  // Anything already in the database but missing from those lists (a retired
+  // religion slug, the free text left by mother_tongue = "Other") gets appended
+  // so real profiles never become unreachable. Comparison is case-insensitive,
+  // so a legacy "Hindu" and the canonical "hindu" collapse to one entry.
+  const mergeValues = (canonical, extra) => {
+    const seen = new Set(canonical.map((v) => String(v).toLowerCase()));
+    return canonical.concat(extra.filter((v) => !seen.has(String(v).toLowerCase())));
+  };
+
+  // Keeps the create-form labels ("Hindu") for the values that have one, and
+  // falls back to the raw stored value for the ones that don't.
+  const withLabels = (canonical, extra) => {
+    const seen = new Set(canonical.map((o) => o.value.toLowerCase()));
+    return canonical.concat(
+      extra.filter((v) => !seen.has(String(v).toLowerCase())).map((v) => ({ value: v, label: v }))
+    );
+  };
+
   try {
     const myGender = req.session.user.gender;
     const filters = {
       religion: req.query.religion,
       caste: req.query.caste,
       language: req.query.language,
-      subcaste: req.query.subcaste,
+      subcaste,
       gender: oppositeGender(myGender),
       keyword: req.query.keyword,
-      minAge: req.query.minAge,
-      maxAge: req.query.maxAge
+      minAge,
+      maxAge
     };
-    const [searchResult, religions, castes, languages, afterSearchAds] = await Promise.all([
+    const [searchResult, used, afterSearchAds] = await Promise.all([
       Profile.search(filters, { page: req.query.page }),
-      Profile.distinctValues('religion'),
-      Profile.distinctValues('caste'),
-      Profile.distinctValues('language'),
+      Profile.filterOptionIndex(),
       Advertisement.listActiveByPlacement('after_search')
     ]);
+
     res.render('user-dashboard', {
       title: 'Find Your Match',
       profiles: searchResult.rows,
       pageInfo: searchResult,
       currentQuery: req.query,
-      religions,
-      castes,
-      languages,
+      religionOptions: withLabels(profileOptions.RELIGION_OPTIONS, used.religion),
+      casteOptionsByReligion: profileOptions.CASTE_OPTIONS_BY_RELIGION,
+      subcasteOptions: used.subcaste,
+      languageOptions: mergeValues(profileOptions.MOTHER_TONGUE_OPTIONS, used.language),
       filters,
       afterSearchAds
     });
@@ -48,9 +83,11 @@ exports.dashboard = async (req, res) => {
       title: 'Find Your Match',
       profiles: [],
       pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
-      religions: [],
-      castes: [],
-      languages: [],
+      currentQuery: req.query,
+      religionOptions: profileOptions.RELIGION_OPTIONS,
+      casteOptionsByReligion: profileOptions.CASTE_OPTIONS_BY_RELIGION,
+      subcasteOptions: [],
+      languageOptions: profileOptions.MOTHER_TONGUE_OPTIONS,
       filters: {},
       afterSearchAds: []
     });

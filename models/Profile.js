@@ -34,26 +34,49 @@ const UPDATABLE_COLUMNS = [
   'mother_tongue', 'mother_tongue_other'
 ];
 
-function buildWhereClause(filters = {}, { includeMarried = false } = {}) {
+// Columns a controller is allowed to filter on, alongside language below. The
+// caller decides which of them match exactly: the member-facing pickers for
+// religion and caste are closed <select> lists, and matching those exactly is
+// what makes the UI predictable — picking "Jat" in the dropdown must mean Jat,
+// not every caste that happens to contain the substring.
+//
+// The comparison is case-insensitive because the option lists come from
+// profileOptions (stored as slugs, e.g. 'hindu') while older rows — and the
+// test seed — hold the display form ('Hindu'). None of these columns is
+// indexed, so LOWER() costs nothing measurable on a search that already scans.
+// Sub-caste is listed here but deliberately left out of every caller's exact
+// list: it is typed, not chosen, and it is free text on the profile form, so a
+// substring match is the only thing a typed value can be expected to hit.
+const SELECT_FILTER_COLUMNS = ['religion', 'caste', 'subcaste'];
+
+// Closed pickers on the member-facing search page. Everything else there is
+// typed and falls through to the substring branch above.
+const MEMBER_EXACT_FILTER_COLUMNS = ['religion', 'caste'];
+
+function buildWhereClause(filters = {}, { includeMarried = false, exactFields = null } = {}) {
   // Soft-deleted profiles are never returned by a search, in any context.
   const clauses = ['deleted_at IS NULL'];
   const params = [];
+  const useExact = (col) => (exactFields ? exactFields.includes(col) : false);
 
-  if (filters.religion) {
-    clauses.push('religion LIKE ?');
-    params.push(`%${filters.religion}%`);
-  }
-  if (filters.caste) {
-    clauses.push('caste LIKE ?');
-    params.push(`%${filters.caste}%`);
+  for (const col of SELECT_FILTER_COLUMNS) {
+    if (!filters[col]) continue;
+    if (useExact(col)) {
+      clauses.push(`LOWER(${col}) = LOWER(?)`);
+      params.push(filters[col]);
+    } else {
+      // Typed, so substring — and case-insensitive, or re-typing a stored value
+      // in a different case would silently return nothing.
+      clauses.push(`${col} ILIKE ?`);
+      params.push(`%${filters[col]}%`);
+    }
   }
   if (filters.language) {
-    clauses.push('language LIKE ?');
+    // Always substring. The control is a dropdown of the canonical
+    // mother-tongue list, but a profile whose mother tongue was "Other" stores
+    // free text in this legacy column, so exact matching would hide those.
+    clauses.push('language ILIKE ?');
     params.push(`%${filters.language}%`);
-  }
-  if (filters.subcaste) {
-    clauses.push('subcaste LIKE ?');
-    params.push(`%${filters.subcaste}%`);
   }
   if (filters.gender) {
     clauses.push('gender = ?');
@@ -99,9 +122,16 @@ async function runPaginatedSearch(filters, fieldSet, opts, pagination) {
 
 const Profile = {
   // Regular-user search: privacy-safe field set, gender-locked, married profiles hidden.
+  // The religion/caste pickers are closed dropdowns of real values, so those two
+  // match exactly; sub-caste and language are typed and match as substrings.
   // Returns { rows, total, page, perPage, totalPages } instead of a bare array.
   async search(filters = {}, pagination = {}) {
-    return runPaginatedSearch(filters, PUBLIC_FIELDS, { includeMarried: false }, pagination);
+    return runPaginatedSearch(
+      filters,
+      PUBLIC_FIELDS,
+      { includeMarried: false, exactFields: MEMBER_EXACT_FILTER_COLUMNS },
+      pagination
+    );
   },
 
   // Admin / Super Admin search: full field set, married profiles included so
@@ -257,13 +287,43 @@ const Profile = {
   },
 
   async distinctValues(column) {
-    const allowed = ['religion', 'caste', 'language'];
+    const allowed = ['religion', 'caste', 'subcaste', 'language'];
     if (!allowed.includes(column)) return [];
     const [rows] = await pool.query(
       `SELECT DISTINCT ${column} AS value FROM profiles
        WHERE ${column} IS NOT NULL AND ${column} != '' AND deleted_at IS NULL ORDER BY ${column} ASC`
     );
     return rows.map((r) => r.value);
+  },
+
+  // The distinct values actually in use, so the search page can offer a
+  // religion/language/sub-caste that the canonical option list would miss
+  // (a religion slug that was retired, or the free text left behind when a
+  // profile's mother tongue was recorded as "Other"). The create-profile form
+  // remains the source of truth for religion and caste options; this only adds
+  // to them so real data is never unreachable.
+  // → { religion: [...], subcaste: [...], language: [...] }
+  async filterOptionIndex() {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT religion, subcaste, language
+       FROM profiles
+       WHERE deleted_at IS NULL`
+    );
+
+    const religion = new Set();
+    const subcaste = new Set();
+    const language = new Set();
+    for (const r of rows) {
+      if (r.religion) religion.add(r.religion);
+      if (r.subcaste) subcaste.add(r.subcaste);
+      if (r.language) language.add(r.language);
+    }
+
+    return {
+      religion: [...religion].sort(),
+      subcaste: [...subcaste].sort(),
+      language: [...language].sort()
+    };
   },
 
   async count() {
