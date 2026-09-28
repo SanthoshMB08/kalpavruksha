@@ -7,7 +7,7 @@
   <%- include('partials/header') %>
 
   <div class="legal-page">
-    <a href="javascript:history.back()" class="legal-back">&larr; Back</a>
+    <button type="button" class="legal-back" data-legal-back>&larr; Back</button>
     <h1>Cookie Policy</h1>
     <p class="legal-updated">Last updated: <%= new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
 
@@ -158,5 +158,7 @@
   </div>
 
   <%- include('partials/footer') %>
+
+  <%- include('partials/legal-back-script') %>
 </body>
 </html>

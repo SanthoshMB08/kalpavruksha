@@ -1,0 +1,23 @@
+<script nonce="<%= nonce %>">
+  // Powers the "← Back" control on the legal pages. It used to be an
+  // <a href="javascript:history.back()">, which the app's CSP (script-src is
+  // nonce-based, no 'unsafe-inline') silently blocks — so the link did
+  // nothing. A real button + this listener is both allowed and giveable
+  // keyboard focus, like the other button-driven toggles in the app.
+  (function () {
+    var btn = document.querySelector('[data-legal-back]');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      // history.length === 1 means this tab has no earlier page to return to
+      // (the link was opened directly, from a bookmark or a shared URL), so
+      // going back would just dump the visitor outside the site. Send them to
+      // the home page instead of nowhere.
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/';
+      }
+    });
+  })();
+</script>

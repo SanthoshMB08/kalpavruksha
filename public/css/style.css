@@ -1216,13 +1216,21 @@ input::placeholder, textarea::placeholder { color: #a09082; }
   margin: 0 auto;
   padding: 40px 24px 70px;
 }
+/* A <button>, not an <a href="javascript:..."> — the latter is blocked by the
+   app's nonce-only script-src CSP. Reset the button chrome so it still reads
+   as a plain link, while keeping native focus/activation behaviour. */
 .legal-back {
   display: inline-block;
   margin-bottom: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
   color: var(--maroon-800);
   font-weight: 700;
   font-size: 0.85rem;
   text-decoration: none;
+  cursor: pointer;
 }
 .legal-back:hover { text-decoration: underline; }
 .legal-page h1 { font-family: var(--font-display); color: var(--maroon-900); margin-bottom: 4px; }
