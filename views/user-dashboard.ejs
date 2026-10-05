@@ -87,7 +87,14 @@
              dropdowns of exactly the list the create-profile form offers;
              sub-caste is free text on that form, so it is typed here too, with
              the values already in use offered as suggestions. -->
-        <div class="fc-grid">
+        <details class="fc-controls" id="fcControls" open>
+          <summary class="fc-filter-toggle">
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+            <span><%= t('dashboard.filters') %></span>
+            <% if (chips.length) { %><span class="fc-filter-count"><%= chips.length %></span><% } %>
+            <i class="fa-solid fa-chevron-down fc-filter-caret" aria-hidden="true"></i>
+          </summary>
+          <div class="fc-grid">
 
           <div class="fc-field<%= filters.religion ? ' is-set' : '' %>">
             <label for="fcReligion"><%= t('dashboard.religion') %></label>
@@ -155,7 +162,8 @@
               <span class="fc-age-hint"><%= t('dashboard.ageHint') %></span>
             </div>
           </div>
-        </div>
+          </div>
+        </details>
 
         <!-- Row 3 — what's actually narrowing the results, each one removable -->
         <div class="fc-foot">
@@ -181,9 +189,18 @@
 
   <main class="match-feed match-feed-full">
     <div class="match-feed-header">
-      <h2><%= t('dashboard.yourMatches') %></h2>
-      <span class="result-count"><%= pageInfo.total %> <%= t('dashboard.profilesFound') %></span>
+      <div class="member-page-heading">
+        <span class="section-eyebrow"><%= t('nav.hello') %>, <%= currentUser.name %></span>
+        <h1><%= t('dashboard.yourMatches') %></h1>
+        <p><%= t('dashboard.findMatchesHint') %></p>
+      </div>
+      <div class="member-dashboard-actions">
+        <a href="/saved-profiles" class="btn btn-outline-gold member-outline"><i class="fa-solid fa-bookmark" aria-hidden="true"></i> <%= t('nav.savedProfiles') %></a>
+        <span class="result-count"><%= pageInfo.total %> <%= t('dashboard.profilesFound') %></span>
+      </div>
     </div>
+
+    <%- include('partials/flash') %>
 
     <% if (afterSearchAds && afterSearchAds.length) { %>
       <div class="search-ad-banner">
@@ -197,9 +214,13 @@
     <% } %>
 
     <% if (profiles.length === 0) { %>
-      <div class="empty-state">
-        <div style="font-size:2rem;"><i class="fa-solid fa-magnifying-glass"></i></div>
-        <p><%= t('dashboard.noResults') %></p>
+      <div class="member-empty-state">
+        <span class="member-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+        <h2><%= chips.length ? t('dashboard.noMatchesTitle') : t('dashboard.noResultsTitle') %></h2>
+        <p><%= chips.length ? t('dashboard.noResults') : t('dashboard.noProfilesHint') %></p>
+        <% if (chips.length) { %>
+          <a href="/dashboard" class="btn btn-gold"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <%= t('dashboard.clearAll') %></a>
+        <% } %>
       </div>
     <% } else { %>
       <div class="profile-grid">
@@ -251,6 +272,14 @@
     (function () {
       var form = document.getElementById('filterForm');
       if (!form) return;
+
+      var filterControls = document.getElementById('fcControls');
+      var mobileViewport = window.matchMedia('(max-width: 900px)');
+      function syncFilterDisclosure(event) {
+        if (filterControls) filterControls.open = !event.matches;
+      }
+      syncFilterDisclosure(mobileViewport);
+      mobileViewport.addEventListener('change', syncFilterDisclosure);
 
       var AGE_MIN = 18;
       var AGE_MAX = 90;

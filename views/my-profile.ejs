@@ -7,6 +7,7 @@
   <%- include('partials/header') %>
 
   <main class="my-profile-page">
+    <%- include('partials/flash') %>
     <div class="my-profile-heading">
       <span class="section-eyebrow">Account</span>
       <h1>My Profile</h1>
@@ -73,8 +74,8 @@
     </aside>
 
     <div class="my-profile-actions">
-      <a href="/dashboard" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> Find matches</a>
-      <a href="/saved-profiles" class="btn btn-outline-gold my-profile-outline">Saved profiles</a>
+      <a href="/dashboard" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> <%= t('nav.findMatch') %></a>
+      <a href="/saved-profiles" class="btn btn-outline-gold my-profile-outline"><i class="fa-solid fa-bookmark" aria-hidden="true"></i> <%= t('nav.savedProfiles') %></a>
     </div>
   </main>
 

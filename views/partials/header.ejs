@@ -26,6 +26,7 @@
     <% if (currentUser) { %>
       <a href="/dashboard"><%= t('nav.findMatch') %></a>
       <a href="/saved-profiles"><%= t('nav.savedProfiles') %></a>
+      <a href="/my-profile"><%= t('nav.myProfile') %></a>
     <% } %>
     <div class="nav-actions nav-actions-mobile">
       <div class="nav-lang-switch" role="group" aria-label="Language">
@@ -39,7 +40,7 @@
             <span class="nav-user-chip-label"><%= t('nav.hello') %></span>
             <span class="nav-user-chip-name"><%= currentUser.name %></span>
           </div>
-          <span class="nav-user-chip-action">My profile <i class="fa-solid fa-arrow-right"></i></span>
+          <span class="nav-user-chip-action"><%= t('nav.myProfile') %> <i class="fa-solid fa-arrow-right"></i></span>
         </a>
         <a href="/logout" class="btn btn-outline-gold btn-block"><i class="fa-solid fa-arrow-right-from-bracket"></i> <%= t('nav.logout') %></a>
       <% } else { %>

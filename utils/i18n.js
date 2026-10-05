@@ -10,6 +10,7 @@ const translations = {
     'nav.contact': 'Contact',
     'nav.findMatch': 'Find Match',
     'nav.savedProfiles': 'Saved Profiles',
+    'nav.myProfile': 'My Profile',
     'nav.login': 'Login',
     'nav.registerNow': 'Register Now',
     'nav.logout': 'Logout',
@@ -55,12 +56,14 @@ const translations = {
     'home.contactTitle': 'Get in touch',
 
     'dashboard.yourMatches': 'Your Matches',
+    'dashboard.findMatchesHint': 'Explore verified profiles and find someone who shares your values.',
     'dashboard.title': 'Find Your Match',
     'dashboard.fieldCaste': 'Caste:',
     'dashboard.fieldLanguage': 'Language:',
     'dashboard.fieldOccupation': 'Occupation:',
     'dashboard.searchPlaceholder': 'Search by name, occupation, or city...',
     'dashboard.search': 'Search',
+    'dashboard.filters': 'Filters',
     'dashboard.religion': 'Religion',
     'dashboard.caste': 'Caste',
     'dashboard.subcaste': 'Sub-caste',
@@ -87,6 +90,9 @@ const translations = {
     'dashboard.share': 'Share',
     'dashboard.profilesFound': 'profile(s) found',
     'dashboard.noResults': 'No matches found for these filters. Try widening your search.',
+    'dashboard.noResultsTitle': 'No profiles to show just yet',
+    'dashboard.noProfilesHint': 'Please check back soon as new verified profiles are added.',
+    'dashboard.noMatchesTitle': 'No matches for these filters',
 
     'saved.title': 'My Profiles',
     'saved.subtitle': "Profiles you've saved for later and profiles you've expressed interest in are kept separate.",
@@ -94,7 +100,10 @@ const translations = {
     'saved.tabSaved': 'Saved',
     'saved.tabInterested': 'Interested',
     'saved.emptySaved': "You haven't saved any profiles yet.",
-    'saved.emptyInterested': "You haven't expressed interest in any profiles yet."
+    'saved.emptyInterested': "You haven't expressed interest in any profiles yet.",
+    'saved.emptySavedTitle': 'Your saved profiles will be here',
+    'saved.emptyInterestedTitle': 'Your interests will be here',
+    'saved.browseMatches': 'Browse matches'
   },
 
   kn: {
@@ -103,6 +112,7 @@ const translations = {
     'nav.contact': 'ಸಂಪರ್ಕಿಸಿ',
     'nav.findMatch': 'ಜೋಡಿ ಹುಡುಕಿ',
     'nav.savedProfiles': 'ಉಳಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳು',
+    'nav.myProfile': 'ನನ್ನ ಪ್ರೊಫೈಲ್',
     'nav.login': 'ಲಾಗಿನ್',
     'nav.registerNow': 'ಈಗ ನೋಂದಾಯಿಸಿ',
     'nav.logout': 'ಲಾಗ್ ಔಟ್',
@@ -148,12 +158,14 @@ const translations = {
     'home.contactTitle': 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',
 
     'dashboard.yourMatches': 'ನಿಮ್ಮ ಜೋಡಿಗಳು',
+    'dashboard.findMatchesHint': 'ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ನೋಡಿ, ನಿಮ್ಮ ಮೌಲ್ಯಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳುವವರನ್ನು ಹುಡುಕಿ.',
     'dashboard.title': 'ನಿಮ್ಮ ಜೋಡಿಯನ್ನು ಹುಡುಕಿ',
     'dashboard.fieldCaste': 'ಜಾತಿ:',
     'dashboard.fieldLanguage': 'ಭಾಷೆ:',
     'dashboard.fieldOccupation': 'ಉದ್ಯೋಗ:',
     'dashboard.searchPlaceholder': 'ಹೆಸರು, ಉದ್ಯೋಗ ಅಥವಾ ನಗರದ ಮೂಲಕ ಹುಡುಕಿ...',
     'dashboard.search': 'ಹುಡುಕಿ',
+    'dashboard.filters': 'ಫಿಲ್ಟರ್‌ಗಳು',
     'dashboard.religion': 'ಧರ್ಮ',
     'dashboard.caste': 'ಜಾತಿ',
     'dashboard.subcaste': 'ಉಪಜಾತಿ',
@@ -180,6 +192,9 @@ const translations = {
     'dashboard.share': 'ಹಂಚಿಕೊಳ್ಳಿ',
     'dashboard.profilesFound': 'ಪ್ರೊಫೈಲ್(ಗಳು) ಸಿಕ್ಕಿವೆ',
     'dashboard.noResults': 'ಈ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಯಾವುದೇ ಹೊಂದಾಣಿಕೆ ಸಿಗಲಿಲ್ಲ. ನಿಮ್ಮ ಹುಡುಕಾಟವನ್ನು ವಿಸ್ತರಿಸಿ.',
+    'dashboard.noResultsTitle': 'ಈಗ ತೋರಿಸಲು ಪ್ರೊಫೈಲ್‌ಗಳಿಲ್ಲ',
+    'dashboard.noProfilesHint': 'ಹೊಸ ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಸೇರಿಸಲಾಗುತ್ತದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.',
+    'dashboard.noMatchesTitle': 'ಈ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಗಳಿಲ್ಲ',
 
     'saved.title': 'ನನ್ನ ಪ್ರೊಫೈಲ್‌ಗಳು',
     'saved.subtitle': 'ನೀವು ಉಳಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳು ಮತ್ತು ಆಸಕ್ತಿ ವ್ಯಕ್ತಪಡಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಪ್ರತ್ಯೇಕವಾಗಿ ಇರಿಸಲಾಗಿದೆ.',
@@ -187,7 +202,10 @@ const translations = {
     'saved.tabSaved': 'ಉಳಿಸಲಾಗಿದೆ',
     'saved.tabInterested': 'ಆಸಕ್ತಿ',
     'saved.emptySaved': 'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಪ್ರೊಫೈಲ್ ಉಳಿಸಿಲ್ಲ.',
-    'saved.emptyInterested': 'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಆಸಕ್ತಿ ವ್ಯಕ್ತಪಡಿಸಿಲ್ಲ.'
+    'saved.emptyInterested': 'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಆಸಕ್ತಿ ವ್ಯಕ್ತಪಡಿಸಿಲ್ಲ.',
+    'saved.emptySavedTitle': 'ನೀವು ಉಳಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ',
+    'saved.emptyInterestedTitle': 'ನಿಮ್ಮ ಆಸಕ್ತಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ',
+    'saved.browseMatches': 'ಜೋಡಿಗಳನ್ನು ವೀಕ್ಷಿಸಿ'
   }
 };
 

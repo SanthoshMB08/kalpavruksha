@@ -5,10 +5,14 @@
 </head>
 <body>
   <%- include('partials/header') %>
-  <main class="match-feed" style="max-width:1100px; margin:0 auto; padding:36px 24px;">
-    <a href="/dashboard" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; <%= t('saved.backToSearch') %></a>
-    <h2 style="margin:16px 0 4px;"><%= t('saved.title') %></h2>
-    <p style="color:#8a7156; font-size:0.85rem; margin-bottom:20px;"><%= t('saved.subtitle') %></p>
+  <main class="match-feed member-page match-feed-full">
+    <%- include('partials/flash') %>
+    <div class="member-page-heading saved-page-heading">
+      <a href="/dashboard" class="member-back-link"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <%= t('saved.backToSearch') %></a>
+      <span class="section-eyebrow"><%= t('nav.savedProfiles') %></span>
+      <h1><%= t('saved.title') %></h1>
+      <p><%= t('saved.subtitle') %></p>
+    </div>
 
     <div class="profile-tabs">
       <a href="/saved-profiles?tab=saved" class="profile-tab <%= tab === 'saved' ? 'active' : '' %>">
@@ -21,12 +25,15 @@
 
     <% var list = tab === 'interested' ? interested : saved; %>
     <% if (list.length === 0) { %>
-      <div class="empty-state">
+      <div class="member-empty-state">
+        <span class="member-empty-icon"><i class="fa-<%= tab === 'interested' ? 'solid fa-heart' : 'solid fa-bookmark' %>" aria-hidden="true"></i></span>
+        <h2><%= tab === 'interested' ? t('saved.emptyInterestedTitle') : t('saved.emptySavedTitle') %></h2>
         <% if (tab === 'interested') { %>
-          <%= t('saved.emptyInterested') %>
+          <p><%= t('saved.emptyInterested') %></p>
         <% } else { %>
-          <%= t('saved.emptySaved') %>
+          <p><%= t('saved.emptySaved') %></p>
         <% } %>
+        <a href="/dashboard" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> <%= t('saved.browseMatches') %></a>
       </div>
     <% } else { %>
       <div class="profile-grid">
