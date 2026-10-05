@@ -1,0 +1,196 @@
+<script nonce="<%= nonce %>">
+  (function () {
+    var nextId = 0;
+    var closeAll = function (except) {
+      document.querySelectorAll('.fc-select.has-searchable-select.is-open').forEach(function (container) {
+        if (container === except) return;
+        var trigger = container.querySelector('.fc-searchable-trigger');
+        var menu = container.querySelector('.fc-searchable-menu');
+        container.classList.remove('is-open');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (menu) menu.hidden = true;
+      });
+    };
+    function positionOpenMenus() {
+      document.querySelectorAll('.fc-select.has-searchable-select.is-open').forEach(function (container) {
+        var trigger = container.querySelector('.fc-searchable-trigger');
+        var menu = container.querySelector('.fc-searchable-menu');
+        if (!trigger || !menu) return;
+        var bounds = trigger.getBoundingClientRect();
+        menu.style.top = (bounds.bottom + 6) + 'px';
+        menu.style.left = bounds.left + 'px';
+        menu.style.width = bounds.width + 'px';
+      });
+    }
+
+    function enhance(select) {
+      var options = Array.prototype.filter.call(select.options, function (option) {
+        return option.value !== '';
+      });
+      var container = select.closest('.fc-select');
+      if (!container) return;
+
+      if (container.classList.contains('has-searchable-select')) {
+        select.dispatchEvent(new Event('searchable-refresh'));
+        return;
+      }
+      if (options.length <= 5) return;
+
+      var field = select.closest('.fc-field');
+      var label = field && field.querySelector('label');
+      var placeholder = select.options.length ? select.options[0].textContent : 'Choose an option';
+      var widget = document.createElement('div');
+      widget.className = 'fc-searchable-widget';
+
+      var trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'fc-searchable-trigger';
+      trigger.setAttribute('role', 'combobox');
+      trigger.setAttribute('aria-haspopup', 'listbox');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-label', label ? label.textContent.trim() : 'Choose an option');
+
+      var value = document.createElement('span');
+      value.className = 'fc-searchable-value';
+      var caret = document.createElement('i');
+      caret.className = 'fa-solid fa-chevron-down fc-searchable-caret';
+      caret.setAttribute('aria-hidden', 'true');
+      trigger.appendChild(value);
+      trigger.appendChild(caret);
+
+      var menu = document.createElement('div');
+      menu.className = 'fc-searchable-menu';
+      menu.hidden = true;
+      var search = document.createElement('input');
+      search.type = 'search';
+      search.className = 'fc-searchable-query';
+      search.placeholder = 'Type to search...';
+      search.setAttribute('aria-label', 'Search ' + (label ? label.textContent.trim() : 'options'));
+      search.autocomplete = 'off';
+      search.spellcheck = false;
+      var list = document.createElement('div');
+      list.className = 'fc-searchable-options';
+      list.setAttribute('role', 'listbox');
+      nextId += 1;
+      list.id = 'fc-searchable-list-' + nextId;
+      trigger.setAttribute('aria-controls', list.id);
+      menu.appendChild(search);
+      menu.appendChild(list);
+      widget.appendChild(trigger);
+      widget.appendChild(menu);
+      container.appendChild(widget);
+      container.classList.add('has-searchable-select');
+      select.classList.add('fc-native-select');
+      select.setAttribute('aria-hidden', 'true');
+      select.tabIndex = -1;
+
+      function renderOptions() {
+        var query = search.value.trim().toLocaleLowerCase();
+        list.textContent = '';
+        var visibleCount = 0;
+        Array.prototype.forEach.call(select.options, function (option) {
+          if (option.disabled) return;
+          if (query && option.textContent.toLocaleLowerCase().indexOf(query) === -1) return;
+          visibleCount += 1;
+          var item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'fc-searchable-option';
+          item.setAttribute('role', 'option');
+          item.setAttribute('aria-selected', String(option.value === select.value));
+          item.textContent = option.textContent;
+          item.addEventListener('click', function () {
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            syncValue();
+            closeAll();
+            trigger.focus();
+          });
+          list.appendChild(item);
+        });
+        if (!visibleCount) {
+          var empty = document.createElement('p');
+          empty.className = 'fc-searchable-empty';
+          empty.textContent = 'No matching options';
+          list.appendChild(empty);
+        }
+      }
+
+      function syncValue() {
+        var selected = select.options[select.selectedIndex];
+        value.textContent = selected ? selected.textContent : placeholder;
+        trigger.disabled = select.disabled;
+        trigger.classList.toggle('is-placeholder', !select.value);
+        renderOptions();
+      }
+
+      function openMenu() {
+        if (trigger.disabled) return;
+        closeAll(container);
+        container.classList.add('is-open');
+        menu.hidden = false;
+        positionOpenMenus();
+        trigger.setAttribute('aria-expanded', 'true');
+        search.value = '';
+        renderOptions();
+        search.focus();
+      }
+
+      trigger.addEventListener('click', function () {
+        if (container.classList.contains('is-open')) {
+          closeAll();
+          trigger.focus();
+        } else {
+          openMenu();
+        }
+      });
+      search.addEventListener('input', renderOptions);
+      search.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeAll();
+          trigger.focus();
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          var first = list.querySelector('.fc-searchable-option');
+          if (first) first.focus();
+        }
+      });
+      list.addEventListener('keydown', function (event) {
+        var items = Array.prototype.slice.call(list.querySelectorAll('.fc-searchable-option'));
+        var index = items.indexOf(document.activeElement);
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeAll();
+          trigger.focus();
+        } else if (event.key === 'ArrowDown' && index < items.length - 1) {
+          event.preventDefault();
+          items[index + 1].focus();
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          if (index > 0) items[index - 1].focus();
+          else search.focus();
+        }
+      });
+      select.addEventListener('change', syncValue);
+
+      select.addEventListener('searchable-refresh', syncValue);
+      syncValue();
+    }
+
+    document.querySelectorAll('.fc-controls .fc-select select').forEach(function (select) {
+      enhance(select);
+      var observer = new MutationObserver(function () {
+        enhance(select);
+      });
+      observer.observe(select, { childList: true, subtree: true, attributes: true });
+    });
+    document.addEventListener('click', function (event) {
+      if (!event.target.closest('.fc-select.has-searchable-select')) closeAll();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeAll();
+    });
+    window.addEventListener('scroll', positionOpenMenus);
+    window.addEventListener('resize', positionOpenMenus);
+  })();
+</script>

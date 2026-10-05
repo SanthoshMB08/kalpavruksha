@@ -1974,6 +1974,33 @@ input[type="file"] { width: 100%; }
 .fc-form { display: flex; flex-direction: column; gap: 14px; }
 .fc-controls > summary { display: none; }
 .fc-controls > summary::-webkit-details-marker { display: none; }
+.admin-profile-filter-controls > summary.fc-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 12px;
+  color: var(--maroon-800);
+  background: var(--cream-50);
+  border: 1px solid rgba(10,56,53,0.16);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+.admin-profile-filter-controls > summary.fc-filter-toggle::-webkit-details-marker { display: none; }
+.admin-profile-filter-controls > summary.fc-filter-toggle:focus-visible { outline: 2px solid var(--maroon-600); outline-offset: 2px; }
+.admin-profile-filter-controls[open] .fc-filter-caret { transform: rotate(180deg); }
+.admin-profile-filter-controls[open] > .fc-grid { margin-top: 10px; }
+.fc-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(10, 56, 53, 0.09);
+}
 
 /* ---------- Row 1 — search box, locked-in context, submit ---------- */
 
@@ -2086,6 +2113,86 @@ input[type="file"] { width: 100%; }
 }
 
 .fc-select { position: relative; }
+.fc-select.has-searchable-select { z-index: 3; }
+.fc-select.has-searchable-select.is-open { z-index: 60; }
+.fc-select.has-searchable-select .fc-caret { display: none; }
+.fc-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.fc-searchable-widget { position: relative; }
+.fc-searchable-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid rgba(10, 56, 53, 0.16);
+  border-radius: var(--radius-md);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fc-searchable-trigger:hover:not(:disabled) { border-color: rgba(10, 56, 53, 0.3); }
+.fc-searchable-trigger:focus-visible {
+  outline: none;
+  border-color: var(--maroon-600);
+  box-shadow: 0 0 0 4px rgba(28, 144, 134, 0.14);
+}
+.fc-searchable-trigger:disabled { cursor: not-allowed; background: var(--cream-100); color: #a99a80; }
+.fc-searchable-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-searchable-trigger.is-placeholder .fc-searchable-value { color: #a99a80; }
+.fc-searchable-caret { flex: 0 0 auto; color: var(--maroon-700); font-size: 0.7rem; }
+.fc-searchable-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: auto;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid rgba(10, 56, 53, 0.18);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 28px rgba(10, 56, 53, 0.2);
+}
+.fc-searchable-menu[hidden] { display: none; }
+.fc-searchable-query {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(10, 56, 53, 0.18);
+  border-radius: 8px;
+  font: inherit;
+}
+.fc-searchable-query:focus { outline: 2px solid rgba(28, 144, 134, 0.3); border-color: var(--maroon-600); }
+.fc-searchable-options { max-height: min(320px, 45vh); margin-top: 6px; overflow-y: auto; overscroll-behavior: contain; }
+.fc-searchable-option {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fc-searchable-option:hover,
+.fc-searchable-option:focus-visible,
+.fc-searchable-option[aria-selected="true"] { outline: none; background: var(--cream-100); color: var(--maroon-800); }
+.fc-searchable-empty { margin: 8px 10px; color: #8a7156; font-size: 0.85rem; }
+.fc-field.is-set .fc-searchable-trigger { border-color: var(--gold-500); background: #fffdf4; }
 
 /* Native select, restyled. appearance:none keeps the custom caret honest
    across platforms instead of letting a second arrow sneak in. */
@@ -2350,6 +2457,8 @@ input[type="file"] { width: 100%; }
   .fc-filter-caret { margin-left: auto; color: #8a7156; font-size: 0.7rem; transition: transform var(--transition-base); }
   .fc-controls[open] .fc-filter-caret { transform: rotate(180deg); }
   .fc-controls[open] > .fc-grid { margin-top: 10px; }
+  .admin-profile-filter-controls > summary.fc-filter-toggle { width: 100%; }
+  .fc-filter-actions > .btn { flex: 1 1 0; text-align: center; }
   .fc-age { justify-content: center; }
   .fc-foot { flex-direction: row; align-items: center; gap: 8px; padding-top: 7px; }
   .fc-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }

@@ -7,73 +7,158 @@
   <% const portal = currentUser.role === 'superadmin' ? 'superadmin' : 'admin'; %>
   <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
   <% const canManage = currentUser.role === 'superadmin'; %>
+  <%
+    const adminProfilePath = '/portal/admin-dashboard/profiles';
+    const selectedCasteOptions = casteOptionsByReligion[String(filters.religion || '').toLowerCase()] || [];
+    const maritalStatusLabels = Object.fromEntries(maritalStatusOptions.map(function(option) {
+      return [option.value, option.label];
+    }));
+    function withoutAdminProfileFilters(drop) {
+      const params = new URLSearchParams();
+      for (const key of Object.keys(currentQuery || {})) {
+        if (key === 'page' || (Array.isArray(drop) ? drop.includes(key) : key === drop)) continue;
+        const value = currentQuery[key];
+        if (value !== undefined && value !== null && value !== '') params.set(key, value);
+      }
+      const query = params.toString();
+      return adminProfilePath + (query ? '?' + query : '');
+    }
+    const activeProfileFilters = [];
+    if (filters.keyword) activeProfileFilters.push({ key: 'keyword', label: 'Keyword', value: filters.keyword });
+    if (filters.religion) activeProfileFilters.push({ key: 'religion', label: 'Religion', value: filters.religion });
+    if (filters.caste) activeProfileFilters.push({ key: 'caste', label: 'Caste', value: filters.caste });
+    if (filters.subcaste) activeProfileFilters.push({ key: 'subcaste', label: 'Sub-caste', value: filters.subcaste });
+    if (filters.language) activeProfileFilters.push({ key: 'language', label: 'Language', value: filters.language });
+    if (filters.gender) activeProfileFilters.push({
+      key: 'gender',
+      label: 'Gender',
+      value: filters.gender === 'male' ? 'Male' : filters.gender === 'female' ? 'Female' : filters.gender
+    });
+    if (filters.maritalStatus) activeProfileFilters.push({
+      key: 'maritalStatus',
+      label: 'Marital status',
+      value: maritalStatusLabels[filters.maritalStatus] || filters.maritalStatus
+    });
+    if (filters.minAge || filters.maxAge) activeProfileFilters.push({
+      key: ['minAge', 'maxAge'],
+      label: 'Age',
+      value: (filters.minAge || 18) + '–' + (filters.maxAge || 90)
+    });
+  %>
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
       <div class="panel">
         <h3><i class="fa-solid fa-address-card"></i> Profiles <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= pageInfo.total %> &middot; all genders)</span></h3>
         <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
 
-        <form id="filterForm" method="GET" action="/portal/admin-dashboard/profiles" class="search-bar admin-search-bar">
-          <div class="search-input-group">
-            <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-            <input type="text" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city...">
-          </div>
-          <button type="button" class="btn btn-outline-gold filter-toggle-btn" id="filterToggleBtn" style="border-color:var(--maroon-800); color:var(--maroon-800);">
-            <i class="fa-solid fa-sliders"></i> Filters
-          </button>
-          <button type="submit" class="btn btn-gold search-submit-btn">Search</button>
-
-          <div class="filter-panel" id="filterPanel">
-            <div class="filter-panel-grid">
-              <div class="filter-group">
-                <label>Religion</label>
-                <input type="text" name="religion" list="religionOptions" value="<%= filters.religion || '' %>" placeholder="Type to search...">
-                <datalist id="religionOptions"><% religions.forEach(function(r){ %><option value="<%= r %>"><% }) %></datalist>
-              </div>
-              <div class="filter-group">
-                <label>Caste</label>
-                <input type="text" name="caste" list="casteOptions" value="<%= filters.caste || '' %>" placeholder="Type to search...">
-                <datalist id="casteOptions"><% castes.forEach(function(c){ %><option value="<%= c %>"><% }) %></datalist>
-              </div>
-              <div class="filter-group">
-                <label>Sub-caste</label>
-                <input type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
-              </div>
-              <div class="filter-group">
-                <label>Language</label>
-                <input type="text" name="language" list="languageOptions" value="<%= filters.language || '' %>" placeholder="Type to search...">
-                <datalist id="languageOptions"><% languages.forEach(function(l){ %><option value="<%= l %>"><% }) %></datalist>
-              </div>
-              <div class="filter-group">
-                <label>Gender</label>
-                <select name="gender">
-                  <option value="">Any</option>
-                  <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
-                  <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label>Marital Status</label>
-                <select name="maritalStatus">
-                  <option value="">Any</option>
-                  <option value="unmarried" <%= filters.maritalStatus === 'unmarried' ? 'selected' : '' %>>Unmarried</option>
-                  <option value="married" <%= filters.maritalStatus === 'married' ? 'selected' : '' %>>Married</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label>Age Range</label>
-                <div class="age-range-row">
-                  <input type="number" name="minAge" min="18" max="90" placeholder="Min" value="<%= filters.minAge || '' %>">
-                  <span>to</span>
-                  <input type="number" name="maxAge" min="18" max="90" placeholder="Max" value="<%= filters.maxAge || '' %>">
+        <div class="search-console admin-profile-search-console">
+          <div class="search-console-inner">
+            <form id="adminProfileFilterForm" method="GET" action="<%= adminProfilePath %>" class="fc-form" autocomplete="off">
+              <div class="fc-topline">
+                <div class="fc-search">
+                  <i class="fa-solid fa-magnifying-glass fc-search-icon" aria-hidden="true"></i>
+                  <input type="search" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city..." aria-label="Search profiles">
                 </div>
+                <button type="submit" class="btn btn-gold fc-submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</button>
               </div>
-            </div>
-            <div class="filter-panel-actions">
-              <a href="/portal/admin-dashboard/profiles" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">Clear All</a>
-              <button type="submit" class="btn btn-gold btn-sm">Apply Filters</button>
-            </div>
+
+              <details class="fc-controls admin-profile-filter-controls" id="adminProfileFilterControls" open>
+                <summary class="fc-filter-toggle">
+                  <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                  <span>Filters</span>
+                  <% if (activeProfileFilters.length) { %><span class="fc-filter-count"><%= activeProfileFilters.length %></span><% } %>
+                  <i class="fa-solid fa-chevron-down fc-filter-caret" aria-hidden="true"></i>
+                </summary>
+                <div class="fc-grid">
+                  <div class="fc-field<%= filters.religion ? ' is-set' : '' %>">
+                    <label for="adminReligion">Religion</label>
+                    <div class="fc-select">
+                      <select id="adminReligion" name="religion">
+                        <option value="">Any religion</option>
+                        <% religionOptions.forEach(function(r) { %><option value="<%= r.value %>" <%= String(filters.religion) === String(r.value) ? 'selected' : '' %>><%= r.label %></option><% }) %>
+                      </select>
+                      <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                  <div class="fc-field<%= filters.caste ? ' is-set' : '' %>">
+                    <label for="adminCaste">Caste</label>
+                    <div class="fc-select">
+                      <select id="adminCaste" name="caste" <%= selectedCasteOptions.length ? '' : 'disabled' %>>
+                        <option value=""><%= filters.religion ? 'Any caste' : 'Choose religion first' %></option>
+                        <% selectedCasteOptions.forEach(function(c) { %><option value="<%= c %>" <%= String(filters.caste) === String(c) ? 'selected' : '' %>><%= c %></option><% }) %>
+                      </select>
+                      <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                  <div class="fc-field<%= filters.subcaste ? ' is-set' : '' %>">
+                    <label for="adminSubcaste">Sub-caste</label>
+                    <div class="fc-select">
+                      <input id="adminSubcaste" class="fc-input" type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+                    </div>
+                  </div>
+                  <div class="fc-field<%= filters.language ? ' is-set' : '' %>">
+                    <label for="adminLanguage">Language</label>
+                    <div class="fc-select">
+                      <select id="adminLanguage" name="language">
+                        <option value="">Any language</option>
+                        <% languageOptions.forEach(function(l) { %><option value="<%= l %>" <%= String(filters.language) === String(l) ? 'selected' : '' %>><%= l %></option><% }) %>
+                      </select>
+                      <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                  <div class="fc-field<%= filters.gender ? ' is-set' : '' %>">
+                    <label for="adminGender">Gender</label>
+                    <div class="fc-select">
+                      <select id="adminGender" name="gender">
+                        <option value="">Any gender</option>
+                        <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
+                        <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
+                      </select>
+                      <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                  <div class="fc-field<%= filters.maritalStatus ? ' is-set' : '' %>">
+                    <label for="adminMaritalStatus">Marital status</label>
+                    <div class="fc-select">
+                      <select id="adminMaritalStatus" name="maritalStatus">
+                        <option value="">Any status</option>
+                        <% maritalStatusOptions.forEach(function(option) { %><option value="<%= option.value %>" <%= String(filters.maritalStatus) === String(option.value) ? 'selected' : '' %>><%= option.label %></option><% }) %>
+                      </select>
+                      <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                  <div class="fc-field fc-field-age<%= (filters.minAge || filters.maxAge) ? ' is-set' : '' %>">
+                    <label for="adminMinAge">Age range</label>
+                    <div class="fc-age">
+                      <input id="adminMinAge" type="number" name="minAge" min="18" max="90" step="1" inputmode="numeric" placeholder="18" value="<%= filters.minAge || '' %>">
+                      <span class="fc-age-dash" aria-hidden="true">&ndash;</span>
+                      <input id="adminMaxAge" type="number" name="maxAge" min="18" max="90" step="1" inputmode="numeric" placeholder="90" value="<%= filters.maxAge || '' %>">
+                    </div>
+                  </div>
+                </div>
+                <div class="fc-filter-actions">
+                  <a href="<%= adminProfilePath %>" class="btn btn-outline-gold btn-sm admin-profile-clear">Clear all</a>
+                  <button type="submit" class="btn btn-gold btn-sm">Apply filters</button>
+                </div>
+              </details>
+
+              <div class="fc-foot">
+                <div class="fc-chips">
+                  <span class="fc-chips-title"><i class="fa-solid fa-filter" aria-hidden="true"></i> Active filters</span>
+                  <% if (activeProfileFilters.length === 0) { %><span class="fc-chips-empty">No filters applied</span><% } %>
+                  <% activeProfileFilters.forEach(function(filter) { %>
+                    <a class="fc-chip" href="<%= withoutAdminProfileFilters(filter.key) %>" title="Remove <%= filter.label %> filter">
+                      <span class="fc-chip-label"><%= filter.label %></span>
+                      <span class="fc-chip-value"><%= filter.value %></span>
+                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                      <span class="sr-only">Remove <%= filter.label %> filter</span>
+                    </a>
+                  <% }) %>
+                </div>
+                <% if (activeProfileFilters.length) { %><a class="fc-reset" href="<%= adminProfilePath %>"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Clear all</a><% } %>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
 
         <div class="table-scroll">
         <table class="data-table">
@@ -122,20 +207,51 @@
       </div>
 
   <script nonce="<%= nonce %>">
-    var filterToggleBtn = document.getElementById('filterToggleBtn');
-    var filterPanel = document.getElementById('filterPanel');
-    if (filterToggleBtn && filterPanel) {
-      filterToggleBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        filterPanel.classList.toggle('open');
-      });
-      document.addEventListener('click', function (e) {
-        if (!filterPanel.contains(e.target) && e.target !== filterToggleBtn) {
-          filterPanel.classList.remove('open');
-        }
-      });
-    }
+    (function () {
+      var form = document.getElementById('adminProfileFilterForm');
+      if (!form) return;
+      var religionSelect = document.getElementById('adminReligion');
+      var casteSelect = document.getElementById('adminCaste');
+      var CASTES_BY_RELIGION = <%- JSON.stringify(casteOptionsByReligion).replace(/</g, '\\u003c') %>;
+
+      function syncCasteOptions() {
+        if (!religionSelect || !casteSelect) return;
+        var currentCaste = casteSelect.value;
+        var religion = religionSelect.value.toLowerCase();
+        var castes = CASTES_BY_RELIGION[religion] || [];
+        casteSelect.innerHTML = '';
+        var anyOption = document.createElement('option');
+        anyOption.value = '';
+        anyOption.textContent = religion ? 'Any caste' : 'Choose religion first';
+        casteSelect.appendChild(anyOption);
+        castes.forEach(function (caste) {
+          var option = document.createElement('option');
+          option.value = caste;
+          option.textContent = caste;
+          casteSelect.appendChild(option);
+        });
+        casteSelect.value = castes.indexOf(currentCaste) === -1 ? '' : currentCaste;
+        casteSelect.disabled = castes.length === 0;
+        var field = casteSelect.closest('.fc-field');
+        if (field) field.classList.toggle('is-locked', casteSelect.disabled);
+        if (field) field.classList.toggle('is-set', Boolean(casteSelect.value));
+        var religionField = religionSelect.closest('.fc-field');
+        if (religionField) religionField.classList.toggle('is-set', Boolean(religionSelect.value));
+      }
+
+      if (religionSelect && casteSelect) {
+        religionSelect.addEventListener('change', function () {
+          syncCasteOptions();
+          form.requestSubmit();
+        });
+        casteSelect.addEventListener('change', function () {
+          form.requestSubmit();
+        });
+        syncCasteOptions();
+      }
+    })();
   </script>
+  <%- include('../partials/searchable-select-script') %>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

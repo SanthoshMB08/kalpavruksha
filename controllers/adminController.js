@@ -6,6 +6,7 @@ const Interest = require('../models/Interest');
 const SuccessStory = require('../models/SuccessStory');
 const { streamProfilePdf } = require('../utils/profilePdf');
 const { checkLogin } = require('../utils/accountLockout');
+const profileOptions = require('../utils/profileOptions');
 
 exports.showLogin = (req, res) => {
   res.render('admin/login', { title: 'Admin Login', error: null });
@@ -233,12 +234,21 @@ exports.listProfiles = async (req, res) => {
   };
   const hasFilters = Object.values(filters).some((v) => v !== undefined && v !== '');
   const pagination = { page: req.query.page };
-  const [searchResult, religions, castes, languages] = await Promise.all([
+  const [searchResult, religions, languages] = await Promise.all([
     hasFilters ? Profile.searchFull(filters, pagination) : Profile.listAllFull(pagination),
     Profile.distinctValues('religion'),
-    Profile.distinctValues('caste'),
     Profile.distinctValues('language')
   ]);
+  const knownReligionValues = new Set(profileOptions.RELIGION_OPTIONS.map((option) => option.value.toLowerCase()));
+  const religionOptions = profileOptions.RELIGION_OPTIONS.concat(
+    religions
+      .filter((religion) => !knownReligionValues.has(String(religion).toLowerCase()))
+      .map((religion) => ({ value: religion, label: religion }))
+  );
+  const knownLanguageValues = new Set(profileOptions.MOTHER_TONGUE_OPTIONS.map((language) => language.toLowerCase()));
+  const languageOptions = profileOptions.MOTHER_TONGUE_OPTIONS.concat(
+    languages.filter((language) => !knownLanguageValues.has(String(language).toLowerCase()))
+  );
   res.render('admin/profiles', {
     title: 'All Profiles',
     active: 'profiles',
@@ -246,13 +256,13 @@ exports.listProfiles = async (req, res) => {
     pageInfo: searchResult,
     currentQuery: req.query,
     religions,
-    castes,
-    languages,
+    religionOptions,
+    languageOptions,
+    casteOptionsByReligion: profileOptions.CASTE_OPTIONS_BY_RELIGION,
+    maritalStatusOptions: profileOptions.MARITAL_STATUS_OPTIONS,
     filters
   });
 };
-
-const profileOptions = require('../utils/profileOptions');
 
 exports.showNewProfileForm = (req, res) => {
   res.render('admin/profile-form', { title: 'Upload New Profile', active: 'profiles', errors: [], old: {}, opts: profileOptions });
