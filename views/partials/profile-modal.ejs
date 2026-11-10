@@ -1,29 +1,33 @@
-<div class="profile-modal-hero">
-  <img src="<%= fileUrl('profiles', profile.image_name) %>" alt="<%= profile.full_name %>">
-  <h2 style="margin-top:14px;"><%= profile.full_name %>, <%= profile.age %></h2>
-</div>
-<table class="data-table">
-  <tr><td><strong><%= t("Caste") %></strong></td><td><%= t(profile.caste) %></td></tr>
-  <tr><td><strong><%= t("Sub-caste") %></strong></td><td><%= profile.subcaste %></td></tr>
-  <tr><td><strong><%= t("Language") %></strong></td><td><%= t(profile.language) %></td></tr>
-  <tr><td><strong><%= t("Occupation") %></strong></td><td><%= t(profile.occupation) %></td></tr>
-</table>
-<div class="profile-detail-actions">
-  <form action="/profile/<%= profile.id %>/<%= profileStates[String(profile.id)]?.is_saved ? 'unsave' : 'save' %>" method="POST" class="profile-save-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button type="submit" class="btn btn-outline-gold btn-block <%= profileStates[String(profile.id)]?.is_saved ? 'is-selected' : '' %>" style="border-color:var(--maroon-800); color:var(--maroon-800);" aria-pressed="<%= profileStates[String(profile.id)]?.is_saved ? 'true' : 'false' %>"><%= profileStates[String(profile.id)]?.is_saved ? t('Unsave') : t('Save Profile') %></button>
-  </form>
-  <form action="/profile/<%= profile.id %>/<%= profileStates[String(profile.id)]?.is_interested ? 'withdraw-interest' : 'express-interest' %>" method="POST" class="profile-interest-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button type="submit" class="btn btn-gold btn-block <%= profileStates[String(profile.id)]?.is_interested ? 'is-selected' : '' %>" aria-pressed="<%= profileStates[String(profile.id)]?.is_interested ? 'true' : 'false' %>"><%= profileStates[String(profile.id)]?.is_interested ? t('Unlike') : t('Express Interest') %></button>
-  </form>
-  <button
-    type="button"
-    class="btn-share"
-    data-profile-share
-    data-share-name="<%= profile.full_name %>"
-    data-share-age="<%= profile.age %>"
-    data-share-caste="<%= t(profile.caste) %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
-    data-share-occupation="<%= t(profile.occupation) %>"
-    aria-label="<%= t("Share profile") %>"
-    title="<%= t("Share profile") %>"
-  ><i class="fa-solid fa-share-nodes"></i></button>
+<div class="profile-detail-view">
+  <div class="profile-modal-hero">
+    <img src="<%= fileUrl('profiles', profile.image_name) %>" alt="<%= profile.full_name %>">
+    <div class="profile-modal-identity">
+      <h2><%= profile.full_name %></h2>
+      <p><span><%= t("Age") %> <b><%= profile.age %></b></span></p>
+    </div>
+  </div>
+  <dl class="profile-detail-facts">
+    <div><dt><%= t("Caste") %></dt><dd><%= t(profile.caste) %><% if (profile.subcaste) { %><span class="profile-detail-subvalue"><%= profile.subcaste %></span><% } %></dd></div>
+    <div><dt><%= t("Language") %></dt><dd><%= t(profile.language) %></dd></div>
+    <div><dt><%= t("Occupation") %></dt><dd><%= t(profile.occupation) %></dd></div>
+  </dl>
+  <div class="profile-detail-actions">
+    <form action="/profile/<%= profile.id %>/<%= profileStates[String(profile.id)]?.is_saved ? 'unsave' : 'save' %>" method="POST" class="profile-save-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="btn btn-outline-gold btn-block <%= profileStates[String(profile.id)]?.is_saved ? 'is-selected' : '' %>" style="border-color:var(--maroon-800); color:var(--maroon-800);" aria-pressed="<%= profileStates[String(profile.id)]?.is_saved ? 'true' : 'false' %>"><%= profileStates[String(profile.id)]?.is_saved ? t('Unsave') : t('Save Profile') %></button>
+    </form>
+    <form action="/profile/<%= profile.id %>/<%= profileStates[String(profile.id)]?.is_interested ? 'withdraw-interest' : 'express-interest' %>" method="POST" class="profile-interest-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="btn btn-gold btn-block <%= profileStates[String(profile.id)]?.is_interested ? 'is-selected' : '' %>" aria-pressed="<%= profileStates[String(profile.id)]?.is_interested ? 'true' : 'false' %>"><%= profileStates[String(profile.id)]?.is_interested ? t('Unlike') : t('Express Interest') %></button>
+    </form>
+    <button
+      type="button"
+      class="btn-share"
+      data-profile-share
+      data-share-name="<%= profile.full_name %>"
+      data-share-age="<%= profile.age %>"
+      data-share-caste="<%= t(profile.caste) %><%= profile.subcaste ? ' (' + profile.subcaste + ')' : '' %>"
+      data-share-occupation="<%= t(profile.occupation) %>"
+      aria-label="<%= t("Share profile") %>"
+      title="<%= t("Share profile") %>"
+    ><i class="fa-solid fa-share-nodes"></i></button>
+  </div>
 </div>

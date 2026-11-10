@@ -123,11 +123,24 @@ textarea{min-height:110px}
  .member-dashboard-page .profile-view-action{order:4}
 }
 .is-selected{background:#e2f2e9!important;color:#12543c!important;border-color:#abd3bd!important}
-.profile-detail-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.profile-detail-view{display:flex;flex-direction:column;gap:18px}
+.profile-detail-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:2px}
 .profile-detail-actions form{flex:1;min-width:130px}
-.profile-modal-hero{text-align:center;margin-bottom:18px}
-.profile-modal-hero img{width:200px;height:240px;object-fit:cover;border-radius:14px}
-.profile-modal-hero h2{margin:14px 0}
+.profile-modal-hero{text-align:center;margin-bottom:0}
+.profile-modal-hero img{display:block;width:min(100%,320px);height:300px;margin:0 auto;object-fit:cover;border-radius:18px}
+.profile-modal-identity h2{margin:14px 0 6px;font-size:1.55rem;line-height:1.2}
+.profile-modal-identity p{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;margin:0;color:var(--ui-muted);font-size:.95rem}
+.profile-modal-identity p span{display:inline-flex;align-items:center;gap:5px}
+.profile-modal-identity p span:first-child{color:var(--ui-accent);font-weight:700}
+.profile-detail-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+.profile-detail-facts>div{min-width:0;padding:13px 14px;background:#f4f7f5;border:1px solid var(--ui-line);border-radius:14px}
+.profile-detail-facts>div:last-child{grid-column:1/-1}
+.profile-detail-facts dt{margin:0 0 5px;color:var(--ui-muted);font-size:.78rem;font-weight:700}
+.profile-detail-facts dd{margin:0;color:var(--ui-ink);font-weight:650;overflow-wrap:anywhere}
+.profile-detail-subvalue{display:block;margin-top:2px;color:var(--ui-muted);font-size:.88rem;font-weight:400}
+.member-profile-modal-overlay .modal-box{border-top:0}
+.member-profile-modal-overlay .modal-close{display:flex;justify-content:flex-end;padding:10px 14px 0;background:#fff}
+.member-profile-modal-overlay .modal-close button{display:grid;place-items:center;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;background:#f1f5f2;border-radius:50%;font-size:26px;line-height:1}
 .data-table{font-size:.95rem}
 .data-table th{color:var(--ui-muted);font-size:.85rem}
 .data-table td,.data-table th{padding:14px 12px}
@@ -234,6 +247,20 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
  .modal-narrow{min-height:auto}
  #modalContent{padding:0 18px 24px!important}
  .profile-modal-hero img{width:220px;height:270px}
+ .member-profile-modal-overlay{align-items:flex-end!important;padding:0!important}
+ .member-profile-modal-overlay .modal-box{width:100%!important;max-width:620px!important;min-height:0!important;height:auto;max-height:94dvh!important;margin:0 auto!important;padding-bottom:env(safe-area-inset-bottom);overflow-y:auto;border-radius:24px 24px 0 0!important;background:#fff;border-top:0;box-shadow:0 -16px 48px rgba(10,35,27,.2);animation:profile-sheet-in .22s ease-out}
+ .member-profile-modal-overlay .modal-close{position:sticky;top:0;z-index:3;padding:10px 14px 0;background:rgba(255,255,255,.94);backdrop-filter:blur(14px)}
+ .member-profile-modal-overlay #modalContent{padding:4px 16px 8px!important}
+ .member-profile-modal-overlay .profile-detail-view{gap:16px}
+ .member-profile-modal-overlay .profile-modal-hero img{width:100%;height:min(36dvh,340px);min-height:220px;border-radius:18px}
+ .member-profile-modal-overlay .profile-modal-identity h2{font-size:1.45rem}
+ .member-profile-modal-overlay .profile-detail-facts{gap:8px}
+ .member-profile-modal-overlay .profile-detail-facts>div{padding:11px 12px;border-radius:12px}
+ .member-profile-modal-overlay .profile-detail-actions{position:sticky;bottom:-8px;z-index:2;flex-wrap:nowrap;gap:8px;margin:0 -16px;padding:10px 16px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid var(--ui-line);backdrop-filter:blur(16px)}
+ .member-profile-modal-overlay .profile-detail-actions form{min-width:0}
+ .member-profile-modal-overlay .profile-detail-actions .btn{min-height:46px;padding:8px 10px;font-size:.88rem}
+ .member-profile-modal-overlay .profile-detail-actions .btn-share{flex:0 0 46px;width:46px;height:46px;min-width:46px;min-height:46px;border-radius:12px}
+ @keyframes profile-sheet-in{from{transform:translateY(24px);opacity:.75}to{transform:translateY(0);opacity:1}}
  .mobile-card-table,.mobile-card-table tbody,.mobile-card-table tr,.mobile-card-table td{display:block;width:100%}
  .mobile-card-table thead{display:none}
  .mobile-card-table tr{border:1px solid var(--ui-line);border-radius:12px;padding:10px;margin:10px 0;background:#fff}
@@ -408,4 +435,4 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
  .profile-card .actions .profile-save-action .is-selected{color:var(--ui-accent)!important;background:transparent!important}
  .profile-card .actions .btn-share{flex:1 1 0;width:100%;height:44px;min-width:0;align-self:auto}
 }
-@media(prefers-reduced-motion:reduce){.member-dashboard-page .fc-filter-sheet{animation:none}}
+@media(prefers-reduced-motion:reduce){.member-dashboard-page .fc-filter-sheet,.member-profile-modal-overlay .modal-box{animation:none}}
