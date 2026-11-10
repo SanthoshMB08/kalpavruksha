@@ -1,0 +1,10 @@
+<% const frame = adPlacements[ad.placement]; %>
+<figure data-ad-expires="<%= ad.expires_at ? new Date(ad.expires_at).toISOString() : '' %>" class="ad-frame ad-frame--<%= ad.placement %>" style="--ad-desktop-ratio:<%= frame.desktop[0] %>/<%= frame.desktop[1] %>;--ad-mobile-ratio:<%= frame.mobile[0] %>/<%= frame.mobile[1] %>">
+  <figcaption><%= t('Sponsored') %></figcaption>
+  <% if (ad.target_url && /^https?:\/\//i.test(ad.target_url)) { %><a href="<%= ad.target_url %>" target="_blank" rel="noopener noreferrer" aria-label="<%= ad.ad_title %>"><% } %>
+  <picture>
+    <% if (ad.mobile_image_name) { %><source media="(max-width: 700px)" srcset="<%= fileUrl('ads', ad.mobile_image_name) %>"><% } %>
+    <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" width="<%= frame.desktop[0] %>" height="<%= frame.desktop[1] %>" loading="lazy" decoding="async">
+  </picture>
+  <% if (ad.target_url && /^https?:\/\//i.test(ad.target_url)) { %></a><% } %>
+</figure>

@@ -11,20 +11,20 @@ const User = {
   // Login lookup — excludes soft-deleted accounts, so a deleted user can't
   // log in even if their session/cookie somehow survives.
   async findByUsername(username) {
-    const [rows] = await pool.query('SELECT * FROM users WHERE username = $1 AND deleted_at IS NULL', [username]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE username = ? AND deleted_at IS NULL', [username]);
     return rows[0];
   },
 
   // Unfiltered by design — used for admin lookups (Trash page, profile
   // detail "created by") where finding a soft-deleted user is expected.
   async findById(id) {
-    const [rows] = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
     return rows[0];
   },
 
   async findMemberById(id) {
     const [rows] = await pool.query(
-      "SELECT id, name, mobile_number, username, gender, status FROM users WHERE id = $1 AND role = 'user' AND deleted_at IS NULL",
+      "SELECT id, name, mobile_number, username, gender, status FROM users WHERE id = ? AND role = 'user' AND deleted_at IS NULL",
       [id]
     );
     return rows[0] || null;
@@ -55,7 +55,7 @@ const User = {
   async create({ name, mobile_number, username, passwordHash, role = 'user', status = 'pending', gender = null }) {
     const [result] = await pool.query(
       `INSERT INTO users (name, mobile_number, username, password, role, status, gender)
-       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [name, mobile_number, username, passwordHash, role, status, gender]
     );
     return result.insertId;
@@ -87,11 +87,11 @@ const User = {
   async listPending(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query("SELECT COUNT(*)::int AS total FROM users WHERE status = 'pending' AND role = 'user' AND deleted_at IS NULL"),
+      pool.query("SELECT COUNT(*) AS total FROM users WHERE status = 'pending' AND role = 'user' AND deleted_at IS NULL"),
       pool.query(
         `SELECT id, name, mobile_number, username, gender, created_at
          FROM users WHERE status = 'pending' AND role = 'user' AND deleted_at IS NULL
-         ORDER BY created_at ASC LIMIT ? OFFSET ?`,
+         ORDER BY created_at ASC, id ASC LIMIT ? OFFSET ?`,
         [perPage, offset]
       )
     ]);
@@ -102,11 +102,11 @@ const User = {
   async listApprovedUsers(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query("SELECT COUNT(*)::int AS total FROM users WHERE role = 'user' AND status = 'approved' AND deleted_at IS NULL"),
+      pool.query("SELECT COUNT(*) AS total FROM users WHERE role = 'user' AND status = 'approved' AND deleted_at IS NULL"),
       pool.query(
         `SELECT id, name, mobile_number, username, gender, status, locked_until, created_at
          FROM users WHERE role = 'user' AND status = 'approved' AND deleted_at IS NULL
-         ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+         ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
         [perPage, offset]
       )
     ]);
@@ -114,11 +114,15 @@ const User = {
   },
 
   async updateStatus(id, status) {
-    await pool.query('UPDATE users SET status = $1 WHERE id = $2', [status, id]);
+    const [rows] = await pool.query(
+      "UPDATE users SET status = ? WHERE id = ? AND role = 'user' AND deleted_at IS NULL",
+      [status, id]
+    );
+    return rows.affectedRows > 0;
   },
 
   async updatePassword(id, passwordHash) {
-    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [passwordHash, id]);
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [passwordHash, id]);
   },
 
   async listAll({ role } = {}, pagination = {}) {
@@ -131,10 +135,10 @@ const User = {
     }
     const where = `WHERE ${clauses.join(' AND ')}`;
     const [[countRows], [rows]] = await Promise.all([
-      pool.query(`SELECT COUNT(*)::int AS total FROM users ${where}`, params),
+      pool.query(`SELECT COUNT(*) AS total FROM users ${where}`, params),
       pool.query(
         `SELECT id, name, mobile_number, username, role, status, gender, locked_until, created_at
-         FROM users ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+         FROM users ${where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
         [...params, perPage, offset]
       )
     ]);
@@ -144,11 +148,11 @@ const User = {
   // --- Soft delete / Trash ---
 
   async deleteById(id) {
-    await pool.query('UPDATE users SET deleted_at = NOW() WHERE id = $1', [id]);
+    await pool.query('UPDATE users SET deleted_at = NOW() WHERE id = ?', [id]);
   },
 
   async restoreById(id) {
-    await pool.query('UPDATE users SET deleted_at = NULL WHERE id = $1', [id]);
+    await pool.query('UPDATE users SET deleted_at = NULL WHERE id = ?', [id]);
   },
 
   // Only allowed on rows already soft-deleted — a real safety backstop
@@ -160,7 +164,7 @@ const User = {
   async listDeleted(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query("SELECT COUNT(*)::int AS total FROM users WHERE deleted_at IS NOT NULL AND role = 'user'"),
+      pool.query("SELECT COUNT(*) AS total FROM users WHERE deleted_at IS NOT NULL AND role = 'user'"),
       pool.query(
         `SELECT id, name, mobile_number, username, gender, deleted_at
          FROM users WHERE deleted_at IS NOT NULL AND role = 'user'
@@ -174,45 +178,25 @@ const User = {
   // --- Account lockout (User + Admin only; Super Admin never locks) ---
 
   async registerFailedLogin(id) {
-  const [rows] = await pool.query(
-    `UPDATE users
-     SET failed_login_attempts = failed_login_attempts + 1
-     WHERE id = $1
-     RETURNING failed_login_attempts`,
-    [id]
-  );
-
-  const attempts = rows[0].failed_login_attempts;
-  let locked = false;
-
-  if (attempts >= MAX_FAILED_ATTEMPTS) {
-    await pool.query(
-      `UPDATE users
-       SET locked_until = NOW() + ($1 * INTERVAL '1 minute')
-       WHERE id = $2`,
-      [LOCKOUT_MINUTES, id]
-    );
-
-    locked = true;
-  }
-
-  return {
-    attempts,
-    remaining: Math.max(0, MAX_FAILED_ATTEMPTS - attempts),
-    locked,
-    lockoutMinutes: LOCKOUT_MINUTES
-  };
-},
+    return pool.transaction(async () => {
+      const [rows] = await pool.query('SELECT failed_login_attempts FROM users WHERE id = ? FOR UPDATE', [id]);
+      if (!rows[0]) throw new Error('Account not found.');
+      const attempts = rows[0].failed_login_attempts + 1;
+      const locked = attempts >= MAX_FAILED_ATTEMPTS;
+      await pool.query('UPDATE users SET failed_login_attempts = ?, locked_until = CASE WHEN ? THEN DATE_ADD(UTC_TIMESTAMP(6), INTERVAL ? MINUTE) ELSE locked_until END WHERE id = ?', [attempts, locked, LOCKOUT_MINUTES, id]);
+      return { attempts, remaining: Math.max(0, MAX_FAILED_ATTEMPTS - attempts), locked, lockoutMinutes: LOCKOUT_MINUTES };
+    });
+  },
   async clearFailedLogins(id) {
     await pool.query(
-  'UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1',
+  'UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
   [id]
 );
   },
 
   // Super Admin action — unlocks immediately, ahead of the automatic window.
   async unlockAccount(id) {
-    await pool.query('UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1', [id]);
+    await pool.query('UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?', [id]);
   },
 
   async listLocked() {
@@ -231,10 +215,10 @@ return rows;
   async counts() {
    const [rows] = await pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE role = 'user' AND deleted_at IS NULL)::int AS total_users,
-         COUNT(*) FILTER (WHERE role = 'user' AND status = 'pending' AND deleted_at IS NULL)::int AS pending_users,
-         COUNT(*) FILTER (WHERE role = 'user' AND status = 'approved' AND deleted_at IS NULL)::int AS approved_users,
-         COUNT(*) FILTER (WHERE role = 'admin' AND deleted_at IS NULL)::int AS total_admins
+         COUNT(CASE WHEN role = 'user' AND deleted_at IS NULL THEN 1 END) AS total_users,
+         COUNT(CASE WHEN role = 'user' AND status = 'pending' AND deleted_at IS NULL THEN 1 END) AS pending_users,
+         COUNT(CASE WHEN role = 'user' AND status = 'approved' AND deleted_at IS NULL THEN 1 END) AS approved_users,
+         COUNT(CASE WHEN role = 'admin' AND deleted_at IS NULL THEN 1 END) AS total_admins
        FROM users`
     );
     return rows[0];

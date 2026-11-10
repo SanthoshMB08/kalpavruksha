@@ -23,7 +23,7 @@ const SuccessStory = {
   async create({ couple_names, story_text, display_order, created_by }) {
     const [result] = await pool.query(
       `INSERT INTO success_stories (couple_names, story_text, display_order, created_by)
-       VALUES (?, ?, ?, ?) RETURNING id`,
+       VALUES (?, ?, ?, ?)`,
       [couple_names, story_text, display_order || 0, created_by || null]
     );
     return result.insertId;

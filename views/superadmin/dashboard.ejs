@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
 <body>
   <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
-      <div class="stat-cards">
-        <div class="stat-card"><div class="value"><%= userCounts.total_users || 0 %></div><div class="label">Total Users</div></div>
-        <div class="stat-card"><div class="value"><%= userCounts.pending_users || 0 %></div><div class="label">Pending Users</div></div>
-        <div class="stat-card"><div class="value"><%= userCounts.approved_users || 0 %></div><div class="label">Approved Users</div></div>
-        <div class="stat-card"><div class="value"><%= userCounts.total_admins || 0 %></div><div class="label">Sub-Admins</div></div>
-        <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
+      <section class="dashboard-intro" aria-labelledby="dashboard-heading">
+        <div>
+          <p class="eyebrow"><%= t("System overview") %></p>
+          <h1 id="dashboard-heading"><%= t("Administration, simplified.") %></h1>
+          <p><%= t("Monitor member growth, manage your team, and keep the platform running smoothly.") %></p>
+        </div>
+        <a href="/portal/super-secure-dashboard/admins" class="btn btn-gold dashboard-primary-action"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> <%= t("Manage team") %></a>
+      </section>
+
+      <div class="stat-cards dashboard-metrics dashboard-metrics-five" aria-label="<%= t("Platform summary") %>">
+        <a href="/portal/admin-dashboard/users" class="stat-card stat-card-action"><span class="stat-card-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><span><span class="value"><%= userCounts.total_users || 0 %></span><span class="label"><%= t("Total users") %></span></span><i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i></a>
+        <a href="/portal/admin-dashboard/users" class="stat-card stat-card-action <%= userCounts.pending_users ? 'is-attention' : '' %>"><span class="stat-card-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span><span><span class="value"><%= userCounts.pending_users || 0 %></span><span class="label"><%= t("Pending users") %></span></span><i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i></a>
+        <a href="/portal/admin-dashboard/users" class="stat-card stat-card-action"><span class="stat-card-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span><span><span class="value"><%= userCounts.approved_users || 0 %></span><span class="label"><%= t("Approved users") %></span></span><i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i></a>
+        <a href="/portal/super-secure-dashboard/admins" class="stat-card stat-card-action"><span class="stat-card-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><span><span class="value"><%= userCounts.total_admins || 0 %></span><span class="label"><%= t("Sub-admins") %></span></span><i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i></a>
+        <a href="/portal/admin-dashboard/profiles" class="stat-card stat-card-action"><span class="stat-card-icon"><i class="fa-solid fa-address-card" aria-hidden="true"></i></span><span><span class="value"><%= totalProfiles %></span><span class="label"><%= t("Profiles") %></span></span><i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i></a>
       </div>
 
-      <div class="panel quick-links">
-        <h3>Quick Links</h3>
+      <section class="panel quick-links dashboard-panel">
+        <div class="panel-title-row"><div><p class="eyebrow"><%= t("Workspace") %></p><h2><%= t("Manage the platform") %></h2></div></div>
         <div class="quick-link-grid">
-          <a href="/portal/super-secure-dashboard/admins" class="quick-link-card"><i class="fa-solid fa-shield-halved"></i> Sub-Admins (<%= adminCount %>)</a>
-          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check"></i> User Approvals</a>
-          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card"></i> Manage Profiles (<%= totalProfiles %>)</a>
-          <a href="/portal/super-secure-dashboard/ads" class="quick-link-card"><i class="fa-solid fa-bullhorn"></i> Advertisements (<%= adCount %>)</a>
-          <a href="/portal/super-secure-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Success Stories (<%= storyCount %>)</a>
+          <a href="/portal/super-secure-dashboard/admins" class="quick-link-card"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span><strong><%= t("Team access") %></strong><small><%= adminCount %> <%= t("sub-admin") %><%= adminCount === 1 ? '' : 's' %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check" aria-hidden="true"></i><span><strong><%= t("User approvals") %></strong><small><%= t("Review and manage member access") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card" aria-hidden="true"></i><span><strong><%= t("Profiles") %></strong><small><%= totalProfiles %> <%= t("profile") %><%= totalProfiles === 1 ? '' : 's' %> <%= t("in the directory") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/super-secure-dashboard/ads" class="quick-link-card"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i><span><strong><%= t("Advertisements") %></strong><small><%= adCount %> <%= t("campaign") %><%= adCount === 1 ? '' : 's' %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/super-secure-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart" aria-hidden="true"></i><span><strong><%= t("Success stories") %></strong><small><%= storyCount %> <%= t("stor") %><%= storyCount === 1 ? 'y' : 'ies' %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
         </div>
-      </div>
+      </section>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

@@ -13,11 +13,11 @@
 
       <% if (errors && errors.length) { %>
         <div class="error-box">
-          <% errors.forEach(function(e) { %><div><%= e %></div><% }) %>
+          <% errors.forEach(function(e) { %><div><%= t(e) %></div><% }) %>
         </div>
       <% } %>
 
-      <form class="auth-form" action="/register" method="POST" id="registerForm"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <form class="auth-form" action="/register" method="POST" id="registerForm" data-password-requires-consent="terms,privacy"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
           <label class="form-label"><%= t('register.name') %></label>
           <input type="text" name="name" value="<%= old.name || '' %>" required>
@@ -31,7 +31,7 @@
           <input type="text" name="username" value="<%= old.username || '' %>" required>
         </div>
         <div class="field">
-          <label class="form-label"><%= t('register.gender') %> <span class="field-tip" data-tip="You'll only be matched with members of the opposite gender.">?</span></label>
+          <label class="form-label"><%= t('register.gender') %> <span class="field-tip" data-tip="<%= t("You'll only be matched with members of the opposite gender.") %>">?</span></label>
           <select name="gender" required>
             <option value=""><%= t('register.selectGender') %></option>
             <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>><%= t('register.genderMale') %></option>
@@ -40,22 +40,17 @@
         </div>
         <div class="field">
           <label class="form-label"><%= t('register.password') %></label>
-          <input type="password" name="password" id="password" required>
-          <ul class="pw-checklist" id="pwChecklist">
-            <li data-rule="length"><i class="fa-solid fa-xmark rule-icon"></i><span>At least 8 characters</span></li>
-            <li data-rule="upper"><i class="fa-solid fa-xmark rule-icon"></i><span>One uppercase letter</span></li>
-            <li data-rule="lower"><i class="fa-solid fa-xmark rule-icon"></i><span>One lowercase letter</span></li>
-            <li data-rule="number"><i class="fa-solid fa-xmark rule-icon"></i><span>One number</span></li>
-          </ul>
+          <input type="password" name="password" id="password" data-password-strength-input required minlength="8" autocomplete="new-password">
+          <%- include('partials/password-strength') %>
         </div>
 
         <label class="checkbox-row">
           <input type="checkbox" name="terms" id="terms">
-          I agree to the <a href="/terms" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Terms of Use</a>
+          <%= t("I agree to the") %> <a href="/terms" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;"><%= t("Terms of Use") %></a>
         </label>
         <label class="checkbox-row">
           <input type="checkbox" name="privacy" id="privacy">
-          I agree to the <a href="/privacy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Privacy Policy</a> &amp; <a href="/cookie-policy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;">Cookie Policy</a>
+          <%= t("I agree to the") %> <a href="/privacy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;"><%= t("Privacy Policy") %></a> &amp; <a href="/cookie-policy" target="_blank" rel="noopener" style="color:var(--maroon-800); text-decoration:underline;"><%= t("Cookie Policy") %></a>
         </label>
 
         <button type="submit" class="btn btn-gold btn-block" id="submitBtn" disabled><%= t('register.submit') %></button>
@@ -67,37 +62,5 @@
 
   <%- include('partials/footer') %>
 
-  <script nonce="<%= nonce %>">
-    const pw = document.getElementById('password');
-    const terms = document.getElementById('terms');
-    const privacy = document.getElementById('privacy');
-    const submitBtn = document.getElementById('submitBtn');
-    const checklist = document.getElementById('pwChecklist');
-
-    function evaluate() {
-      const val = pw.value;
-      const rules = {
-        length: val.length >= 8,
-        upper: /[A-Z]/.test(val),
-        lower: /[a-z]/.test(val),
-        number: /[0-9]/.test(val)
-      };
-      let allMet = true;
-      checklist.querySelectorAll('li').forEach(function (li) {
-        const rule = li.getAttribute('data-rule');
-        const met = rules[rule];
-        if (!met) allMet = false;
-        li.classList.toggle('met', met);
-        const icon = li.querySelector('.rule-icon');
-        icon.classList.toggle('fa-check', met);
-        icon.classList.toggle('fa-xmark', !met);
-      });
-      submitBtn.disabled = !(allMet && terms.checked && privacy.checked);
-    }
-
-    pw.addEventListener('input', evaluate);
-    terms.addEventListener('change', evaluate);
-    privacy.addEventListener('change', evaluate);
-  </script>
 </body>
 </html>

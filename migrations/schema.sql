@@ -1,322 +1,204 @@
--- ============================================================================
--- Kalpavruksha Kalyana -- full database schema (single consolidated migration)
--- ============================================================================
--- This one file replaces the old sequence of schema.sql + 002_upgrade_features.sql
--- + 003_stage2_superadmin.sql + 004_biodata_upload.sql + 005_ad_slot_expiry.sql.
--- Those five files are kept only in migrations/archive/ for history -- do not
--- run them again.
---
--- Safe to run in either situation:
---   * Brand-new, empty Postgres database  -> creates everything from scratch.
---   * An existing database from any of the old individual migrations
---     (partially or fully applied) -> every statement is idempotent
---     (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS / etc.), so re-running this
---     file just fills in whatever is missing and leaves existing data alone.
---
--- Works against any standard Postgres 13+ database -- Supabase, Neon, Railway,
--- Render Postgres, RDS, a local Postgres, etc. There is nothing Supabase-
--- specific in this file (file storage is handled separately by the app's
--- storage layer, not by this schema).
---
--- Run it with:
---   psql "$DATABASE_URL" -f migrations/schema.sql
--- or paste it into your provider's SQL editor (e.g. Supabase SQL Editor).
--- ============================================================================
+-- Kalpavruksha Kalyana: fresh MySQL 8.0.16+ / MariaDB 10.6+ schema.
+-- Select your Hostinger database in phpMyAdmin, then import this file.
+-- Does not drop tables or rewrite existing member data. Use a NEW database.
+-- All DATETIME values are UTC. Session data is recreated at cutover.
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET time_zone = '+00:00';
 
--- ----------------------------------------------------------------------------
--- 1. USERS
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  mobile_number VARCHAR(15) NOT NULL,
-  username VARCHAR(50) NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(10) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
-  status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `mobile_number` VARCHAR(15) NOT NULL,
+  `username` VARCHAR(50) COLLATE utf8mb4_bin NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `role` VARCHAR(10) NOT NULL DEFAULT 'user',
+  `status` VARCHAR(10) NOT NULL DEFAULT 'pending',
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `gender` VARCHAR(10) NULL,
+  `deleted_at` DATETIME(6) NULL,
+  `failed_login_attempts` INT NOT NULL DEFAULT 0,
+  `locked_until` DATETIME(6) NULL,
+  locale VARCHAR(2) NULL,
+  active_username VARCHAR(50) COLLATE utf8mb4_bin GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN username ELSE NULL END) STORED,
+  active_mobile VARCHAR(15) GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN mobile_number ELSE NULL END) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY users_username_active_key (active_username),
+  UNIQUE KEY users_mobile_number_active_key (active_mobile),
+  CONSTRAINT users_check_1 CHECK (role IN ('user','admin','superadmin')),
+  CONSTRAINT users_check_2 CHECK (status IN ('pending','approved','rejected')),
+  CONSTRAINT users_check_3 CHECK (gender IN ('male','female'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- gender is required for role='user' (opposite-gender match rule); existing
--- rows created before this column existed will have gender = NULL and the
--- app prompts to fill it in on next login.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10) NULL CHECK (gender IN ('male', 'female'));
+CREATE TABLE IF NOT EXISTS `profiles` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `full_name` VARCHAR(100) NOT NULL,
+  `gender` VARCHAR(10) NOT NULL,
+  `image_name` VARCHAR(255) NOT NULL,
+  `religion` VARCHAR(100) NOT NULL,
+  `caste` VARCHAR(100) NULL,
+  
+  `subcaste` VARCHAR(100) NULL DEFAULT 'Not Specified',
+  `date_of_birth` DATE NOT NULL,
+  `time_of_birth` TIME NULL,
+  `language` VARCHAR(100) NOT NULL,
+  `occupation` VARCHAR(150) NULL,
+  `annual_salary` DECIMAL(12,2) NULL,
+  `father_name` VARCHAR(100) NOT NULL,
+  `father_occupation` VARCHAR(150) NOT NULL,
+  `father_salary` DECIMAL(12,2) NULL,
+  `mother_name` VARCHAR(100) NOT NULL,
+  `mother_occupation` VARCHAR(150) NOT NULL,
+  `mother_salary` DECIMAL(12,2) NULL,
+  `total_siblings` INT NOT NULL DEFAULT 0,
+  `male_siblings` INT NOT NULL DEFAULT 0,
+  `female_siblings` INT NOT NULL DEFAULT 0,
+  `phone_number` VARCHAR(15) NOT NULL,
+  `address` TEXT NOT NULL,
+  `city` VARCHAR(100) NOT NULL,
+  `state` VARCHAR(100) NULL,
+  `assets` TEXT NOT NULL,
+  `loans` TEXT NULL,
+  `rashi` VARCHAR(100) NOT NULL,
+  `nakshatra` VARCHAR(100) NOT NULL,
+  `jathaka_pdf_name` VARCHAR(255) NULL,
+  `created_by` BIGINT NULL,
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `marital_status` VARCHAR(20) NOT NULL DEFAULT 'never_married',
+  `image_name_2` VARCHAR(255) NULL,
+  `biodata_pdf_name` VARCHAR(255) NULL,
+  `deleted_at` DATETIME(6) NULL,
+  `willing_other_caste` VARCHAR(5) NULL,
+  `phone_country_code` VARCHAR(6) NOT NULL DEFAULT '+91',
+  `religion_other` VARCHAR(100) NULL,
+  `caste_other` VARCHAR(100) NULL,
+  `has_children` VARCHAR(30) NULL,
+  `number_of_children` INT NULL,
+  `education` VARCHAR(100) NULL,
+  `employed_in` VARCHAR(50) NULL,
+  `employed_in_other` VARCHAR(100) NULL,
+  `occupation_other` VARCHAR(100) NULL,
+  `company_name` VARCHAR(150) NULL,
+  `designation` VARCHAR(150) NULL,
+  `annual_income_band` VARCHAR(50) NULL,
+  `has_dosh` VARCHAR(5) NULL,
+  `family_type` VARCHAR(30) NULL,
+  `family_values` VARCHAR(30) NULL,
+  `family_status` VARCHAR(30) NULL,
+  `num_brothers` INT NULL DEFAULT 0,
+  `married_brothers` INT NULL DEFAULT 0,
+  `num_sisters` INT NULL DEFAULT 0,
+  `married_sisters` INT NULL DEFAULT 0,
+  `country` VARCHAR(100) NOT NULL DEFAULT 'India',
+  `eating_habit` VARCHAR(30) NULL,
+  `smoking_habit` VARCHAR(30) NULL,
+  `drinking_habit` VARCHAR(30) NULL,
+  `mother_tongue` VARCHAR(50) NULL,
+  `mother_tongue_other` VARCHAR(50) NULL,
+  `birth_place` VARCHAR(150) NULL,
+  `user_id` BIGINT NULL,
+  active_phone VARCHAR(15) GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN phone_number ELSE NULL END) STORED,
+  PRIMARY KEY (id),
+  KEY idx_profiles_created_at (created_at, id),
+  KEY idx_profiles_education (education),
+  KEY idx_profiles_full_name (full_name),
+  KEY idx_profiles_marital_status (marital_status),
+  KEY idx_profiles_mother_tongue (mother_tongue),
+  KEY idx_profiles_user_id (user_id),
+  UNIQUE KEY idx_profiles_phone_active (active_phone),
+  KEY idx_profiles_name_dob_active (full_name, date_of_birth, deleted_at),
+  KEY idx_profiles_feed (deleted_at, gender, created_at, id),
+  KEY idx_profiles_dob (date_of_birth),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT profiles_check_1 CHECK (gender IN ('male','female')),
+  CONSTRAINT profiles_check_2 CHECK (marital_status IN ('never_married','divorced','widowed','awaiting_divorce','annulled','separated','married')),
+  CONSTRAINT profiles_check_3 CHECK (willing_other_caste IN ('yes','no')),
+  CONSTRAINT profiles_check_4 CHECK (has_dosh IN ('yes','no')),
+  CONSTRAINT profiles_check_5 CHECK (has_children IN ('no','yes_living_with_me','yes_not_living_with_me'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Soft delete: Delete User sets this instead of removing the row, so it's
--- reversible from the Super Admin Trash page. Filtered out of every normal
--- listing/login query.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+CREATE TABLE IF NOT EXISTS `interests` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT NOT NULL,
+  `profile_id` BIGINT NOT NULL,
+  `is_saved_only` BOOLEAN NOT NULL DEFAULT false,
+  `is_saved` BOOLEAN NOT NULL DEFAULT false,
+  `is_interested` BOOLEAN NOT NULL DEFAULT false,
+  `saved_at` DATETIME(6) NULL,
+  `interested_at` DATETIME(6) NULL,
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY interests_user_profile_key (user_id, profile_id),
+  KEY idx_interests_profile (profile_id),
+  KEY idx_interests_saved (user_id,is_saved,saved_at,id),
+  KEY idx_interests_interested (user_id,is_interested,interested_at,id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Account lockout (User + Admin roles only — Super Admin is exempt and is
--- who unlocks a locked account, so it never locks itself out).
-ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INT NOT NULL DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP NULL;
+CREATE TABLE IF NOT EXISTS `advertisements` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `ad_title` VARCHAR(100) NOT NULL,
+  `image_name` VARCHAR(255) NOT NULL,
+  `placement` VARCHAR(20) NOT NULL,
+  `target_url` VARCHAR(255) NULL,
+  `is_active` BOOLEAN NOT NULL DEFAULT true,
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `expires_at` DATETIME(6) NULL,
+  mobile_image_name VARCHAR(255) NULL,
+  active_placement VARCHAR(20) GENERATED ALWAYS AS (CASE WHEN is_active = TRUE THEN placement ELSE NULL END) STORED,
+  PRIMARY KEY (id),
+  KEY idx_advertisements_placement (placement,is_active,expires_at),
+  UNIQUE KEY one_active_ad_per_placement (active_placement),
+  CONSTRAINT advertisements_check_1 CHECK (placement IN ('top_banner','sidebar','home_middle','home_bottom','after_search'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- mobile_number/username were originally plain UNIQUE columns. Converted to
--- partial unique indexes scoped to non-deleted rows, so a soft-deleted
--- user's mobile/username becomes available again for a new registration
--- without waiting on a permanent purge from the Trash page.
-DO $$ BEGIN
-  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_mobile_number_key;
-  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_username_key;
-EXCEPTION WHEN undefined_object THEN NULL;
-END $$;
-CREATE UNIQUE INDEX IF NOT EXISTS users_mobile_number_active_key ON users (mobile_number) WHERE deleted_at IS NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS users_username_active_key ON users (username) WHERE deleted_at IS NULL;
+CREATE TABLE IF NOT EXISTS `success_stories` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `couple_names` VARCHAR(150) NOT NULL,
+  `story_text` TEXT NOT NULL,
+  `display_order` INT NOT NULL DEFAULT 0,
+  `is_active` BOOLEAN NOT NULL DEFAULT true,
+  `created_by` BIGINT NULL,
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  KEY idx_success_stories_active (is_active,display_order),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ----------------------------------------------------------------------------
--- 2. PROFILES
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS profiles (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  full_name VARCHAR(100) NOT NULL,
-  gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
-  image_name VARCHAR(255) NOT NULL,
-  religion VARCHAR(100) NOT NULL,
-  caste VARCHAR(100) NOT NULL,
-  subcaste VARCHAR(100) NOT NULL,
-  date_of_birth DATE NOT NULL,
-  time_of_birth TIME NULL,
-  language VARCHAR(100) NOT NULL,
-  occupation VARCHAR(150) NOT NULL,
-  annual_salary DECIMAL(12, 2) NOT NULL,
-  father_name VARCHAR(100) NOT NULL,
-  father_occupation VARCHAR(150) NOT NULL,
-  father_salary DECIMAL(12, 2) NOT NULL,
-  mother_name VARCHAR(100) NOT NULL,
-  mother_occupation VARCHAR(150) NOT NULL,
-  mother_salary DECIMAL(12, 2) NOT NULL,
-  total_siblings INT NOT NULL DEFAULT 0,
-  male_siblings INT NOT NULL DEFAULT 0,
-  female_siblings INT NOT NULL DEFAULT 0,
-  phone_number VARCHAR(15) NOT NULL,
-  address TEXT NOT NULL,
-  city VARCHAR(100) NOT NULL,
-  state VARCHAR(100) NOT NULL,
-  assets TEXT NOT NULL,
-  loans TEXT NULL,
-  rashi VARCHAR(100) NOT NULL,
-  nakshatra VARCHAR(100) NOT NULL,
-  jathaka_pdf_name VARCHAR(255) NULL,
-  created_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE IF NOT EXISTS `contact_messages` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `mobile` VARCHAR(15) NOT NULL,
+  `message` TEXT NOT NULL,
+  `is_read` BOOLEAN NOT NULL DEFAULT false,
+  `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  KEY idx_contact_messages_unread (is_read,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- married profiles are hidden from member-facing search/dashboard, but stay
--- visible to admin/super admin
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS marital_status VARCHAR(20) NOT NULL DEFAULT 'unmarried'
-  CHECK (marital_status IN ('unmarried', 'married'));
--- optional second profile photo
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS image_name_2 VARCHAR(255) NULL;
--- bio-data PDF, separate from the jathaka document
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS biodata_pdf_name VARCHAR(255) NULL;
+CREATE TABLE IF NOT EXISTS session (
+  sid VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  expires INT UNSIGNED NOT NULL,
+  sess MEDIUMTEXT NOT NULL,
+  PRIMARY KEY (sid),
+  KEY idx_session_expire (expires),
+  CONSTRAINT session_json_check CHECK (JSON_VALID(sess))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Every profile is linked to the login account (users row) it belongs to.
--- Nullable so profiles created before this column existed aren't broken —
--- new profiles always get one set (either an existing account the admin
--- looked up by phone, or a brand-new one created in the same step).
--- ON DELETE SET NULL rather than CASCADE: soft-deleting/purging the user
--- account should not also destroy the matrimony profile data.
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL;
-CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles (user_id);
+-- Stable rows let transactions serialize even when a placement has no ads.
+CREATE TABLE IF NOT EXISTS ad_placements (
+  placement VARCHAR(20) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT IGNORE INTO ad_placements (placement) VALUES
+('top_banner'),('sidebar'),('home_middle'),('home_bottom'),('after_search');
 
--- ==========================================================================
--- Expanded profile form: marital status detail, caste/religion "Other" text,
--- education/occupation/income, family details, location, habits.
--- ==========================================================================
-
--- marital_status widened from unmarried/married to the full set used by the
--- new form. Existing 'unmarried' rows become 'never_married'; existing
--- 'married' rows stay 'married'. The member-search "hide from members" rule
--- (see Profile.search()) changes from "= unmarried" to "!= married", since
--- divorced/widowed/separated/awaiting-divorce/annulled people are legitimate,
--- available matches — only "still married" should be hidden.
-ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_marital_status_check;
-UPDATE profiles SET marital_status = 'never_married' WHERE marital_status = 'unmarried';
-ALTER TABLE profiles ALTER COLUMN marital_status SET DEFAULT 'never_married';
-ALTER TABLE profiles ADD CONSTRAINT profiles_marital_status_check
-  CHECK (marital_status IN ('never_married', 'divorced', 'widowed', 'awaiting_divorce', 'annulled', 'separated', 'married'));
-
--- Family Status (a broad economic-class band) is the new replacement for
--- collecting exact parental salary figures, so those become optional.
-ALTER TABLE profiles ALTER COLUMN father_salary DROP NOT NULL;
-ALTER TABLE profiles ALTER COLUMN mother_salary DROP NOT NULL;
-
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS willing_other_caste VARCHAR(5) NULL CHECK (willing_other_caste IN ('yes', 'no'));
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_country_code VARCHAR(6) NOT NULL DEFAULT '+91';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS religion_other VARCHAR(100) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS caste_other VARCHAR(100) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_children VARCHAR(30) NULL
-  CHECK (has_children IN ('no', 'yes_living_with_me', 'yes_not_living_with_me'));
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS number_of_children INT NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS education VARCHAR(100) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employed_in VARCHAR(50) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employed_in_other VARCHAR(100) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS occupation_other VARCHAR(100) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS company_name VARCHAR(150) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS designation VARCHAR(150) NULL;
--- Annual income moves from a free-typed number to a fixed set of bands. Kept
--- as a new column rather than repurposing `annual_salary` so old profiles'
--- numeric figures aren't destroyed; `annual_salary` is now optional/legacy.
-ALTER TABLE profiles ALTER COLUMN annual_salary DROP NOT NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS annual_income_band VARCHAR(50) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_dosh VARCHAR(5) NULL CHECK (has_dosh IN ('yes', 'no'));
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_type VARCHAR(30) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_values VARCHAR(30) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_status VARCHAR(30) NULL;
--- Sibling counts move from total/male/female to the brothers/sisters +
--- married-count shape the new form collects. Old columns are kept (now
--- optional/legacy) rather than dropped, so no existing data is lost.
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS num_brothers INT NULL DEFAULT 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS married_brothers INT NULL DEFAULT 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS num_sisters INT NULL DEFAULT 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS married_sisters INT NULL DEFAULT 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS country VARCHAR(100) NOT NULL DEFAULT 'India';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS eating_habit VARCHAR(30) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking_habit VARCHAR(30) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking_habit VARCHAR(30) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_tongue VARCHAR(50) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_tongue_other VARCHAR(50) NULL;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place VARCHAR(150) NULL;
-CREATE INDEX IF NOT EXISTS idx_profiles_education ON profiles (education);
-CREATE INDEX IF NOT EXISTS idx_profiles_mother_tongue ON profiles (mother_tongue);
-
--- Soft delete: Delete Profile sets this instead of removing the row, so it's
--- reversible from the Super Admin Trash page. Filtered out of every normal
--- listing/search query.
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
-
--- Speeds up the duplicate-profile check on creation (same phone number, or
--- same name + date of birth, among active profiles).
-CREATE INDEX IF NOT EXISTS idx_profiles_phone_active ON profiles (phone_number) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_profiles_name_dob_active ON profiles (full_name, date_of_birth) WHERE deleted_at IS NULL;
-
--- ----------------------------------------------------------------------------
--- 3. INTERESTS
--- ----------------------------------------------------------------------------
--- is_saved and is_interested are independent flags: a member can save a
--- profile for later AND separately express interest in it. Each shows up in
--- its own tab on the "Saved Profiles" page.
-CREATE TABLE IF NOT EXISTS interests (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  profile_id BIGINT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  is_saved_only BOOLEAN NOT NULL DEFAULT FALSE, -- retained for backward compatibility, no longer used by the app
-  is_saved BOOLEAN NOT NULL DEFAULT FALSE,
-  is_interested BOOLEAN NOT NULL DEFAULT FALSE,
-  saved_at TIMESTAMP NULL,
-  interested_at TIMESTAMP NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Backfill for any pre-existing rows written before is_saved/is_interested
--- existed: rows previously written with is_saved_only = TRUE were "saved",
--- rows written with is_saved_only = FALSE were "interested". No-op on a
--- fresh database (no rows to touch).
-UPDATE interests SET is_saved = TRUE, saved_at = created_at WHERE is_saved_only = TRUE AND NOT is_saved;
-UPDATE interests SET is_interested = TRUE, interested_at = created_at WHERE is_saved_only = FALSE AND NOT is_interested;
-
--- ----------------------------------------------------------------------------
--- 4. ADVERTISEMENTS
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS advertisements (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  ad_title VARCHAR(100) NOT NULL,
-  image_name VARCHAR(255) NOT NULL,
-  placement VARCHAR(20) NOT NULL CHECK (placement IN ('top_banner', 'sidebar', 'home_middle', 'home_bottom', 'after_search')),
-  target_url VARCHAR(255) NULL,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Every ad now has an expiry timestamp, and switches to Inactive on its own
--- once its time is up (enforced by the app, not the database).
---
--- IMPORTANT: this must be TIMESTAMPTZ, not TIMESTAMP. A plain TIMESTAMP has
--- no timezone attached, so comparing it against NOW() (which IS timezone-
--- aware) forces Postgres to guess a timezone using the session setting --
--- which may not match the timezone the Node process used when it wrote the
--- value. That mismatch is exactly what caused ads to stay active past their
--- real-world expiry time (by whatever offset separates the two timezones).
--- TIMESTAMPTZ stores an absolute instant, so the comparison is unambiguous
--- no matter what timezone the app server or DB session are running in.
-ALTER TABLE advertisements ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ NULL;
-
--- Fixes already-deployed databases where the column was created as the old,
--- ambiguous TIMESTAMP type. Naive values are reinterpreted as UTC on
--- conversion (a reasonable default) -- only runs if the column still has
--- the old type, so it's safe to run repeatedly.
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'advertisements'
-      AND column_name = 'expires_at'
-      AND data_type = 'timestamp without time zone'
-  ) THEN
-    ALTER TABLE advertisements
-      ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC';
-  END IF;
-END $$;
-
--- A placement ("location") can have at most one ACTIVE ad at a time, enforced
--- at the database level so it can never be violated even by concurrent
--- requests, not just by application logic.
-CREATE UNIQUE INDEX IF NOT EXISTS one_active_ad_per_placement
-  ON advertisements (placement)
-  WHERE is_active = TRUE;
-
--- ----------------------------------------------------------------------------
--- 5. SUCCESS STORIES (editable from the Admin / Super Admin portal, shown on
---    the public home page instead of being hard-coded in the template)
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS success_stories (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  couple_names VARCHAR(150) NOT NULL,
-  story_text TEXT NOT NULL,
-  display_order INT NOT NULL DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Seed 3 starter stories so the home page isn't empty on a fresh install.
--- Safe to edit/delete from the Admin portal afterwards; skipped entirely if
--- the table already has any rows (e.g. on an upgrade of an existing site).
-INSERT INTO success_stories (couple_names, story_text, display_order)
-SELECT * FROM (VALUES
-  ('Shivaraj & Basavi', 'We found each other within two months of registering. Our families connected instantly over shared values.', 1),
-  ('Mallikarjun & Girija', 'The verification process gave both our families confidence right from the first conversation.', 2),
-  ('Basavaraj & Veena', 'A simple, respectful platform that understood exactly what our community was looking for.', 3)
-) AS seed_data(couple_names, story_text, display_order)
-WHERE NOT EXISTS (SELECT 1 FROM success_stories);
-
--- ----------------------------------------------------------------------------
--- 6. CONTACT MESSAGES (home page "Get in touch" form -- previously discarded
---    with no persistence at all; now saved so enquiries are never silently
---    lost, and can be reviewed from the Super Admin portal)
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS contact_messages (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  mobile VARCHAR(15) NOT NULL,
-  message TEXT NOT NULL,
-  is_read BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX IF NOT EXISTS idx_contact_messages_unread ON contact_messages (is_read, created_at DESC);
-
--- ----------------------------------------------------------------------------
--- 7. INDEXES
--- ----------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON profiles (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_profiles_marital_status ON profiles (marital_status);
-CREATE INDEX IF NOT EXISTS idx_profiles_full_name ON profiles (full_name);
-CREATE INDEX IF NOT EXISTS idx_interests_user ON interests (user_id);
-CREATE INDEX IF NOT EXISTS idx_interests_profile ON interests (profile_id);
-CREATE INDEX IF NOT EXISTS idx_advertisements_placement ON advertisements (placement, is_active);
-CREATE INDEX IF NOT EXISTS idx_success_stories_active ON success_stories (is_active, display_order);
-
--- NOTE: the express-session table ("session") is created automatically by
--- connect-pg-simple at app startup (createTableIfMissing: true), so it is
--- intentionally not defined here.
+-- Upload compensation and retries; only unreferenced objects are removed.
+CREATE TABLE IF NOT EXISTS storage_cleanup (
+  bucket VARCHAR(20) NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  run_after DATETIME(6) NOT NULL,
+  attempts INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (bucket,filename),
+  KEY idx_storage_cleanup_due (run_after)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

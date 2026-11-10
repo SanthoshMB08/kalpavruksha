@@ -4,6 +4,10 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
 
 const logger = pino({
+  redact: {
+    paths: ['password', 'passwordHash', 'secret', 'req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]', 'req.body', 'err.config'],
+    censor: '[REDACTED]'
+  },
   level: process.env.LOG_LEVEL || (isProduction ? 'info' : isTest ? 'silent' : 'debug'),
   // In production we want plain JSON lines (what log aggregators/hosting
   // platforms expect). In development, pretty-print for a human reading the

@@ -1,18 +1,23 @@
+const { wrapHandlers, validateId } = require('../middleware/routeSafety');
+const { validateLogin } = require('../utils/security');
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/adminController');
+router.param('id', validateId);
+const adminController = wrapHandlers(require('../controllers/adminController'));
+const privateDocumentController = wrapHandlers(require('../controllers/privateDocumentController'));
 const { isAdmin, isSuperAdmin } = require('../middleware/auth');
-const { uploadProfileAssets } = require('../middleware/upload');
+const { parseProfileAssets, uploadProfileAssets } = require('../middleware/upload');
 const { profileValidators, memberCreateValidators } = require('../middleware/validators');
 const { doubleCsrfProtection } = require('../middleware/csrf');
-const { loginLimiter } = require('../middleware/rateLimiters');
+const { loginIpLimiter, loginLimiter, uploadLimiter } = require('../middleware/rateLimiters');
 
 router.get('/admin-login', adminController.showLogin);
-router.post('/admin-login', loginLimiter, doubleCsrfProtection, adminController.login);
-router.get('/admin-logout', adminController.logout);
+router.post('/admin-login', loginIpLimiter, loginLimiter, doubleCsrfProtection, validateLogin, adminController.login);
+router.post('/admin-logout', doubleCsrfProtection, adminController.logout);
 
 router.get('/admin-dashboard', isAdmin, adminController.dashboard);
 router.get('/admin-dashboard/activity', isAdmin, adminController.activityFeed);
+router.get('/admin-dashboard/private-files/:bucket/:filename', isAdmin, privateDocumentController.serve);
 
 router.get('/admin-dashboard/users', isAdmin, adminController.userManagement);
 router.post('/admin-dashboard/users/:id/approve', isAdmin, doubleCsrfProtection, adminController.approveUser);
@@ -25,12 +30,11 @@ router.post('/admin-dashboard/users/:id/unlock', isSuperAdmin, doubleCsrfProtect
 router.get('/admin-dashboard/profiles', isAdmin, adminController.listProfiles);
 router.get('/admin-dashboard/profiles/new', isAdmin, adminController.showNewProfileForm);
 router.get('/admin-dashboard/profiles/check-mobile', isAdmin, adminController.checkMobile);
-// CSRF check runs AFTER uploadProfileAssets (multer) — the token lives in the
-// multipart body, which isn't parsed yet when the request first arrives.
-router.post('/admin-dashboard/profiles', isAdmin, uploadProfileAssets, doubleCsrfProtection, profileValidators, adminController.createProfile);
+// Parse multipart before CSRF; persist files only after CSRF and validation.
+router.post('/admin-dashboard/profiles', isAdmin, uploadLimiter, parseProfileAssets, doubleCsrfProtection, profileValidators, uploadProfileAssets, adminController.createProfile);
 router.get('/admin-dashboard/profiles/:id', isAdmin, adminController.viewProfileFull);
 router.get('/admin-dashboard/profiles/:id/pdf', isAdmin, adminController.exportProfilePdf);
-router.post('/admin-dashboard/profiles/:id/photos', isAdmin, uploadProfileAssets, doubleCsrfProtection, adminController.updateProfilePhotos);
+router.post('/admin-dashboard/profiles/:id/photos', isAdmin, uploadLimiter, parseProfileAssets, doubleCsrfProtection, uploadProfileAssets, adminController.updateProfilePhotos);
 router.post('/admin-dashboard/profiles/:id/marital-status', isAdmin, doubleCsrfProtection, adminController.updateMaritalStatus);
 router.post('/admin-dashboard/profiles/:id/delete', isSuperAdmin, doubleCsrfProtection, adminController.deleteProfile);
 

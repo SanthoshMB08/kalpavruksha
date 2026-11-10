@@ -32,10 +32,10 @@ async function createUser(pool, overrides = {}) {
   const passwordHash = await bcrypt.hash(data.password, 4); // low cost factor — tests don't need production-strength hashing, just speed
   const result = await pool.query(
     `INSERT INTO users (name, mobile_number, username, password, role, status, gender)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [data.name, data.mobile_number, data.username, passwordHash, data.role, data.status, data.gender]
   );
-  return { id: result.rows[0].id, plainPassword: data.password, ...data };
+  return { id: result[0].insertId, plainPassword: data.password, ...data };
 }
 
 // Logs an existing user in via the real login endpoint (member /login, admin

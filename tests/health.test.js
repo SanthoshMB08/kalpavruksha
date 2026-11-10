@@ -1,6 +1,5 @@
 const request = require('supertest');
 const app = require('../app');
-const { pool: appPool } = require('../config/db');
 const { applySchema, resetTables, closePool } = require('./helpers/db');
 
 beforeAll(async () => {
@@ -13,7 +12,6 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await closePool();
-  await appPool.end();
 });
 
 describe('GET /health', () => {

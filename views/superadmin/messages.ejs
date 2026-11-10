@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -7,10 +7,10 @@
   <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-envelope"></i> Contact Messages</h3>
-        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Submissions from the home page "Get in touch" form.</p>
+        <h3><i class="fa-solid fa-envelope"></i> <%= t("Contact Messages") %></h3>
+        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;"><%= t("Submissions from the home page \"Get in touch\" form.") %></p>
         <% if (messages.length === 0) { %>
-          <div class="empty-state">No messages yet.</div>
+          <div class="empty-state"><%= t("No messages yet.") %></div>
         <% } else { %>
           <div class="story-edit-list">
             <% messages.forEach(function(m) { %>
@@ -19,23 +19,23 @@
                   <div>
                     <h4 style="margin-bottom:4px;">
                       <%= m.name %>
-                      <% if (!m.is_read) { %><span class="badge badge-pending" style="margin-left:8px;">New</span><% } %>
+                      <% if (!m.is_read) { %><span class="badge badge-pending" style="margin-left:8px;"><%= t("New") %></span><% } %>
                     </h4>
                     <p style="font-size:0.82rem; color:#8a7156; margin-bottom:8px;">
-                      <i class="fa-solid fa-phone"></i> <%= m.mobile %> &mdash; <%= new Date(m.created_at).toLocaleString('en-IN') %>
+                      <i class="fa-solid fa-phone"></i> <%= m.mobile %> &mdash; <%= new Date(m.created_at).toLocaleString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %>
                     </p>
                     <p style="color:#6b5638; font-size:0.9rem;"><%= m.message %></p>
                   </div>
                   <div class="row-menu">
-                    <button type="button" class="row-menu-btn" aria-label="Actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <button type="button" class="row-menu-btn" aria-label="<%= t("Actions") %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="row-menu-dropdown">
                       <% if (!m.is_read) { %>
                         <form action="/portal/super-secure-dashboard/messages/<%= m.id %>/read" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit"><i class="fa-solid fa-check"></i> Mark as Read</button>
+                          <button type="submit"><i class="fa-solid fa-check"></i> <%= t("Mark as Read") %></button>
                         </form>
                       <% } %>
-                      <form action="/portal/super-secure-dashboard/messages/<%= m.id %>/delete" method="POST" data-confirm="Delete this message?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                      <form action="/portal/super-secure-dashboard/messages/<%= m.id %>/delete" method="POST" data-confirm="<%= t("Delete this message?") %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> <%= t("Delete") %></button>
                       </form>
                     </div>
                   </div>

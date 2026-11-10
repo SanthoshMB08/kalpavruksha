@@ -1,3 +1,4 @@
+const { randomUUID } = require('crypto');
 const path = require('path');
 const {
   S3Client,
@@ -54,8 +55,8 @@ function getClient() {
 }
 
 function makeFilename(originalname) {
-  const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-  return `${unique}${path.extname(originalname)}`;
+  const unique = randomUUID();
+  return `${unique}${path.extname(originalname).toLowerCase()}`;
 }
 
 function objectKey(bucketKey, filename) {

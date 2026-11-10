@@ -4,7 +4,7 @@ const { normalizePagination, buildPageMeta } = require('../utils/pagination');
 const PUBLIC_FIELDS = `
   id, full_name, gender, image_name, image_name_2, caste, subcaste, language, occupation,
   date_of_birth, marital_status,
-  DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
+  TIMESTAMPDIFF(YEAR, date_of_birth, CURRENT_DATE) AS age
 `;
 
 const FULL_FIELDS = `
@@ -17,7 +17,7 @@ const FULL_FIELDS = `
   jathaka_pdf_name, biodata_pdf_name, marital_status, willing_other_caste, has_children, number_of_children,
   education, family_type, family_values, family_status, eating_habit, smoking_habit, drinking_habit,
   mother_tongue, mother_tongue_other, user_id, created_by, created_at,
-  DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
+  TIMESTAMPDIFF(YEAR, date_of_birth, CURRENT_DATE) AS age
 `;
 
 // Every column a controller is allowed to touch via updateFields(). id,
@@ -67,7 +67,7 @@ function buildWhereClause(filters = {}, { includeMarried = false, exactFields = 
     } else {
       // Typed, so substring — and case-insensitive, or re-typing a stored value
       // in a different case would silently return nothing.
-      clauses.push(`${col} ILIKE ?`);
+      clauses.push(`${col} LIKE ?`);
       params.push(`%${filters[col]}%`);
     }
   }
@@ -75,7 +75,7 @@ function buildWhereClause(filters = {}, { includeMarried = false, exactFields = 
     // Always substring. The control is a dropdown of the canonical
     // mother-tongue list, but a profile whose mother tongue was "Other" stores
     // free text in this legacy column, so exact matching would hide those.
-    clauses.push('language ILIKE ?');
+    clauses.push('language LIKE ?');
     params.push(`%${filters.language}%`);
   }
   if (filters.gender) {
@@ -83,16 +83,16 @@ function buildWhereClause(filters = {}, { includeMarried = false, exactFields = 
     params.push(filters.gender);
   }
   if (filters.keyword) {
-    clauses.push('(full_name ILIKE ? OR occupation ILIKE ? OR city ILIKE ?)');
+    clauses.push('(full_name LIKE ? OR occupation LIKE ? OR city LIKE ?)');
     params.push(`%${filters.keyword}%`, `%${filters.keyword}%`, `%${filters.keyword}%`);
   }
   if (filters.minAge) {
-    clauses.push("DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) >= ?");
-    params.push(filters.minAge);
+    clauses.push("date_of_birth <= DATE_SUB(CURRENT_DATE, INTERVAL ? YEAR)");
+    params.push(Number(filters.minAge));
   }
   if (filters.maxAge) {
-    clauses.push("DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) <= ?");
-    params.push(filters.maxAge);
+    clauses.push("date_of_birth > DATE_SUB(CURRENT_DATE, INTERVAL ? YEAR)");
+    params.push(Number(filters.maxAge) + 1);
   }
   if (filters.maritalStatus) {
     clauses.push('marital_status = ?');
@@ -109,8 +109,8 @@ async function runPaginatedSearch(filters, fieldSet, opts, pagination) {
   const { where, params } = buildWhereClause(filters, opts);
   const { page, perPage, offset } = normalizePagination(pagination);
 
-  const countSql = `SELECT COUNT(*)::int AS total FROM profiles ${where}`;
-  const dataSql = `SELECT ${fieldSet} FROM profiles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+  const countSql = `SELECT COUNT(*) AS total FROM profiles ${where}`;
+  const dataSql = `SELECT ${fieldSet} FROM profiles ${where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`;
 
   const [[countRows], [rows]] = await Promise.all([
     pool.query(countSql, params),
@@ -158,9 +158,9 @@ const Profile = {
   async listAllFull(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NULL'),
+      pool.query('SELECT COUNT(*) AS total FROM profiles WHERE deleted_at IS NULL'),
       pool.query(
-        `SELECT ${FULL_FIELDS} FROM profiles WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        `SELECT ${FULL_FIELDS} FROM profiles WHERE deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
         [perPage, offset]
       )
     ]);
@@ -203,8 +203,7 @@ const Profile = {
         jathaka_pdf_name, biodata_pdf_name, marital_status, willing_other_caste, has_children, number_of_children,
         education, family_type, family_values, family_status, eating_habit, smoking_habit, drinking_habit,
         mother_tongue, mother_tongue_other, user_id, created_by
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-      RETURNING id`,
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         data.full_name, data.gender, data.image_name, data.image_name_2 || null, data.religion, data.religion_other || null,
         data.caste || null, data.caste_other || null, data.subcaste || null,
@@ -276,7 +275,7 @@ const Profile = {
   async listDeleted(pagination = {}) {
     const { page, perPage, offset } = normalizePagination(pagination);
     const [[countRows], [rows]] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NOT NULL'),
+      pool.query('SELECT COUNT(*) AS total FROM profiles WHERE deleted_at IS NOT NULL'),
       pool.query(
         `SELECT id, full_name, gender, image_name, deleted_at FROM profiles
          WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT ? OFFSET ?`,
@@ -327,7 +326,7 @@ const Profile = {
   },
 
   async count() {
-    const [rows] = await pool.query('SELECT COUNT(*)::int AS total FROM profiles WHERE deleted_at IS NULL');
+    const [rows] = await pool.query('SELECT COUNT(*) AS total FROM profiles WHERE deleted_at IS NULL');
     return rows[0].total;
   },
 
@@ -344,8 +343,8 @@ const Profile = {
     params.push(limit);
     const [rows] = await pool.query(
       `SELECT id, full_name, gender, image_name, city,
-              DATE_PART('year', AGE(CURRENT_DATE, date_of_birth)) AS age
-       FROM profiles WHERE ${where} ORDER BY created_at DESC LIMIT ?`,
+              TIMESTAMPDIFF(YEAR, date_of_birth, CURRENT_DATE) AS age
+       FROM profiles WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT ?`,
       params
     );
     return rows;

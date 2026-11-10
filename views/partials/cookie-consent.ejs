@@ -3,18 +3,16 @@
     <div class="cookie-banner-text">
       <h3 class="cookie-banner-title">
         <i class="fa-solid fa-cookie-bite" aria-hidden="true"></i>
-        We value your privacy
+        <%= t("We value your privacy") %>
       </h3>
       <p>
-        We use cookies to keep you signed in, protect your account, remember your preferences, and
-        improve the website. You can accept all cookies or continue with essential cookies only.
-        Read our <a href="/cookie-policy">Cookie Policy</a> and <a href="/privacy">Privacy Policy</a>
-        for full details.
+        <%= t("We use cookies to keep you signed in, protect your account, remember your preferences, and improve the website. You can accept all cookies or continue with essential cookies only. Read our") %> <a href="/cookie-policy"><%= t("Cookie Policy") %></a> <%= t("and") %> <a href="/privacy"><%= t("Privacy Policy") %></a>
+        <%= t("for full details.") %>
       </p>
     </div>
     <div class="cookie-banner-actions">
-      <button type="button" class="btn btn-outline-gold" data-cookie-choice="essential">Essential Only</button>
-      <button type="button" class="btn btn-gold" data-cookie-choice="all">Accept All</button>
+      <button type="button" class="btn btn-outline-gold" data-cookie-choice="essential"><%= t("Essential Only") %></button>
+      <button type="button" class="btn btn-gold" data-cookie-choice="all"><%= t("Accept All") %></button>
     </div>
   </div>
 </div>

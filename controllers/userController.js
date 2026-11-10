@@ -1,3 +1,4 @@
+const { safeRedirect } = require('../utils/security');
 const Profile = require('../models/Profile');
 const Interest = require('../models/Interest');
 const Advertisement = require('../models/Advertisement');
@@ -59,15 +60,17 @@ exports.dashboard = async (req, res) => {
       minAge,
       maxAge
     };
-    const [searchResult, used, afterSearchAds] = await Promise.all([
+    const [searchResult, used, afterSearchAds, profileStates] = await Promise.all([
       Profile.search(filters, { page: req.query.page }),
       Profile.filterOptionIndex(),
-      Advertisement.listActiveByPlacement('after_search')
+      Object.keys(req.query).some(key => ['religion','caste','language','subcaste','keyword','minAge','maxAge'].includes(key) && req.query[key]) ? Advertisement.listActiveByPlacement('after_search') : [],
+      Interest.statesByUser(req.session.user.id)
     ]);
 
     res.render('user-dashboard', {
       title: 'Find Your Match',
       profiles: searchResult.rows,
+      profileStates,
       pageInfo: searchResult,
       currentQuery: req.query,
       religionOptions: withLabels(profileOptions.RELIGION_OPTIONS, used.religion),
@@ -79,18 +82,7 @@ exports.dashboard = async (req, res) => {
     });
   } catch (err) {
     req.log.error(err);
-    res.render('user-dashboard', {
-      title: 'Find Your Match',
-      profiles: [],
-      pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
-      currentQuery: req.query,
-      religionOptions: profileOptions.RELIGION_OPTIONS,
-      casteOptionsByReligion: profileOptions.CASTE_OPTIONS_BY_RELIGION,
-      subcasteOptions: [],
-      languageOptions: profileOptions.MOTHER_TONGUE_OPTIONS,
-      filters: {},
-      afterSearchAds: []
-    });
+    res.status(503).render('service-error');
   }
 };
 
@@ -128,7 +120,7 @@ exports.profileModal = async (req, res) => {
   if (profile.marital_status === 'married' || (myGender && profile.gender === myGender)) {
     return res.status(404).send('<p class="p-6 text-maroon-800">Profile not found.</p>');
   }
-  res.render('partials/profile-modal', { profile, layout: false });
+  res.render('partials/profile-modal', { profile, profileStates: await Interest.statesByUser(req.session.user.id), layout: false });
 };
 
 // Shared guard: a profile must exist, be unmarried, and be the opposite
@@ -148,22 +140,40 @@ async function isValidInterestTarget(req, profileId) {
 
 exports.saveProfile = async (req, res) => {
   if (!(await isValidInterestTarget(req, req.params.id))) {
+    if (req.get('Accept') === 'application/json') return res.status(404).json({error:req.t('That profile is not available.')});
     req.flash('error', 'That profile is not available.');
-    return res.redirect('back');
+    return res.redirect(safeRedirect(req, req.get('Referrer'), '/dashboard'));
   }
   await Interest.markSaved(req.session.user.id, req.params.id);
+  if (req.get('Accept') === 'application/json') return res.json({message:req.t('Profile saved.'), isSaved:true});
   req.flash('success', 'Profile saved.');
-  res.redirect('back');
+  res.redirect(safeRedirect(req, req.get('Referrer'), '/dashboard'));
+};
+
+exports.unsaveProfile = async (req, res) => {
+  await Interest.markUnsaved(req.session.user.id, req.params.id);
+  if (req.get('Accept') === 'application/json') return res.json({message:req.t('Profile removed from saved.'), isSaved:false});
+  req.flash('success', 'Profile removed from saved.');
+  res.redirect(safeRedirect(req, req.get('Referrer'), '/saved-profiles'));
 };
 
 exports.expressInterest = async (req, res) => {
   if (!(await isValidInterestTarget(req, req.params.id))) {
+    if (req.get('Accept') === 'application/json') return res.status(404).json({error:req.t('That profile is not available.')});
     req.flash('error', 'That profile is not available.');
-    return res.redirect(req.get('Referrer') || '/');
+    return res.redirect(safeRedirect(req, req.get('Referrer'), '/dashboard'));
   }
   await Interest.markInterested(req.session.user.id, req.params.id);
+  if (req.get('Accept') === 'application/json') return res.json({message:req.t('Interest expressed! The admin has been notified.'), isInterested:true});
   req.flash('success', 'Interest expressed! The admin has been notified.');
-  res.redirect(req.get('Referrer') || '/');
+  res.redirect(safeRedirect(req, req.get('Referrer'), '/dashboard'));
+};
+
+exports.withdrawInterest = async (req, res) => {
+  await Interest.markNotInterested(req.session.user.id, req.params.id);
+  if (req.get('Accept') === 'application/json') return res.json({message:req.t('Interest withdrawn.'), isInterested:false});
+  req.flash('success', 'Interest withdrawn.');
+  res.redirect(safeRedirect(req, req.get('Referrer'), '/saved-profiles?tab=interested'));
 };
 
 exports.savedProfiles = async (req, res) => {

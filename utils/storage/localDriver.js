@@ -1,3 +1,4 @@
+const { randomUUID } = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,8 +22,8 @@ const BUCKETS = {
 };
 
 function makeFilename(originalname) {
-  const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-  return `${unique}${path.extname(originalname)}`;
+  const unique = randomUUID();
+  return `${unique}${path.extname(originalname).toLowerCase()}`;
 }
 
 async function uploadFile(bucketKey, file) {
@@ -49,7 +50,7 @@ async function deleteFile(bucketKey, filename) {
   try {
     await fs.promises.unlink(path.join(UPLOAD_ROOT, folder, filename));
   } catch (err) {
-    if (err.code !== 'ENOENT') console.error(`Local delete failed (${folder}/${filename}):`, err.message);
+    if (err.code !== 'ENOENT') throw err;
   }
 }
 

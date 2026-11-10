@@ -2,11 +2,15 @@
 // Run with: npm run seed
 require('dotenv').config();
 const bcrypt = require('bcrypt');
+const { validPassword } = require('../utils/security');
 const { query } = require('../config/db');
 
 async function seed() {
   const username = process.env.SUPERADMIN_USERNAME || 'superadmin';
-  const password = process.env.SUPERADMIN_PASSWORD || 'ChangeMe123';
+  const password = process.env.SUPERADMIN_PASSWORD;
+  if (!validPassword(password) || password.length < 12 || /^(changeme|password)/i.test(password)) {
+    throw new Error('Set a unique SUPERADMIN_PASSWORD of at least 12 characters (uppercase, lowercase, number; maximum 72 UTF-8 bytes).');
+  }
   const mobile = process.env.SUPERADMIN_MOBILE || '9999999999';
 
   const [existing] = await query(
@@ -27,7 +31,7 @@ async function seed() {
     ['Super Admin', mobile, username, hash]
   );
 
-  console.log(`Super admin created. Username: ${username}  Password: ${password}`);
+  console.log(`Super admin created. Username: ${username}`);
   console.log('Please log in at /portal/super-secure-login and change this password immediately.');
   process.exit(0);
 }

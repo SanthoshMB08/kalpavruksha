@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
 <body>
   <div class="auth-wrap" style="min-height:100vh; background:var(--maroon-800); background-image: radial-gradient(circle at 20% 20%, rgba(234,179,8,0.08), transparent 55%);">
     <div class="auth-card">
-      <h1>Admin Portal</h1>
-      <div class="subtitle">Kalpavruksha Kalyana &mdash; Staff Access</div>
-      <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+      <h1><%= t("Admin Portal") %></h1>
+      <div class="subtitle"><%= t("Kalpavruksha Kalyana — Staff Access") %></div>
+      <% if (error) { %><div class="error-box"><%= t(error) %></div><% } %>
       <form class="auth-form" action="/portal/admin-login" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="field">
-          <label class="form-label">Username</label>
+          <label class="form-label"><%= t("Username") %></label>
           <input type="text" name="username" required autofocus>
         </div>
         <div class="field">
-          <label class="form-label">Password</label>
+          <label class="form-label"><%= t("Password") %></label>
           <div class="password-field">
             <input type="password" name="password" required>
-            <button type="button" class="password-toggle-btn" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            <button type="button" class="password-toggle-btn" aria-label="<%= t("Show password") %>"><i class="fa-solid fa-eye"></i></button>
           </div>
         </div>
-        <button type="submit" class="btn btn-maroon btn-block">Login</button>
+        <button type="submit" class="btn btn-maroon btn-block"><%= t("Login") %></button>
       </form>
     </div>
   </div>

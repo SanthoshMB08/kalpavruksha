@@ -1,3 +1,5 @@
+const { parseAdExpiry } = require('../utils/adPlacements');
+const { establishSession, logout, validPassword, PASSWORD_MESSAGE } = require('../utils/security');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
@@ -15,20 +17,14 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findByUsername(username);
-    if (!user || user.role !== 'superadmin') {
+    if (!user || user.status !== 'approved' || user.role !== 'superadmin') {
       return res.render('superadmin/login', { title: 'Super Admin Login', error: 'Invalid credentials.' });
     }
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.render('superadmin/login', { title: 'Super Admin Login', error: 'Invalid credentials.' });
     }
-    req.session.user = {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      role: user.role,
-      status: user.status
-    };
+    await establishSession(req, user);
     res.redirect('/portal/super-secure-dashboard');
   } catch (err) {
     req.log.error(err);
@@ -36,9 +32,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
-  req.session.destroy(() => res.redirect('/portal/super-secure-login'));
-};
+exports.logout = (req, res, next) => logout(req, res, next, '/portal/super-secure-login');
 
 // --- Overview page: stats + quick links only ---
 exports.dashboard = async (req, res) => {
@@ -139,8 +133,8 @@ exports.unlockAdmin = async (req, res) => {
 // Super Admin can reset an Admin's password.
 exports.changeAdminPassword = async (req, res) => {
   const { password } = req.body;
-  if (!password || password.length < 8) {
-    req.flash('error', 'Password must be at least 8 characters.');
+  if (!validPassword(password)) {
+    req.flash('error', PASSWORD_MESSAGE);
     return res.redirect('/portal/super-secure-dashboard/admins');
   }
   try {
@@ -207,36 +201,13 @@ exports.adsPage = async (req, res) => {
   res.render('superadmin/ads', { title: 'Advertisement Manager', active: 'ads', ads });
 };
 
-exports.createAd = async (req, res) => {
+exports.createAd = async (req,res) => {
   try {
-    if (!req.file) {
-      req.flash('error', 'Please choose an image for the advertisement.');
-      return res.redirect('/portal/super-secure-dashboard/ads');
-    }
-    const { ad_title, placement, target_url, expires_at } = req.body;
-    if (!expires_at) {
-      req.flash('error', 'Please set an expiry date/time for the advertisement.');
-      return res.redirect('/portal/super-secure-dashboard/ads');
-    }
-    const expiresAt = new Date(expires_at);
-    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
-      req.flash('error', 'Expiry must be a valid date/time in the future.');
-      return res.redirect('/portal/super-secure-dashboard/ads');
-    }
-    await Advertisement.create({
-      ad_title,
-      placement,
-      target_url,
-      image_name: req.file.filename,
-      expiresAt
-    });
-    req.flash('success', 'Advertisement uploaded. It has taken over the single slot for this location.');
-    res.redirect('/portal/super-secure-dashboard/ads');
-  } catch (err) {
-    req.log.error(err);
-    req.flash('error', 'Could not upload advertisement.');
-    res.redirect('/portal/super-secure-dashboard/ads');
-  }
+    await Advertisement.create({ ad_title:req.body.ad_title, placement:req.body.placement, target_url:req.body.target_url,
+      image_name:req.file.filename, mobile_image_name:req.mobileAdFile.filename, expiresAt:req.adExpiresAt });
+    req.flash('success','Advertisement published.');
+  } catch(err) { req.log.error(err); req.flash('error','Could not publish advertisement. The previous advertisement is unchanged.'); }
+  res.redirect(303,'/portal/super-secure-dashboard/ads');
 };
 
 exports.toggleAd = async (req, res) => {
@@ -262,8 +233,8 @@ exports.reactivateAd = async (req, res) => {
     req.flash('error', 'Please set a new expiry date/time to reactivate this advertisement.');
     return res.redirect('/portal/super-secure-dashboard/ads');
   }
-  const expiresAt = new Date(expires_at);
-  if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+  const expiresAt = parseAdExpiry(expires_at);
+  if (!expiresAt) {
     req.flash('error', 'Expiry must be a valid date/time in the future.');
     return res.redirect('/portal/super-secure-dashboard/ads');
   }

@@ -1,7 +1,6 @@
 const path = require('path');
 const request = require('supertest');
 const app = require('../app');
-const { pool: appPool } = require('../config/db');
 const { pool, applySchema, resetTables, closePool } = require('./helpers/db');
 const { getCsrfToken, loginAs } = require('./helpers/auth');
 
@@ -17,7 +16,6 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await closePool();
-  await appPool.end();
 });
 
 async function loginAsSuperAdmin() {
@@ -28,12 +26,19 @@ async function loginAsSuperAdmin() {
 
 const baseProfileFields = {
   gender: 'female',
-  religion: 'Hindu',
-  caste: 'Test',
+  religion: 'hindu',
+  marital_status: 'never_married',
+  willing_other_caste: 'no',
+  employed_in: 'private',
+  annual_income_band: 'Prefer Not to Say',
+  country: 'India',
+  password: 'ProfilePass123',
+  confirm_password: 'ProfilePass123',
+  caste: 'Lingayat',
   subcaste: 'Test',
   date_of_birth: '1998-01-01',
-  language: 'Kannada',
-  occupation: 'Engineer',
+  mother_tongue: 'Kannada',
+  occupation: 'Engineering',
   annual_salary: '800000',
   father_name: 'John',
   father_occupation: 'Business',
@@ -66,8 +71,8 @@ describe('Duplicate profile detection', () => {
     const res = await submitProfile(superAgent, token2, { full_name: 'Second Person', phone_number: '9111111111' });
 
     expect(res.text).toMatch(/phone number already exists/i);
-    const result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = $1', ['9111111111']);
-    expect(Number(result.rows[0].count)).toBe(1); // only the first one was created
+    const result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = ?', ['9111111111']);
+    expect(Number(result[0][0].count)).toBe(1); // only the first one was created
   });
 
   it('warns (but does not block) on matching name + date of birth, and allows override', async () => {
@@ -87,8 +92,8 @@ describe('Duplicate profile detection', () => {
       phone_number: '9333333333'
     });
     expect(warnRes.text).toMatch(/same name and date of birth/i);
-    let result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = $1', ['9333333333']);
-    expect(Number(result.rows[0].count)).toBe(0);
+    let result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = ?', ['9333333333']);
+    expect(Number(result[0][0].count)).toBe(0);
 
     // Resubmitting with confirm_duplicate=1 should go through
     const token3 = await getCsrfToken(superAgent, '/portal/admin-dashboard/profiles/new');
@@ -98,8 +103,8 @@ describe('Duplicate profile detection', () => {
       phone_number: '9333333333',
       confirm_duplicate: '1'
     });
-    result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = $1', ['9333333333']);
-    expect(Number(result.rows[0].count)).toBe(1);
+    result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = ?', ['9333333333']);
+    expect(Number(result[0][0].count)).toBe(1);
   });
 
   it('does not warn when name and DOB are both different', async () => {
@@ -114,7 +119,7 @@ describe('Duplicate profile detection', () => {
       phone_number: '9555555555'
     });
     expect(res.text).not.toMatch(/already exists/i);
-    const result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = $1', ['9555555555']);
-    expect(Number(result.rows[0].count)).toBe(1);
+    const result = await pool.query('SELECT COUNT(*) AS count FROM profiles WHERE phone_number = ?', ['9555555555']);
+    expect(Number(result[0][0].count)).toBe(1);
   });
 });

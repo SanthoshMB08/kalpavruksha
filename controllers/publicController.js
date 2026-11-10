@@ -39,7 +39,9 @@ exports.home = async (req, res) => {
 
 exports.contactSubmit = async (req, res) => {
   const { name, mobile, message } = req.body;
-  if (!name || !mobile || !message) {
+  if (typeof name !== 'string' || !name.trim() || name.length > 100 ||
+      typeof mobile !== 'string' || !/^[+0-9 ()-]{7,20}$/.test(mobile) ||
+      typeof message !== 'string' || !message.trim() || message.length > 5000) {
     req.flash('error', 'Please fill in all fields.');
     return res.redirect('/#contact');
   }

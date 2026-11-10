@@ -1,3 +1,4 @@
+const { validPassword, PASSWORD_MESSAGE } = require('../utils/security');
 const { body } = require('express-validator');
 const {
   MARITAL_STATUS_OPTIONS, YES_NO_OPTIONS, RELIGION_OPTIONS, CASTE_OPTIONS_BY_RELIGION,
@@ -8,9 +9,9 @@ const {
 } = require('../utils/profileOptions');
 
 // Letters, spaces, and a few common name punctuation marks only — no digits.
-const NAME_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{3,50}$/;
+const NAME_PATTERN = /^[\p{L}][\p{L}\p{M}\s.'-]{1,99}$/u;
 const MOBILE_PATTERN = /^[6-9][0-9]{9}$/;
-const TEXT_WORD_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{1,50}$/;
+const TEXT_WORD_PATTERN = /^[\p{L}][\p{L}\p{M}\s.'-]{0,99}$/u;
 const ALL_CASTES = Object.values(CASTE_OPTIONS_BY_RELIGION).flat();
 const COUNTRY_CODE_VALUES = [...new Set(COUNTRY_CODES.map((c) => c.code))];
 
@@ -32,7 +33,7 @@ function textField(field, label, { optional = false } = {}) {
   return chain.matches(TEXT_WORD_PATTERN).withMessage(`${label} should contain letters only.`);
 }
 
-const OCCUPATION_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9 ]{0,146}[A-Za-z0-9])?$/;
+const OCCUPATION_PATTERN = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}\s.,&()/'-]{0,149}$/u;
 function occupationField(field, label, { optional = false } = {}) {
   let chain = body(field).trim();
   chain = optional ? chain.optional({ checkFalsy: true }) : chain.notEmpty().withMessage(`${label} is required.`);
@@ -65,7 +66,7 @@ function dobField(field = 'date_of_birth', { optional = false, minAge = 18 } = {
     const dob = new Date(value);
     const age = (Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
     if (age < minAge) throw new Error(`Age must be at least ${minAge} years.`);
-    if (age > 50) throw new Error('Enter a valid date of birth.');
+    if (age > 90) throw new Error('Enter a valid date of birth.');
     return true;
   });
 }
@@ -202,19 +203,13 @@ const profileEditValidators = [
 const userCreateValidators = [
   nameField('name', 'Name'),
   mobileField('mobile_number', 'Mobile number'),
-  body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters.')
+  body('username').isString().bail().trim().isLength({ min: 3, max: 50 }).withMessage('Username must be 3 to 50 characters.'),
+  body('password').custom(validPassword).withMessage(PASSWORD_MESSAGE)
 ];
 
 const memberCreateValidators = [...userCreateValidators, genderField('gender')];
 
-const passwordChangeValidators = [
-  body('password')
-    .isLength({ min: 8 })
-    .matches(/[A-Z]/)
-    .matches(/[a-z]/)
-    .matches(/[0-9]/)
-    .withMessage('Password must be 8+ characters with uppercase, lowercase, and a number.')
-];
+const passwordChangeValidators = [body('password').custom(validPassword).withMessage(PASSWORD_MESSAGE)];
 
 module.exports = {
   nameField,

@@ -1,0 +1,125 @@
+{
+  "planHash": "d113eea8e19246922cbe133d5866054fc1389732873f94bba5e03cf03a1965c7",
+  "phase": "standalone",
+  "recordedAtUtc": "2026-11-09T19:02:12.2208340Z",
+  "retryCount": 1,
+  "resetBaseline": false,
+  "complete": true,
+  "result": {
+    "setupSucceeded": true,
+    "setupDurationMs": 0,
+    "setupFailureOutput": null,
+    "assertions": [
+      {
+        "name": "lint",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E kalpavruksha-kalyana@1.0.0 lint\r\n\u003E eslint \u0022**/*.js\u0022 --ignore-pattern node_modules --ignore-pattern public\r\n\r\n",
+        "durationMs": 3365
+      },
+      {
+        "name": "hostinger-storage-and-security-tests",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E kalpavruksha-kalyana@1.0.0 test\r\n\u003E jest --runInBand tests/hostingerStorage.test.js tests/security.test.js\r\n\r\nPASS tests/security.test.js (5.648 s)\r\nPASS tests/hostingerStorage.test.js\r\n\r\nTest Suites: 2 passed, 2 total\r\nTests:       62 passed, 62 total\r\nSnapshots:   0 total\r\nTime:        6.074 s, estimated 7 s\r\nRan all test suites matching /tests\\\\hostingerStorage.test.js|tests\\\\security.test.js/i.\r\n",
+        "durationMs": 8853
+      },
+      {
+        "name": "tests-pass",
+        "kind": "process",
+        "verificationMethod": "test-results",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 1,
+        "outputSample": "\r\n\u003E kalpavruksha-kalyana@1.0.0 test\r\n\u003E jest\r\n\r\nPASS tests/security.test.js (5.761 s)\r\nPASS tests/hostingerStorage.test.js\r\nFAIL tests/pagination.test.js\r\n  \u25CF Test suite failed to run\r\n\r\n    Refusing destructive tests outside a dedicated _test database.\r\n\r\n    \u001B[0m \u001B[90m 4 |\u001B[39m \u001B[36mif\u001B[39m (process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mNODE_ENV\u001B[39m \u001B[33m!==\u001B[39m \u001B[32m\u0027test\u0027\u001B[39m) \u001B[36mthrow\u001B[39m \u001B[36mnew\u001B[39m \u001B[33mError\u001B[39m(\u001B[32m\u0027Integration tests require NODE_ENV=test.\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m 5 |\u001B[39m \u001B[36mconst\u001B[39m database \u001B[33m=\u001B[39m process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m \u001B[33m?\u001B[39m decodeURIComponent(\u001B[36mnew\u001B[39m \u001B[33mURL\u001B[39m(process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m)\u001B[33m.\u001B[39mpathname\u001B[33m.\u001B[39mslice(\u001B[35m1\u001B[39m)) \u001B[33m:\u001B[39m process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDB_NAME\u001B[39m\u001B[33m;\u001B[39m\r\n    \u001B[31m\u001B[1m\u003E\u001B[22m\u001B[39m\u001B[90m 6 |\u001B[39m \u001B[36mif\u001B[39m (\u001B[33m!\u001B[39mdatabase \u001B[33m||\u001B[39m \u001B[33m!\u001B[39mdatabase\u001B[33m.\u001B[39mendsWith(\u001B[32m\u0027_test\u0027\u001B[39m)) \u001B[36mthrow\u001B[39m \u001B[36mnew\u001B[39m \u001B[33mError\u001B[39m(\u001B[32m\u0027Refusing destructive tests outside a dedicated _test database.\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m   |\u001B[39m                                                     \u001B[31m\u001B[1m^\u001B[22m\u001B[39m\r\n     \u001B[90m 7 |\u001B[39m \u001B[36mconst\u001B[39m { pool } \u001B[33m=\u001B[39m require(\u001B[32m\u0027../../config/db\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m 8 |\u001B[39m \u001B[36masync\u001B[39m \u001B[36mfunction\u001B[39m applySchema() {\r\n     \u001B[90m 9 |\u001B[39m   \u001B[36mconst\u001B[39m sql \u001B[33m=\u001B[39m fs\u001B[33m.\u001B[39mreadFileSync(path\u001B[33m.\u001B[39mjoin(__dirname\u001B[33m,\u001B[39m \u001B[32m\u0027../../migrations/schema.sql\u0027\u001B[39m)\u001B[33m,\u001B[39m \u001B[32m\u0027utf8\u0027\u001B[39m)\u001B[33m.\u001B[39mreplace(\u001B[35m/^--.*$/gm\u001B[39m\u001B[33m,\u001B[39m \u001B[32m\u0027\u0027\u001B[39m)\u001B[33m;\u001B[39m\u001B[0m\r\n\r\n      at Object.\u003Canonymous\u003E (tests/helpers/db.js:6:53)\r\n      at Object.require (tests/pagination.test.js:3:55)\r\n\r\nFAIL tests/migration.test.js\r\n  \u25CF Test suite failed to run\r\n\r\n    Refusing destructive tests outside a dedicated _test database.\r\n\r\n    \u001B[0m \u001B[90m 4 |\u001B[39m \u001B[36mif\u001B[39m (process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mNODE_ENV\u001B[39m \u001B[33m!==\u001B[39m \u001B[32m\u0027test\u0027\u001B[39m) \u001B[36mthrow\u001B[39m \u001B[36mnew\u001B[39m \u001B[33mError\u001B[39m(\u001B[32m\u0027Integration tests require NODE_ENV=test.\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m 5 |\u001B[39m \u001B[36mconst\u001B[39m database \u001B[33m=\u001B[39m process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m \u001B[33m?\u001B[39m decodeURIComponent(\u001B[36mnew\u001B[39m \u001B[33mURL\u001B[39m(process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m)\u001B[33m.\u001B[39mpathname\u001B[33m.\u001B[39mslice(\u001B[35m1\u001B[39m)) \u001B[33m:\u001B[39m process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDB_NAME\u001B[39m\u001B[33m;\u001B[39m\r\n    \u001B[31m\u001B[1m\u003E\u001B[22m\u001B[39m\u001B[90m 6 |\u001B[39m \u001B[36mif\u001B[39m (\u001B[33m!\u001B[39mdatabase \u001B[33m||\u001B[39m \u001B[33m!\u001B[39mdatabase\u001B[33m.\u001B[39mendsWith(\u001B[32m\u0027_test\u0027\u001B[39m)) \u001B[36mthrow\u001B[39m \u001B[36mnew\u001B[39m \u001B[33mError\u001B[39m(\u001B[32m\u0027Refusing destructive tests outside a dedicated _test database.\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m   |\u001B[39m                                                     \u001B[31m\u001B[1m^\u001B[22m\u001B[39m\r\n     \u001B[90m 7 |\u001B[39m \u001B[36mconst\u001B[39m { pool } \u001B[33m=\u001B[39m require(\u001B[32m\u0027../../config/db\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m 8 |\u001B[39m \u001B[36masync\u001B[39m \u001B[36mfunction\u001B[39m applySchema() {\r\n     \u001B[90m 9 |\u001B[39m   \u001B[36mconst\u001B[39m sql \u001B[33m=\u001B[39m fs\u001B[33m.\u001B[39mreadFileSync(path\u001B[33m.\u001B[39mjoin(__dirname\u001B[33m,\u001B[39m \u001B[32m\u0027../../migrations/schema.sql\u0027\u001B[39m)\u001B[33m,\u001B[39m \u001B[32m\u0027utf8\u0027\u001B[39m)\u001B[33m.\u001B[39mreplace(\u001B[35m/^--.*$/gm\u001B[39m\u001B[33m,\u001B[39m \u001B[32m\u0027\u0027\u001B[39m)\u001B[33m;\u001B[39m\u001B[0m\r\n\r\n      at Object.\u003Canonymous\u003E (tests/helpers/db.js:6:53)\r\n      at Object.require (tests/migration.test.js:6:43)\r\n\r\nFAIL tests/softDelete.test.js\r\n  \u25CF Test suite failed to run\r\n\r\n    Refusing destructive tests outside a dedicated _test database.\r\n\r\n    \u001B[0m \u001B[90m 4 |\u001B[39m \u001B[36mif\u001B[39m (process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mNODE_ENV\u001B[39m \u001B[33m!==\u001B[39m \u001B[32m\u0027test\u0027\u001B[39m) \u001B[36mthrow\u001B[39m \u001B[36mnew\u001B[39m \u001B[33mError\u001B[39m(\u001B[32m\u0027Integration tests require NODE_ENV=test.\u0027\u001B[39m)\u001B[33m;\u001B[39m\r\n     \u001B[90m 5 |\u001B[39m \u001B[36mconst\u001B[39m database \u001B[33m=\u001B[39m process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m \u001B[33m?\u001B[39m decodeURIComponent(\u001B[36mnew\u001B[39m \u001B[33mURL\u001B[39m(process\u001B[33m.\u001B[39menv\u001B[33m.\u001B[39m\u001B[33mDATABASE_URL\u001B[39m)\u001B[33m.\u001B[39mpathname\u001B[33m.\u001B[39mslice(\u001B[35m1\u001B[39m)) \u001B[33m:\u001B[39m process\u001B[33\n\u2026[truncated]",
+        "durationMs": 15762,
+        "testResults": {
+          "testFramework": "jest",
+          "runnerDetectedFrom": "package_json",
+          "testsTotal": 62,
+          "testsPassed": 62,
+          "testsFailed": 0,
+          "testsSkipped": 0,
+          "parseFailed": false
+        }
+      },
+      {
+        "name": "health-endpoint-200",
+        "kind": "http-probe",
+        "verificationMethod": "http-status",
+        "passed": false,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 1,
+        "outputSample": "server exited before responding (exit=1)\n--- server output ---\n\r\n\u003E kalpavruksha-kalyana@1.0.0 start\r\n\u003E node server.js\r\n\r\nnode:events:496\r\n      throw er; // Unhandled \u0027error\u0027 event\r\n      ^\r\n\r\nError: listen EADDRINUSE: address already in use :::3000\r\n    at Server.setupListenHandle [as _listen2] (node:net:1940:16)\r\n    at listenInCluster (node:net:1997:12)\r\n    at Server.listen (node:net:2102:7)\r\n    at Function.listen (C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha\\node_modules\\express\\lib\\application.js:635:24)\r\n    at Object.\u003Canonymous\u003E (C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha\\server.js:7:20)\r\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\r\nEmitted \u0027error\u0027 event on Server instance at:\r\n    at emitErrorNT (node:net:1976:8)\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\r\n  code: \u0027EADDRINUSE\u0027,\r\n  errno: -4091,\r\n  syscall: \u0027listen\u0027,\r\n  address: \u0027::\u0027,\r\n  port: 3000\r\n}\r\n\r\nNode.js v22.18.0\r\n",
+        "durationMs": 3258
+      }
+    ],
+    "executions": [
+      {
+        "source": "lint",
+        "resolvedExecutable": "C:\\nvm4w\\nodejs\\npm.CMD",
+        "args": [
+          "run",
+          "lint"
+        ],
+        "cwd": "C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "hostinger-storage-and-security-tests",
+        "resolvedExecutable": "C:\\nvm4w\\nodejs\\npm.CMD",
+        "args": [
+          "test",
+          "--",
+          "--runInBand",
+          "tests/hostingerStorage.test.js",
+          "tests/security.test.js"
+        ],
+        "cwd": "C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "tests-pass",
+        "resolvedExecutable": "C:\\nvm4w\\nodejs\\npm.CMD",
+        "args": [
+          "test"
+        ],
+        "cwd": "C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "health-endpoint-200",
+        "resolvedExecutable": "C:\\nvm4w\\nodejs\\npm.CMD",
+        "args": [
+          "start"
+        ],
+        "cwd": "C:\\Users\\santhosh.m.b\\Desktop\\kalpavruksha",
+        "env": {
+          "PORT": "3000"
+        },
+        "prependPath": [],
+        "platform": "win32"
+      }
+    ]
+  }
+}

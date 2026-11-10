@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Temporarily Unavailable — Kalpavruksha Kalyana</title>
+  <title><%= t("Temporarily Unavailable — Kalpavruksha Kalyana") %></title>
   <style>
     body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
            font-family: Georgia, 'Times New Roman', serif; background: #fbf4e4; color: #3a2a1c; padding: 24px; }
@@ -17,10 +17,10 @@
 </head>
 <body>
   <div class="box">
-    <h1>We're temporarily unavailable</h1>
-    <p>Something on our end (usually the database) is briefly unreachable.</p>
-    <p>This isn't something wrong on your side — please try again in a few minutes.</p>
-    <a href="/">Try again</a>
+    <h1><%= t("We're temporarily unavailable") %></h1>
+    <p><%= t("Something on our end (usually the database) is briefly unreachable.") %></p>
+    <p><%= t("This isn't something wrong on your side — please try again in a few minutes.") %></p>
+    <a href="/"><%= t("Try again") %></a>
   </div>
 </body>
 </html>

@@ -39,27 +39,32 @@
       <div class="profile-grid">
         <% list.forEach(function(p) { %>
           <div class="profile-card">
-            <div class="photo"><img src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>"></div>
+            <div class="photo"><img loading="lazy" decoding="async" src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>"></div>
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>
               <div class="meta">
-                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= p.caste %></div>
-                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= p.occupation %></div>
+                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= t(p.caste) %></div>
+                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= t(p.occupation) %></div>
               </div>
             </div>
             <div class="actions">
               <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); flex:1;" data-open-profile-id="<%= p.id %>"><%= t('dashboard.viewDetails') %></button>
+              <form action="/profile/<%= p.id %>/<%= tab === 'interested' ? 'withdraw-interest' : 'unsave' %>" method="POST" class="saved-list-remove-action"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-outline-gold profile-card-action profile-remove-action" aria-label="<%= t(tab === 'interested' ? 'Unlike' : 'Unsave') %>" title="<%= t(tab === 'interested' ? 'Unlike' : 'Unsave') %>">
+                  <i class="fa-solid <%= tab === 'interested' ? 'fa-heart-crack' : 'fa-bookmark' %>" aria-hidden="true"></i><span class="profile-action-text"><%= t(tab === 'interested' ? 'Unlike' : 'Unsave') %></span>
+                </button>
+              </form>
               <button
                 type="button"
-                class="btn-whatsapp"
-                data-whatsapp-share
+                class="btn-share"
+                data-profile-share
                 data-share-name="<%= p.full_name %>"
                 data-share-age="<%= p.age %>"
-                data-share-caste="<%= p.caste %>"
-                data-share-occupation="<%= p.occupation %>"
-                aria-label="Share on WhatsApp"
-                title="Share on WhatsApp"
-              ><i class="fa-brands fa-whatsapp"></i></button>
+                data-share-caste="<%= t(p.caste) %>"
+                data-share-occupation="<%= t(p.occupation) %>"
+                aria-label="<%= t("Share profile") %>"
+                title="<%= t("Share profile") %>"
+              ><i class="fa-solid fa-share-nodes"></i></button>
             </div>
           </div>
         <% }) %>
@@ -71,33 +76,11 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box" id="modalBox">
       <div class="modal-close"><button data-close-profile-modal>&times;</button></div>
-      <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
+      <div id="modalContent" style="padding: 0 24px 24px;"><%= t("Loading...") %></div>
     </div>
   </div>
 
   <script nonce="<%= nonce %>">
-    function openProfileModal(id) {
-      const overlay = document.getElementById('modalOverlay');
-      const content = document.getElementById('modalContent');
-      content.innerHTML = 'Loading...';
-      overlay.classList.add('open');
-      fetch('/profile/' + id + '/modal')
-        .then((r) => r.text())
-        .then((html) => { content.innerHTML = html; })
-        .catch(() => { content.innerHTML = '<p>Could not load profile.</p>'; });
-    }
-    function closeProfileModal() {
-      document.getElementById('modalOverlay').classList.remove('open');
-    }
-    document.getElementById('modalOverlay').addEventListener('click', function (e) {
-      if (e.target === this) closeProfileModal();
-    });
-    document.querySelectorAll('[data-open-profile-id]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openProfileModal(btn.getAttribute('data-open-profile-id')); });
-    });
-    document.querySelectorAll('[data-close-profile-modal]').forEach(function (btn) {
-      btn.addEventListener('click', closeProfileModal);
-    });
   </script>
   <%- include('partials/whatsapp-share-script') %>
 

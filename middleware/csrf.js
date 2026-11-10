@@ -13,13 +13,15 @@ const { invalidCsrfTokenError, generateCsrfToken, doubleCsrfProtection } = doubl
   },
   // The app posts forms as application/x-www-form-urlencoded — this is where
   // csrf-csrf looks for the token on incoming requests.
-  getCsrfTokenFromRequest: (req) => req.body._csrf
+  getCsrfTokenFromRequest: (req) => req.body && req.body._csrf
 });
 
 // Generates (or reuses) this request's token and makes it available to every
 // EJS view as `csrfToken`, so `<input type="hidden" name="_csrf" value="<%= csrfToken %>">`
 // works the same way in every form across the app.
 function attachCsrfToken(req, res, next) {
+  // Persist anonymous sessions so tokens stay bound to a stable session ID.
+  req.session.csrfInitialized = true;
   res.locals.csrfToken = generateCsrfToken(req, res);
   next();
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('partials/head') %>
 </head>
@@ -7,146 +7,133 @@
   <%- include('partials/header') %>
 
   <div class="legal-page">
-    <button type="button" class="legal-back" data-legal-back>&larr; Back</button>
-    <h1>Terms of Use</h1>
-    <p class="legal-subtitle">Service Agreement</p>
-    <p class="legal-updated">Last updated: <%= new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+    <button type="button" class="legal-back" data-legal-back><%= t("← Back") %></button>
+    <h1><%= t("Terms of Use") %></h1>
+    <p class="legal-subtitle"><%= t("Service Agreement") %></p>
+    <p class="legal-updated"><%= t("Last updated:") %> <%= new Date().toLocaleDateString(currentLang === 'kn' ? 'kn-IN' : 'en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
 
     <p>
-      By registering on Kalpavruksha Kalyana, you acknowledge and agree to the following terms
-      and conditions. These terms form part of our <a href="/privacy">Privacy Policy</a> and our
-      <a href="/cookie-policy">Cookie Policy</a>. If you do not agree with any part of these terms,
-      please do not use this service.
+      <%= t("By registering on Kalpavruksha Kalyana, you acknowledge and agree to the following terms and conditions. These terms form part of our") %> <a href="/privacy"><%= t("Privacy Policy") %></a> <%= t("and our") %>
+      <a href="/cookie-policy"><%= t("Cookie Policy") %></a><%= t(". If you do not agree with any part of these terms, please do not use this service.") %>
     </p>
 
     <section>
-      <h2>1. Information Accuracy</h2>
+      <h2><%= t("1. Information Accuracy") %></h2>
       <p>
-        All information provided by members, including photographs, personal details, education,
-        occupation, income, religion, caste, horoscope, and family information, is submitted by
-        the respective users.
+        <%= t("All information provided by members, including photographs, personal details, education, occupation, income, religion, caste, horoscope, and family information, is submitted by the respective users.") %>
       </p>
       <p>
-        We do not verify or guarantee the accuracy, authenticity, completeness, or reliability of
-        any information published by members.
+        <%= t("We do not verify or guarantee the accuracy, authenticity, completeness, or reliability of any information published by members.") %>
       </p>
     </section>
 
     <section>
-      <h2>2. User Responsibility</h2>
-      <p>Members are solely responsible for:</p>
+      <h2><%= t("2. User Responsibility") %></h2>
+      <p><%= t("Members are solely responsible for:") %></p>
       <ul class="legal-list">
-        <li>The information they provide.</li>
-        <li>The photographs they upload.</li>
-        <li>Their communication with other members.</li>
-        <li>Independently verifying all details before making any personal or matrimonial decision.</li>
+        <li><%= t("The information they provide.") %></li>
+        <li><%= t("The photographs they upload.") %></li>
+        <li><%= t("Their communication with other members.") %></li>
+        <li><%= t("Independently verifying all details before making any personal or matrimonial decision.") %></li>
       </ul>
     </section>
 
     <section>
-      <h2>3. No Guarantee of Marriage</h2>
+      <h2><%= t("3. No Guarantee of Marriage") %></h2>
       <p>
-        Our platform only provides matchmaking services by connecting registered members. We do not
-        guarantee:
+        <%= t("Our platform only provides matchmaking services by connecting registered members. We do not guarantee:") %>
       </p>
       <ul class="legal-list">
-        <li>Marriage</li>
-        <li>Suitable matches</li>
-        <li>Compatibility</li>
-        <li>Successful relationships</li>
-        <li>Response from other members</li>
+        <li><%= t("Marriage") %></li>
+        <li><%= t("Suitable matches") %></li>
+        <li><%= t("Compatibility") %></li>
+        <li><%= t("Successful relationships") %></li>
+        <li><%= t("Response from other members") %></li>
       </ul>
     </section>
 
     <section>
-      <h2>4. Identity Verification</h2>
+      <h2><%= t("4. Identity Verification") %></h2>
       <p>
-        Although we may provide profile verification features, verification does not guarantee the
-        character, background, intentions, or authenticity of any member.
+        <%= t("Although we may provide profile verification features, verification does not guarantee the character, background, intentions, or authenticity of any member.") %>
       </p>
       <p>
-        Users are advised to conduct their own background checks before proceeding with any
-        relationship or marriage.
+        <%= t("Users are advised to conduct their own background checks before proceeding with any relationship or marriage.") %>
       </p>
     </section>
 
     <section>
-      <h2>5. No Liability</h2>
+      <h2><%= t("5. No Liability") %></h2>
       <p>
-        Kalpavruksha Kalyana, its owners, employees, affiliates, and partners shall not be liable
-        for:
+        <%= t("Kalpavruksha Kalyana, its owners, employees, affiliates, and partners shall not be liable for:") %>
       </p>
       <ul class="legal-list">
-        <li>False or misleading information provided by users</li>
-        <li>Fake or duplicate profiles</li>
-        <li>Misrepresentation of identity</li>
-        <li>Financial loss</li>
-        <li>Emotional distress</li>
-        <li>Marriage disputes</li>
-        <li>Family disputes</li>
-        <li>Divorce or separation</li>
-        <li>Fraud committed by users</li>
-        <li>Any loss arising from interactions between members</li>
+        <li><%= t("False or misleading information provided by users") %></li>
+        <li><%= t("Fake or duplicate profiles") %></li>
+        <li><%= t("Misrepresentation of identity") %></li>
+        <li><%= t("Financial loss") %></li>
+        <li><%= t("Emotional distress") %></li>
+        <li><%= t("Marriage disputes") %></li>
+        <li><%= t("Family disputes") %></li>
+        <li><%= t("Divorce or separation") %></li>
+        <li><%= t("Fraud committed by users") %></li>
+        <li><%= t("Any loss arising from interactions between members") %></li>
       </ul>
-      <p>All interactions are entirely at the user's own risk.</p>
+      <p><%= t("All interactions are entirely at the user's own risk.") %></p>
     </section>
 
     <section>
-      <h2>6. Privacy of Information</h2>
-      <p>Users should exercise caution when sharing personal information.</p>
+      <h2><%= t("6. Privacy of Information") %></h2>
+      <p><%= t("Users should exercise caution when sharing personal information.") %></p>
       <p>
-        We are not responsible for information voluntarily shared by users with other members
-        outside the platform.
+        <%= t("We are not responsible for information voluntarily shared by users with other members outside the platform.") %>
       </p>
     </section>
 
     <section>
-      <h2>7. User Conduct</h2>
-      <p>Members shall not:</p>
+      <h2><%= t("7. User Conduct") %></h2>
+      <p><%= t("Members shall not:") %></p>
       <ul class="legal-list">
-        <li>Create fake profiles.</li>
-        <li>Upload false information.</li>
-        <li>Harass or threaten other members.</li>
-        <li>Misuse contact information.</li>
-        <li>Use the platform for illegal activities.</li>
+        <li><%= t("Create fake profiles.") %></li>
+        <li><%= t("Upload false information.") %></li>
+        <li><%= t("Harass or threaten other members.") %></li>
+        <li><%= t("Misuse contact information.") %></li>
+        <li><%= t("Use the platform for illegal activities.") %></li>
       </ul>
-      <p>Violation of these rules may result in account suspension or permanent removal.</p>
+      <p><%= t("Violation of these rules may result in account suspension or permanent removal.") %></p>
     </section>
 
     <section>
-      <h2>8. Independent Verification</h2>
+      <h2><%= t("8. Independent Verification") %></h2>
       <p>
-        We strongly recommend that members independently verify the following before making any
-        commitment:
+        <%= t("We strongly recommend that members independently verify the following before making any commitment:") %>
       </p>
       <ul class="legal-list">
-        <li>Identity</li>
-        <li>Age</li>
-        <li>Education</li>
-        <li>Employment</li>
-        <li>Income</li>
-        <li>Family background</li>
-        <li>Marital status</li>
-        <li>Health information (where appropriate)</li>
+        <li><%= t("Identity") %></li>
+        <li><%= t("Age") %></li>
+        <li><%= t("Education") %></li>
+        <li><%= t("Employment") %></li>
+        <li><%= t("Income") %></li>
+        <li><%= t("Family background") %></li>
+        <li><%= t("Marital status") %></li>
+        <li><%= t("Health information (where appropriate)") %></li>
       </ul>
     </section>
 
     <section>
-      <h2>9. Limitation of Liability</h2>
+      <h2><%= t("9. Limitation of Liability") %></h2>
       <p>
-        To the maximum extent permitted by applicable law, Kalpavruksha Kalyana shall not be
-        responsible for any direct, indirect, incidental, consequential, or special damages arising
-        from the use of the platform.
+        <%= t("To the maximum extent permitted by applicable law, Kalpavruksha Kalyana shall not be responsible for any direct, indirect, incidental, consequential, or special damages arising from the use of the platform.") %>
       </p>
     </section>
 
     <section>
-      <h2>10. Acceptance</h2>
-      <p>By registering and using our services, you confirm that:</p>
+      <h2><%= t("10. Acceptance") %></h2>
+      <p><%= t("By registering and using our services, you confirm that:") %></p>
       <ul class="legal-list">
-        <li>You have read and understood these Terms.</li>
-        <li>You agree that all matrimonial decisions are your own responsibility.</li>
-        <li>You release Kalpavruksha Kalyana from any liability arising from the use of the platform.</li>
+        <li><%= t("You have read and understood these Terms.") %></li>
+        <li><%= t("You agree that all matrimonial decisions are your own responsibility.") %></li>
+        <li><%= t("You release Kalpavruksha Kalyana from any liability arising from the use of the platform.") %></li>
       </ul>
     </section>
   </div>

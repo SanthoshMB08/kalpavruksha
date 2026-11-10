@@ -3,7 +3,7 @@
 <head>
   <%- include('partials/head') %>
 </head>
-<body>
+<body class="member-dashboard-page">
   <%- include('partials/header') %>
 
   <%
@@ -55,7 +55,7 @@
     }
   %>
 
-  <div class="search-console">
+  <div class="search-console" id="matchSearch">
     <div class="search-console-inner">
       <form id="filterForm" method="GET" action="/dashboard" class="fc-form" autocomplete="off" novalidate>
 
@@ -68,7 +68,7 @@
               name="keyword"
               id="fcKeyword"
               value="<%= filters.keyword || '' %>"
-              placeholder="<%= t('dashboard.searchPlaceholder') %>"
+              placeholder="<%= t('Search...') %>"
               aria-label="<%= t('dashboard.searchPlaceholder') %>">
             <kbd class="fc-kbd" aria-hidden="true">/</kbd>
           </div>
@@ -78,7 +78,7 @@
             <strong><%= isMale ? t('dashboard.bride') : t('dashboard.groom') %></strong>
           </span>
           <button type="submit" class="btn btn-gold fc-submit">
-            <span class="fc-submit-label"><i class="fa-solid fa-magnifying-glass"></i> <%= t('dashboard.search') %></span>
+            <span class="fc-submit-label"><i class="fa-solid fa-magnifying-glass"></i> <span class="fc-submit-text"><%= t('dashboard.search') %></span></span>
             <span class="fc-submit-busy"><span class="fc-spinner" aria-hidden="true"></span> <%= t('dashboard.searching') %></span>
           </button>
         </div>
@@ -88,13 +88,19 @@
              sub-caste is free text on that form, so it is typed here too, with
              the values already in use offered as suggestions. -->
         <details class="fc-controls" id="fcControls" open>
-          <summary class="fc-filter-toggle">
+          <summary class="fc-filter-toggle" aria-label="<%= t('dashboard.filters') %>">
             <i class="fa-solid fa-sliders" aria-hidden="true"></i>
             <span><%= t('dashboard.filters') %></span>
             <% if (chips.length) { %><span class="fc-filter-count"><%= chips.length %></span><% } %>
             <i class="fa-solid fa-chevron-down fc-filter-caret" aria-hidden="true"></i>
           </summary>
-          <div class="fc-grid">
+          <button type="button" class="fc-filter-backdrop" data-close-filters tabindex="-1" aria-hidden="true"></button>
+          <div class="fc-filter-sheet">
+            <div class="fc-sheet-header">
+              <strong><i class="fa-solid fa-sliders" aria-hidden="true"></i> <%= t('dashboard.filters') %></strong>
+              <button type="button" data-close-filters aria-label="<%= t('Close') %>"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div class="fc-grid">
 
           <div class="fc-field<%= filters.religion ? ' is-set' : '' %>">
             <label for="fcReligion"><%= t('dashboard.religion') %></label>
@@ -102,7 +108,7 @@
               <select name="religion" id="fcReligion">
                 <option value=""><%= t('dashboard.anyReligion') %></option>
                 <% religionOptions.forEach(function (o) { %>
-                  <option value="<%= o.value %>" <%= String(filters.religion) === String(o.value) ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= String(filters.religion) === String(o.value) ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
               <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
@@ -162,11 +168,16 @@
               <span class="fc-age-hint"><%= t('dashboard.ageHint') %></span>
             </div>
           </div>
+            </div>
+            <div class="fc-mobile-filter-actions">
+              <a href="/dashboard" class="btn btn-outline-gold"><%= t('dashboard.clearAll') %></a>
+              <button type="submit" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> <%= t('dashboard.search') %></button>
+            </div>
           </div>
         </details>
 
         <!-- Row 3 — what's actually narrowing the results, each one removable -->
-        <div class="fc-foot">
+        <% if (chips.length) { %><div class="fc-foot">
           <div class="fc-chips" id="fcChips">
             <span class="fc-chips-title"><i class="fa-solid fa-filter" aria-hidden="true"></i> <%= t('dashboard.activeFilters') %></span>
             <% if (chips.length === 0) { %>
@@ -182,7 +193,7 @@
             <% }) %>
           </div>
           <a class="fc-reset" href="/dashboard"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <%= t('dashboard.clearAll') %></a>
-        </div>
+        </div><% } %>
       </form>
     </div>
   </div>
@@ -202,17 +213,6 @@
 
     <%- include('partials/flash') %>
 
-    <% if (afterSearchAds && afterSearchAds.length) { %>
-      <div class="search-ad-banner">
-        <div class="eyebrow">Sponsored</div>
-        <% afterSearchAds.forEach(function(ad) { %>
-          <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
-            <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
-          </a>
-        <% }) %>
-      </div>
-    <% } %>
-
     <% if (profiles.length === 0) { %>
       <div class="member-empty-state">
         <span class="member-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
@@ -224,47 +224,65 @@
       </div>
     <% } else { %>
       <div class="profile-grid">
-        <% profiles.forEach(function(p) { %>
+        <% profiles.forEach(function(p) { const state = profileStates[String(p.id)] || {}; %>
           <div class="profile-card">
+            <div class="profile-card-social-head">
+              <span class="profile-card-avatar" aria-hidden="true"><%= p.full_name.charAt(0).toUpperCase() %></span>
+              <span class="profile-card-social-copy"><strong><%= p.full_name %>, <%= p.age %></strong><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> <%= p.city || t(p.occupation) %></span></span>
+            </div>
             <div class="photo">
-              <img src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>">
+              <button type="button" class="profile-photo-open" data-open-profile-id="<%= p.id %>" aria-label="<%= t('dashboard.viewDetails') %>: <%= p.full_name %>">
+                <img loading="lazy" decoding="async" src="<%= fileUrl('profiles', p.image_name) %>" alt="<%= p.full_name %>">
+              </button>
             </div>
             <div class="info">
               <h4><%= p.full_name %>, <%= p.age %></h4>
               <div class="meta">
-                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= p.caste %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
-                <div><strong><%= t('dashboard.fieldLanguage') %></strong> <%= p.language %></div>
-                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= p.occupation %></div>
+                <div><strong><%= t('dashboard.fieldCaste') %></strong> <%= t(p.caste) %> <% if (p.subcaste) { %>(<%= p.subcaste %>)<% } %></div>
+                <div><strong><%= t('dashboard.fieldLanguage') %></strong> <%= t(p.language) %></div>
+                <div><strong><%= t('dashboard.fieldOccupation') %></strong> <%= t(p.occupation) %></div>
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800);" data-open-profile-id="<%= p.id %>"><%= t('dashboard.viewDetails') %></button>
-              <form action="/profile/<%= p.id %>/express-interest" method="POST" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="btn btn-gold" style="width:100%;"><%= t('dashboard.expressInterest') %></button>
+              <button class="btn btn-outline-gold profile-card-action profile-view-action" style="border-color:var(--maroon-800); color:var(--maroon-800);" data-open-profile-id="<%= p.id %>" aria-label="<%= t('dashboard.viewDetails') %>"><i class="fa-regular fa-eye" aria-hidden="true"></i> <span class="profile-action-text"><%= t('dashboard.viewDetails') %></span></button>
+              <form action="/profile/<%= p.id %>/<%= state.is_interested ? 'withdraw-interest' : 'express-interest' %>" method="POST" class="profile-interest-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-gold profile-card-action <%= state.is_interested ? 'is-selected' : '' %>" style="width:100%;" aria-label="<%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %>" aria-pressed="<%= state.is_interested ? 'true' : 'false' %>"><i class="fa-<%= state.is_interested ? 'solid' : 'regular' %> fa-heart" aria-hidden="true"></i> <span class="profile-action-text" data-action-text><%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %></span></button>
+              </form>
+              <form action="/profile/<%= p.id %>/<%= state.is_saved ? 'unsave' : 'save' %>" method="POST" class="profile-save-action"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-outline-gold profile-card-action <%= state.is_saved ? 'is-selected' : '' %>" aria-label="<%= state.is_saved ? t('Unsave') : t('Save') %>" aria-pressed="<%= state.is_saved ? 'true' : 'false' %>"><i class="fa-<%= state.is_saved ? 'solid' : 'regular' %> fa-bookmark" aria-hidden="true"></i> <span class="profile-action-text" data-action-text><%= state.is_saved ? t('Unsave') : t('Save') %></span></button>
               </form>
               <button
                 type="button"
-                class="btn-whatsapp"
-                data-whatsapp-share
+                class="btn-share profile-card-action profile-share-action"
+                data-profile-share
                 data-share-name="<%= p.full_name %>"
                 data-share-age="<%= p.age %>"
-                data-share-caste="<%= p.caste %><%= p.subcaste ? ' (' + p.subcaste + ')' : '' %>"
-                data-share-occupation="<%= p.occupation %>"
-                aria-label="Share on WhatsApp"
-                title="Share on WhatsApp"
-              ><i class="fa-brands fa-whatsapp"></i></button>
+                data-share-caste="<%= t(p.caste) %><%= p.subcaste ? ' (' + p.subcaste + ')' : '' %>"
+                data-share-occupation="<%= t(p.occupation) %>"
+                aria-label="<%= t("Share profile") %>"
+                title="<%= t("Share profile") %>"
+              ><i class="fa-solid fa-share-nodes"></i><span class="profile-action-text"><%= t("Share") %></span></button>
             </div>
           </div>
         <% }) %>
       </div>
       <%- include('partials/pagination', { pageInfo, currentQuery }) %>
     <% } %>
+    <% if (afterSearchAds && afterSearchAds.length) { %>
+      <div class="search-ad-banner">
+        <div class="eyebrow"><%= t("Sponsored") %></div>
+        <% afterSearchAds.forEach(function(ad) { %>
+          <%- include('partials/ad', { ad }) %>
+        <% }) %>
+      </div>
+    <% } %>
+
   </main>
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box" id="modalBox">
       <div class="modal-close"><button data-close-profile-modal>&times;</button></div>
-      <div id="modalContent" style="padding: 0 24px 24px;">Loading...</div>
+      <div id="modalContent" style="padding: 0 24px 24px;"><%= t("Loading...") %></div>
     </div>
   </div>
 
@@ -275,11 +293,21 @@
 
       var filterControls = document.getElementById('fcControls');
       var mobileViewport = window.matchMedia('(max-width: 900px)');
+      function syncFilterSheetState() {
+        document.body.classList.toggle('filter-sheet-open', Boolean(filterControls && filterControls.open && mobileViewport.matches));
+      }
       function syncFilterDisclosure(event) {
         if (filterControls) filterControls.open = !event.matches;
+        syncFilterSheetState();
       }
       syncFilterDisclosure(mobileViewport);
       mobileViewport.addEventListener('change', syncFilterDisclosure);
+      if (filterControls) {
+        filterControls.addEventListener('toggle', syncFilterSheetState);
+        filterControls.querySelectorAll('[data-close-filters]').forEach(function (button) {
+          button.addEventListener('click', function () { filterControls.open = false; });
+        });
+      }
 
       var AGE_MIN = 18;
       var AGE_MAX = 90;
@@ -315,12 +343,12 @@
         sel.innerHTML = '';
         var blank = document.createElement('option');
         blank.value = '';
-        blank.textContent = blankLabel;
+        blank.textContent = window.t(blankLabel);
         sel.appendChild(blank);
         options.forEach(function (v) {
           var o = document.createElement('option');
           o.value = v;
-          o.textContent = v;
+          o.textContent = window.t(v);
           sel.appendChild(o);
         });
         // A value that is no longer on offer can't stay selected.
@@ -379,8 +407,8 @@
         var el = e.target;
 
         if (el === ageMinNum || el === ageMaxNum) { normaliseAges(); return; }
-        if (el === religionSel) { syncCaste(); markSet(religionSel); form.requestSubmit(); return; }
-        if (el === casteSel) { markSet(el); form.requestSubmit(); }
+        if (el === religionSel) { syncCaste(); markSet(religionSel); return; }
+        if (el === casteSel) { markSet(el); }
         if (el === subcasteInput) { el.value.trim() ? markSet(el) : markUnset(el); }
       });
 
@@ -401,11 +429,16 @@
 
       form.addEventListener('submit', function () {
         normaliseAges();
+        document.body.classList.remove('filter-sheet-open');
         form.classList.add('is-busy');
       });
 
       // "/" jumps to the search box, the way every other search page behaves.
       document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && filterControls && filterControls.open && mobileViewport.matches) {
+          filterControls.open = false;
+          return;
+        }
         if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
         var tag = document.activeElement && document.activeElement.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -424,28 +457,6 @@
     })();
 
     // Profile details modal — fetched without disturbing scroll position on the grid
-    function openProfileModal(id) {
-      const overlay = document.getElementById('modalOverlay');
-      const content = document.getElementById('modalContent');
-      content.innerHTML = 'Loading...';
-      overlay.classList.add('open');
-      fetch('/profile/' + id + '/modal')
-        .then((r) => r.text())
-        .then((html) => { content.innerHTML = html; })
-        .catch(() => { content.innerHTML = '<p>Could not load profile.</p>'; });
-    }
-    function closeProfileModal() {
-      document.getElementById('modalOverlay').classList.remove('open');
-    }
-    document.getElementById('modalOverlay').addEventListener('click', function (e) {
-      if (e.target === this) closeProfileModal();
-    });
-    document.querySelectorAll('[data-open-profile-id]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openProfileModal(btn.getAttribute('data-open-profile-id')); });
-    });
-    document.querySelectorAll('[data-close-profile-modal]').forEach(function (btn) {
-      btn.addEventListener('click', closeProfileModal);
-    });
   </script>
   <%- include('partials/searchable-select-script') %>
   <%- include('partials/whatsapp-share-script') %>

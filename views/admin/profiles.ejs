@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -47,8 +47,8 @@
   %>
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
       <div class="panel">
-        <h3><i class="fa-solid fa-address-card"></i> Profiles <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= pageInfo.total %> &middot; all genders)</span></h3>
-        <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;">+ Upload New Profile</a>
+        <h3><i class="fa-solid fa-address-card"></i> <%= t("Profiles") %> <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">(<%= pageInfo.total %> <%= t("&middot; all genders)") %></span></h3>
+        <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold" style="margin-bottom:16px; display:inline-block;"><%= t("+ Upload New Profile") %></a>
 
         <div class="search-console admin-profile-search-console">
           <div class="search-console-inner">
@@ -56,31 +56,31 @@
               <div class="fc-topline">
                 <div class="fc-search">
                   <i class="fa-solid fa-magnifying-glass fc-search-icon" aria-hidden="true"></i>
-                  <input type="search" name="keyword" value="<%= filters.keyword || '' %>" placeholder="Search by name, occupation, or city..." aria-label="Search profiles">
+                  <input type="search" name="keyword" value="<%= filters.keyword || '' %>" placeholder="<%= t("Search by name, occupation, or city...") %>" aria-label="<%= t("Search profiles") %>">
                 </div>
-                <button type="submit" class="btn btn-gold fc-submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</button>
+                <button type="submit" class="btn btn-gold fc-submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> <span class="fc-submit-text"><%= t("Search") %></span></button>
               </div>
 
               <details class="fc-controls admin-profile-filter-controls" id="adminProfileFilterControls" open>
                 <summary class="fc-filter-toggle">
                   <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                  <span>Filters</span>
+                  <span><%= t("Filters") %></span>
                   <% if (activeProfileFilters.length) { %><span class="fc-filter-count"><%= activeProfileFilters.length %></span><% } %>
                   <i class="fa-solid fa-chevron-down fc-filter-caret" aria-hidden="true"></i>
                 </summary>
                 <div class="fc-grid">
                   <div class="fc-field<%= filters.religion ? ' is-set' : '' %>">
-                    <label for="adminReligion">Religion</label>
+                    <label for="adminReligion"><%= t("Religion") %></label>
                     <div class="fc-select">
                       <select id="adminReligion" name="religion">
-                        <option value="">Any religion</option>
-                        <% religionOptions.forEach(function(r) { %><option value="<%= r.value %>" <%= String(filters.religion) === String(r.value) ? 'selected' : '' %>><%= r.label %></option><% }) %>
+                        <option value=""><%= t("Any religion") %></option>
+                        <% religionOptions.forEach(function(r) { %><option value="<%= r.value %>" <%= String(filters.religion) === String(r.value) ? 'selected' : '' %>><%= t(r.label) %></option><% }) %>
                       </select>
                       <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
                     </div>
                   </div>
                   <div class="fc-field<%= filters.caste ? ' is-set' : '' %>">
-                    <label for="adminCaste">Caste</label>
+                    <label for="adminCaste"><%= t("Caste") %></label>
                     <div class="fc-select">
                       <select id="adminCaste" name="caste" <%= selectedCasteOptions.length ? '' : 'disabled' %>>
                         <option value=""><%= filters.religion ? 'Any caste' : 'Choose religion first' %></option>
@@ -90,44 +90,44 @@
                     </div>
                   </div>
                   <div class="fc-field<%= filters.subcaste ? ' is-set' : '' %>">
-                    <label for="adminSubcaste">Sub-caste</label>
+                    <label for="adminSubcaste"><%= t("Sub-caste") %></label>
                     <div class="fc-select">
-                      <input id="adminSubcaste" class="fc-input" type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="Enter sub-caste">
+                      <input id="adminSubcaste" class="fc-input" type="text" name="subcaste" value="<%= filters.subcaste || '' %>" placeholder="<%= t("Enter sub-caste") %>">
                     </div>
                   </div>
                   <div class="fc-field<%= filters.language ? ' is-set' : '' %>">
-                    <label for="adminLanguage">Language</label>
+                    <label for="adminLanguage"><%= t("Language") %></label>
                     <div class="fc-select">
                       <select id="adminLanguage" name="language">
-                        <option value="">Any language</option>
+                        <option value=""><%= t("Any language") %></option>
                         <% languageOptions.forEach(function(l) { %><option value="<%= l %>" <%= String(filters.language) === String(l) ? 'selected' : '' %>><%= l %></option><% }) %>
                       </select>
                       <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
                     </div>
                   </div>
                   <div class="fc-field<%= filters.gender ? ' is-set' : '' %>">
-                    <label for="adminGender">Gender</label>
+                    <label for="adminGender"><%= t("Gender") %></label>
                     <div class="fc-select">
                       <select id="adminGender" name="gender">
-                        <option value="">Any gender</option>
-                        <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Male</option>
-                        <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Female</option>
+                        <option value=""><%= t("Any gender") %></option>
+                        <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>><%= t("Male") %></option>
+                        <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>><%= t("Female") %></option>
                       </select>
                       <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
                     </div>
                   </div>
                   <div class="fc-field<%= filters.maritalStatus ? ' is-set' : '' %>">
-                    <label for="adminMaritalStatus">Marital status</label>
+                    <label for="adminMaritalStatus"><%= t("Marital status") %></label>
                     <div class="fc-select">
                       <select id="adminMaritalStatus" name="maritalStatus">
-                        <option value="">Any status</option>
-                        <% maritalStatusOptions.forEach(function(option) { %><option value="<%= option.value %>" <%= String(filters.maritalStatus) === String(option.value) ? 'selected' : '' %>><%= option.label %></option><% }) %>
+                        <option value=""><%= t("Any status") %></option>
+                        <% maritalStatusOptions.forEach(function(option) { %><option value="<%= option.value %>" <%= String(filters.maritalStatus) === String(option.value) ? 'selected' : '' %>><%= t(option.label) %></option><% }) %>
                       </select>
                       <i class="fa-solid fa-chevron-down fc-caret" aria-hidden="true"></i>
                     </div>
                   </div>
                   <div class="fc-field fc-field-age<%= (filters.minAge || filters.maxAge) ? ' is-set' : '' %>">
-                    <label for="adminMinAge">Age range</label>
+                    <label for="adminMinAge"><%= t("Age range") %></label>
                     <div class="fc-age">
                       <input id="adminMinAge" type="number" name="minAge" min="18" max="90" step="1" inputmode="numeric" placeholder="18" value="<%= filters.minAge || '' %>">
                       <span class="fc-age-dash" aria-hidden="true">&ndash;</span>
@@ -136,70 +136,69 @@
                   </div>
                 </div>
                 <div class="fc-filter-actions">
-                  <a href="<%= adminProfilePath %>" class="btn btn-outline-gold btn-sm admin-profile-clear">Clear all</a>
-                  <button type="submit" class="btn btn-gold btn-sm">Apply filters</button>
+                  <a href="<%= adminProfilePath %>" class="btn btn-outline-gold btn-sm admin-profile-clear"><%= t("Clear all") %></a>
+                  <button type="submit" class="btn btn-gold btn-sm"><%= t("Apply filters") %></button>
                 </div>
               </details>
 
-              <div class="fc-foot">
+              <% if (activeProfileFilters.length) { %><div class="fc-foot">
                 <div class="fc-chips">
-                  <span class="fc-chips-title"><i class="fa-solid fa-filter" aria-hidden="true"></i> Active filters</span>
-                  <% if (activeProfileFilters.length === 0) { %><span class="fc-chips-empty">No filters applied</span><% } %>
+                  <span class="fc-chips-title"><i class="fa-solid fa-filter" aria-hidden="true"></i> <%= t("Active filters") %></span>
+                  <% if (activeProfileFilters.length === 0) { %><span class="fc-chips-empty"><%= t("No filters applied") %></span><% } %>
                   <% activeProfileFilters.forEach(function(filter) { %>
                     <a class="fc-chip" href="<%= withoutAdminProfileFilters(filter.key) %>" title="Remove <%= filter.label %> filter">
                       <span class="fc-chip-label"><%= filter.label %></span>
                       <span class="fc-chip-value"><%= filter.value %></span>
                       <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                      <span class="sr-only">Remove <%= filter.label %> filter</span>
+                      <span class="sr-only"><%= t("Remove") %> <%= filter.label %> <%= t("filter") %></span>
                     </a>
                   <% }) %>
                 </div>
-                <% if (activeProfileFilters.length) { %><a class="fc-reset" href="<%= adminProfilePath %>"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Clear all</a><% } %>
-              </div>
+                <a class="fc-reset" href="<%= adminProfilePath %>"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <%= t("Clear all") %></a>
+              </div><% } %>
             </form>
           </div>
         </div>
 
         <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>Photo</th><th>Name</th><th>Gender</th><th>Caste</th><th>Age</th><th>City</th><th>Status</th><th>Uploaded</th><th>Actions</th></tr></thead>
+          <thead><tr><th><%= t("Photo") %></th><th><%= t("Name") %></th><th><%= t("Gender") %></th><th><%= t("Caste") %></th><th><%= t("Age") %></th><th><%= t("City") %></th><th><%= t("Status") %></th><th><%= t("Uploaded") %></th><th><%= t("Actions") %></th></tr></thead>
           <tbody>
             <% profiles.forEach(function(p) { %>
               <tr>
-                <td data-label="Photo"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb" style="border-radius:8px;"></td>
-                <td data-label="Name"><%= p.full_name %></td>
-                <td data-label="Gender"><%= p.gender === 'male' ? 'Male' : 'Female' %></td>
-                <td data-label="Caste"><%= p.caste %></td>
-                <td data-label="Age"><%= p.age %></td>
-                <td data-label="City"><%= p.city %></td>
-                <td data-label="Status"><span class="badge <%= p.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= p.marital_status === 'married' ? 'Married' : 'Unmarried' %></span></td>
-                <td data-label="Uploaded"><%= new Date(p.created_at).toLocaleDateString('en-IN') %></td>
-                <td data-label="Actions" class="row-actions">
+                <td data-label="<%= t("Photo") %>"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb" style="border-radius:8px;"></td>
+                <td data-label="<%= t("Name") %>"><%= p.full_name %></td>
+                <td data-label="<%= t("Gender") %>"><%= t(p.gender === 'male' ? 'Male' : 'Female') %></td>
+                <td data-label="<%= t("Caste") %>"><%= t(p.caste) %></td>
+                <td data-label="<%= t("Age") %>"><%= p.age %></td>
+                <td data-label="<%= t("City") %>"><%= p.city %></td>
+                <td data-label="<%= t("Status") %>"><span class="badge <%= p.marital_status === 'married' ? 'marital-badge-married' : 'marital-badge-unmarried' %>"><%= t(p.marital_status === 'married' ? 'Married' : 'Unmarried') %></span></td>
+                <td data-label="<%= t("Uploaded") %>"><%= new Date(p.created_at).toLocaleDateString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %></td>
+                <td data-label="<%= t("Actions") %>" class="row-actions">
                   <div class="row-actions-inner">
-                    <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);">View</a>
+                    <a href="/portal/admin-dashboard/profiles/<%= p.id %>" class="btn btn-outline-gold btn-sm" style="border-color:var(--maroon-800); color:var(--maroon-800);"><%= t("View") %></a>
                     <% if (canManage) { %>
-                      <a href="/portal/super-secure-dashboard/profiles/<%= p.id %>/edit" class="btn btn-maroon btn-sm">Edit</a>
-                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" data-confirm="Permanently delete this profile?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                      <a href="/portal/super-secure-dashboard/profiles/<%= p.id %>/edit" class="btn btn-maroon btn-sm"><%= t("Edit") %></a>
+                      <form action="/portal/admin-dashboard/profiles/<%= p.id %>/delete" method="POST" data-confirm="<%= t("Permanently delete this profile?") %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-danger btn-sm" type="submit"><%= t("Delete") %></button>
                       </form>
                     <% } %>
                     <button
                       type="button"
-                      class="btn-whatsapp"
-                      data-whatsapp-share
+                      class="btn-share"
+                      data-profile-share
                       data-share-name="<%= p.full_name %>"
                       data-share-age="<%= p.age %>"
-                      data-share-caste="<%= p.caste %>"
+                      data-share-caste="<%= t(p.caste) %>"
                       data-share-extra="<%= p.city %>"
-                      data-share-link="/portal/admin-dashboard/profiles/<%= p.id %>"
-                      aria-label="Share on WhatsApp"
-                      title="Share on WhatsApp"
-                    ><i class="fa-brands fa-whatsapp"></i></button>
+                      aria-label="<%= t("Share profile") %>"
+                      title="<%= t("Share profile") %>"
+                    ><i class="fa-solid fa-share-nodes"></i></button>
                   </div>
                 </td>
               </tr>
             <% }) %>
-            <% if (profiles.length === 0) { %><tr><td colspan="9" style="text-align:center; color:#a08a6a;">No profiles match these filters.</td></tr><% } %>
+            <% if (profiles.length === 0) { %><tr><td colspan="9" style="text-align:center; color:#a08a6a;"><%= t("No profiles match these filters.") %></td></tr><% } %>
           </tbody>
         </table>
         </div>

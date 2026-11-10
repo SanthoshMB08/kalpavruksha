@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -11,16 +11,16 @@
 
       <div class="panel">
         <h3>
-          <i class="fa-solid fa-heart"></i> Success Stories
-          <span style="font-size:0.75rem; color:#8a7156; font-weight:400;">shown on the public home page <% if (!editable) { %>&mdash; view only, Super Admin edits these<% } %></span>
+          <i class="fa-solid fa-heart"></i> <%= t("Success Stories") %>
+          <span style="font-size:0.75rem; color:#8a7156; font-weight:400;"><%= t("shown on the public home page") %> <% if (!editable) { %><%= t("— view only, Super Admin edits these") %><% } %></span>
           <% if (editable) { %>
             <span class="panel-head-actions">
-              <button type="button" class="btn btn-gold btn-sm" data-open-modal="createStoryModal"><i class="fa-solid fa-plus"></i> Add Success Story</button>
+              <button type="button" class="btn btn-gold btn-sm" data-open-modal="createStoryModal"><i class="fa-solid fa-plus"></i> <%= t("Add Success Story") %></button>
             </span>
           <% } %>
         </h3>
         <% if (stories.length === 0) { %>
-          <div class="empty-state">No success stories yet.</div>
+          <div class="empty-state"><%= t("No success stories yet.") %></div>
         <% } else { %>
           <div class="story-edit-list">
             <% stories.forEach(function(s) { %>
@@ -29,18 +29,18 @@
                   <div>
                     <h4 style="margin-bottom:6px;"><%= s.couple_names %></h4>
                     <p style="color:#6b5638; font-size:0.9rem;">"<%= s.story_text %>"</p>
-                    <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= s.is_active ? 'Visible on home page' : 'Hidden' %></span>
+                    <span class="badge <%= s.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= t(s.is_active ? 'Visible on home page' : 'Hidden') %></span>
                   </div>
                   <% if (editable) { %>
                     <div class="row-menu">
                       <button type="button" class="row-menu-btn" aria-label="Actions for <%= s.couple_names %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                       <div class="row-menu-dropdown">
-                        <button type="button" data-open-modal="editStoryModal-<%= s.id %>"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button type="button" data-open-modal="editStoryModal-<%= s.id %>"><i class="fa-solid fa-pen"></i> <%= t("Edit") %></button>
                         <form action="<%= portalHome %>/stories/<%= s.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit"><i class="fa-solid <%= s.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i> <%= s.is_active ? 'Hide from home page' : 'Show on home page' %></button>
+                          <button type="submit"><i class="fa-solid <%= s.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i> <%= t(s.is_active ? 'Hide from home page' : 'Show on home page') %></button>
                         </form>
-                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" data-confirm="Delete this success story?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
+                        <form action="<%= portalHome %>/stories/<%= s.id %>/delete" method="POST" data-confirm="<%= t("Delete this success story?") %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> <%= t("Delete") %></button>
                         </form>
                       </div>
                     </div>
@@ -49,22 +49,22 @@
                       <div class="modal-box">
                         <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
                         <div style="padding:0 24px 24px;">
-                          <h3 style="margin-bottom:16px;">Edit Success Story</h3>
+                          <h3 style="margin-bottom:16px;"><%= t("Edit Success Story") %></h3>
                           <form class="form-grid" action="<%= portalHome %>/stories/<%= s.id %>/update" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="field">
-                              <label class="form-label">Couple Names</label>
+                              <label class="form-label"><%= t("Couple Names") %></label>
                               <input type="text" name="couple_names" value="<%= s.couple_names %>" required>
                             </div>
                             <div class="field">
-                              <label class="form-label">Display Order</label>
+                              <label class="form-label"><%= t("Display Order") %></label>
                               <input type="number" name="display_order" value="<%= s.display_order %>" min="0">
                             </div>
                             <div class="field full">
-                              <label class="form-label">Story Text</label>
+                              <label class="form-label"><%= t("Story Text") %></label>
                               <textarea name="story_text" rows="3" required><%= s.story_text %></textarea>
                             </div>
                             <div class="field full">
-                              <button type="submit" class="btn btn-maroon">Save Changes</button>
+                              <button type="submit" class="btn btn-maroon"><%= t("Save Changes") %></button>
                             </div>
                           </form>
                         </div>
@@ -83,12 +83,12 @@
         <div class="modal-box">
           <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
           <div style="padding:0 24px 24px;">
-            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-heart"></i> Add New Success Story</h3>
+            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-heart"></i> <%= t("Add New Success Story") %></h3>
             <form class="form-grid" action="<%= portalHome %>/stories" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <div class="field"><label class="form-label">Couple Names</label><input type="text" name="couple_names" placeholder="e.g. Shivaraj &amp; Basavi" required></div>
-              <div class="field"><label class="form-label">Display Order</label><input type="number" name="display_order" value="0" min="0"></div>
-              <div class="field full"><label class="form-label">Story Text</label><textarea name="story_text" rows="3" placeholder="Share a short quote from the couple..." required></textarea></div>
-              <div class="field full"><button type="submit" class="btn btn-gold">Add Success Story</button></div>
+              <div class="field"><label class="form-label"><%= t("Couple Names") %></label><input type="text" name="couple_names" placeholder="<%= t("e.g. Shivaraj & Basavi") %>" required></div>
+              <div class="field"><label class="form-label"><%= t("Display Order") %></label><input type="number" name="display_order" value="0" min="0"></div>
+              <div class="field full"><label class="form-label"><%= t("Story Text") %></label><textarea name="story_text" rows="3" placeholder="<%= t("Share a short quote from the couple...") %>" required></textarea></div>
+              <div class="field full"><button type="submit" class="btn btn-gold"><%= t("Add Success Story") %></button></div>
             </form>
           </div>
         </div>

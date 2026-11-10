@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Remaining scoped follow-up tasks for Kalpavruksha Kalyana.",
+  "tasks": [
+    {
+      "id": "001-validate-repair-pipelines",
+      "type": "transform",
+      "description": "Close remaining CI and validation-pipeline gaps",
+      "reason": "The CI workflow and local UI checker are present, but there is no recorded failing-run context and the UI checker is not currently invoked by CI.",
+      "requirements": "Run the existing lint, Jest, UI, and dependency-audit checks and repair reproducible failures. Ensure the UI check is covered by the appropriate pipeline if it can run reliably there. Preserve the MySQL and MariaDB CI coverage and avoid unrelated application behavior changes.",
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "002-remove-provably-unused-code",
+      "type": "transform",
+      "description": "Remove only demonstrably unused application code",
+      "reason": "The request includes cautious cleanup, while the current worktree contains extensive in-progress changes that must not be disturbed.",
+      "requirements": "Identify unused code only where repository references and static analysis provide clear evidence. Remove only those items, preserve existing behavior and unrelated work, and leave ambiguous candidates untouched with a short explanation.",
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "003-security-dependency-audit",
+      "type": "security",
+      "description": "Resolve actionable dependency CVEs found by the configured audit",
+      "reason": "The existing CI includes a production dependency audit; any actionable findings must be resolved without broadening the modernization scope.",
+      "requirements": "Run the configured dependency audit and remediate confirmed, fixable CVEs to the minimum patched versions. If a fix requires a major upgrade, record the affected dependency and breaking-change risk. Do not perform unrelated security refactoring; verify the build and existing tests after any dependency change.",
+      "dependencies": [
+        "001-validate-repair-pipelines",
+        "002-remove-provably-unused-code"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "kalpavruksha-follow-up",
+    "projectName": "Kalpavruksha Kalyana",
+    "language": "javascript",
+    "createdAt": "2026-11-09T20:21:46+05:30",
+    "version": "1.0"
+  }
+}

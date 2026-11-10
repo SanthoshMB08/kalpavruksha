@@ -1,7 +1,6 @@
 const express = require('express');
 const request = require('supertest');
 const app = require('../app');
-const { pool: appPool } = require('../config/db');
 const { pool, applySchema, resetTables, closePool } = require('./helpers/db');
 const { getCsrfToken, createUser, loginAs } = require('./helpers/auth');
 
@@ -15,7 +14,6 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await closePool();
-  await appPool.end();
 });
 
 describe('Error handler flash fallback', () => {
@@ -45,9 +43,9 @@ describe('CSRF protection', () => {
     const agent = request.agent(app);
     await agent.get('/login'); // establishes the session/CSRF cookie, but we deliberately don't use the token
     const res = await agent.post('/login').type('form').send({ username: 'csrfvictim', password: 'Passw0rd1' });
-    // CSRF failures redirect back with a flash error rather than logging in
-    expect(res.status).toBe(302);
-    expect(res.headers.location).not.toMatch(/dashboard/);
+    // Missing tokens are rejected explicitly before credentials are checked.
+    expect(res.status).toBe(403);
+    expect(res.headers.location).toBeUndefined();
   });
 
   it('accepts a login POST with a valid CSRF token', async () => {
@@ -181,9 +179,9 @@ describe('Account lockout (user + admin only, Super Admin exempt)', () => {
     const token = await getCsrfToken(superAgent, '/portal/admin-dashboard/users');
     await superAgent.post(`/portal/admin-dashboard/users/${member.id}/unlock`).type('form').send({ _csrf: token });
 
-    const result = await pool.query('SELECT locked_until, failed_login_attempts FROM users WHERE id = $1', [member.id]);
-    expect(result.rows[0].locked_until).toBeNull();
-    expect(result.rows[0].failed_login_attempts).toBe(0);
+    const result = await pool.query('SELECT locked_until, failed_login_attempts FROM users WHERE id = ?', [member.id]);
+    expect(result[0][0].locked_until).toBeNull();
+    expect(result[0][0].failed_login_attempts).toBe(0);
 
     const retryAgent = request.agent(app);
     const res = await loginAs(retryAgent, '/login', 'unlockme', 'Passw0rd1');
@@ -202,5 +200,18 @@ describe('Rate limiting', () => {
       lastStatus = res.status;
     }
     expect(lastStatus).toBe(429);
+  });
+});
+
+describe('Member management role boundaries', () => {
+  it('does not let an admin reject a staff account through the member endpoint', async () => {
+    const admin = await createUser(pool, { username: 'roleboundaryadmin', role: 'admin' });
+    const target = await pool.query("SELECT id FROM users WHERE role = 'superadmin'");
+    const agent = request.agent(app);
+    await loginAs(agent, '/portal/admin-login', admin.username, admin.plainPassword);
+    const token = await getCsrfToken(agent, '/portal/admin-dashboard/users');
+    await agent.post('/portal/admin-dashboard/users/' + target[0][0].id + '/reject').type('form').send({ _csrf: token });
+    const result = await pool.query('SELECT status FROM users WHERE id = ?', [target[0][0].id]);
+    expect(result[0][0].status).toBe('approved');
   });
 });

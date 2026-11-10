@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -8,34 +8,34 @@
 
       <div class="panel">
         <h3>
-          <i class="fa-solid fa-shield-halved"></i> Sub-Admin Management
+          <i class="fa-solid fa-shield-halved"></i> <%= t("Sub-Admin Management") %>
           <span class="panel-head-actions">
-            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createAdminModal"><i class="fa-solid fa-plus"></i> Create Sub-Admin</button>
+            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createAdminModal"><i class="fa-solid fa-plus"></i> <%= t("Create Sub-Admin") %></button>
           </span>
         </h3>
         <div class="table-scroll">
         <table class="data-table" style="margin-bottom:20px;">
-          <thead><tr><th>Name</th><th>Username</th><th>Mobile</th><th>Since</th><th>Actions</th></tr></thead>
+          <thead><tr><th><%= t("Name") %></th><th><%= t("Username") %></th><th><%= t("Mobile") %></th><th><%= t("Since") %></th><th><%= t("Actions") %></th></tr></thead>
           <tbody>
             <% admins.forEach(function(a) { %>
               <% const isLocked = a.locked_until && new Date(a.locked_until) > new Date(); %>
               <tr>
-                <td data-label="Name"><%= a.name %> <% if (isLocked) { %><span class="badge badge-rejected" title="Locked until <%= new Date(a.locked_until).toLocaleString('en-IN') %>">Locked</span><% } %></td>
-                <td data-label="Username"><%= a.username %></td>
-                <td data-label="Mobile"><%= a.mobile_number %></td>
-                <td data-label="Since"><%= new Date(a.created_at).toLocaleDateString('en-IN') %></td>
-                <td data-label="Actions" class="row-actions">
+                <td data-label="<%= t("Name") %>"><%= a.name %> <% if (isLocked) { %><span class="badge badge-rejected" title="Locked until <%= new Date(a.locked_until).toLocaleString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %>"><%= t("Locked") %></span><% } %></td>
+                <td data-label="<%= t("Username") %>"><%= a.username %></td>
+                <td data-label="<%= t("Mobile") %>"><%= a.mobile_number %></td>
+                <td data-label="<%= t("Since") %>"><%= new Date(a.created_at).toLocaleDateString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %></td>
+                <td data-label="<%= t("Actions") %>" class="row-actions">
                   <div class="row-menu">
                     <button type="button" class="row-menu-btn" aria-label="Actions for <%= a.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="row-menu-dropdown">
-                      <button type="button" data-open-modal="pwModal-<%= a.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
+                      <button type="button" data-open-modal="pwModal-<%= a.id %>"><i class="fa-solid fa-key"></i> <%= t("Change Password") %></button>
                       <% if (isLocked) { %>
                         <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/unlock" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit"><i class="fa-solid fa-lock-open"></i> Unlock Account</button>
+                          <button type="submit"><i class="fa-solid fa-lock-open"></i> <%= t("Unlock Account") %></button>
                         </form>
                       <% } %>
-                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" data-confirm="Remove this admin account?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Remove</button>
+                      <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/remove" method="POST" data-confirm="<%= t("Remove this admin account?") %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> <%= t("Remove") %></button>
                       </form>
                     </div>
                   </div>
@@ -44,15 +44,15 @@
                     <div class="modal-box modal-narrow">
                       <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
                       <div style="padding:0 24px 24px;">
-                        <h3 style="margin-bottom:4px;">Change Password</h3>
+                        <h3 style="margin-bottom:4px;"><%= t("Change Password") %></h3>
                         <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= a.username %></p>
                         <form action="/portal/super-secure-dashboard/admins/<%= a.id %>/password" method="POST" data-confirm="Reset password for <%= a.username %>?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <div class="field">
-                            <label class="form-label">New Password</label>
+                            <label class="form-label"><%= t("New Password") %></label>
                             <input type="password" name="password" minlength="8" required autofocus>
                           </div>
                           <div class="field" style="margin-top:16px;">
-                            <button type="submit" class="btn btn-maroon btn-block">Update Password</button>
+                            <button type="submit" class="btn btn-maroon btn-block"><%= t("Update Password") %></button>
                           </div>
                         </form>
                       </div>
@@ -61,7 +61,7 @@
                 </td>
               </tr>
             <% }) %>
-            <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;">No sub-admins yet.</td></tr><% } %>
+            <% if (admins.length === 0) { %><tr><td colspan="5" style="text-align:center; color:#a08a6a;"><%= t("No sub-admins yet.") %></td></tr><% } %>
           </tbody>
         </table>
         </div>
@@ -73,16 +73,20 @@
         <div class="modal-box">
           <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
           <div style="padding:0 24px 24px;">
-            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-shield-halved"></i> Create New Sub-Admin</h3>
+            <h3 style="margin-bottom:16px;"><i class="fa-solid fa-shield-halved"></i> <%= t("Create New Sub-Admin") %></h3>
             <% if (formErrors && formErrors.length) { %>
-              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= t(e) %></div><% }) %></div>
             <% } %>
             <form class="form-grid" action="/portal/super-secure-dashboard/admins" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <div class="field"><label class="form-label">Full Name</label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-              <div class="field"><label class="form-label">Mobile Number</label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
-              <div class="field"><label class="form-label">Username</label><input type="text" name="username" value="<%= old.username || '' %>" required></div>
-              <div class="field"><label class="form-label">Password</label><input type="password" name="password" required minlength="8"></div>
-              <div class="field full"><button type="submit" class="btn btn-maroon">Create Sub-Admin</button></div>
+              <div class="field"><label class="form-label"><%= t("Full Name") %></label><input type="text" name="name" value="<%= old.name || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" required></div>
+              <div class="field"><label class="form-label"><%= t("Mobile Number") %></label><input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" required></div>
+              <div class="field"><label class="form-label"><%= t("Username") %></label><input type="text" name="username" value="<%= old.username || '' %>" required></div>
+              <div class="field">
+                <label class="form-label"><%= t("Password") %></label>
+                <input type="password" name="password" data-password-strength-input required minlength="8" autocomplete="new-password">
+                <%- include('../partials/password-strength') %>
+              </div>
+              <div class="field full"><button type="submit" class="btn btn-maroon"><%= t("Create Sub-Admin") %></button></div>
             </form>
           </div>
         </div>

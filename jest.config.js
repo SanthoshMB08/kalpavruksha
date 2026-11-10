@@ -1,7 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
   testTimeout: 15000,
-  // Tests share one Postgres database and truncate tables between files —
+  // Tests share one MySQL database and truncate tables between files —
   // running files in parallel workers would race on shared tables (one
   // file's TRUNCATE wiping data another file is mid-assertion on). This is
   // an integration suite hitting a real DB, not isolated unit tests, so

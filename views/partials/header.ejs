@@ -1,5 +1,5 @@
-<header class="navbar">
-  <a href="/" class="brand">
+<header class="navbar<%= currentUser && currentUser.role === 'user' ? ' member-app-navbar' : '' %>">
+  <a href="<%= currentUser && currentUser.role === 'user' ? '/dashboard' : '/' %>" class="brand">
     <img src="/assets/logo/logo-desktop.png" alt="" class="brand-logo brand-logo-desktop">
     <img src="/assets/logo/logo-mobile.png" alt="" class="brand-logo brand-logo-mobile">
     <span class="brand-name">
@@ -7,7 +7,12 @@
       <span class="brand-name-secondary">Kalyana</span>
     </span>
   </a>
-  <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false"><span class="nav-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span></button>
+  <% if (currentUser && currentUser.role === 'user') { %>
+    <a href="/my-profile" class="member-top-profile" aria-label="<%= t("View your profile") %>">
+      <%= currentUser.name.charAt(0).toUpperCase() %>
+    </a>
+  <% } %>
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="<%= t("Toggle navigation") %>" aria-expanded="false"><span class="nav-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span></button>
   <div class="nav-drawer-overlay" id="navDrawerOverlay"></div>
   <nav id="navLinks">
     <div class="nav-drawer-header">
@@ -15,10 +20,10 @@
         <span class="nav-drawer-brand-mark">✦</span>
         <div>
           <strong>Kalpavruksha</strong>
-          <span>Menu</span>
+          <span><%= t("Menu") %></span>
         </div>
       </div>
-      <button type="button" class="nav-drawer-close" id="navDrawerClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+      <button type="button" class="nav-drawer-close" id="navDrawerClose" aria-label="<%= t("Close menu") %>"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <a href="/#about"><%= t('nav.about') %></a>
     <a href="/#stories"><%= t('nav.successStories') %></a>
@@ -29,12 +34,12 @@
       <a href="/my-profile"><%= t('nav.myProfile') %></a>
     <% } %>
     <div class="nav-actions nav-actions-mobile">
-      <div class="nav-lang-switch" role="group" aria-label="Language">
-        <a href="/lang/en" class="nav-lang-switch-option <%= currentLang === 'en' ? 'active' : '' %>">EN</a>
-        <a href="/lang/kn" class="nav-lang-switch-option <%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
+      <div class="nav-lang-switch" role="group" aria-label="<%= t("Language") %>">
+        <a href="<%= languageUrl('en') %>" lang="en" class="nav-lang-switch-option <%= currentLang === 'en' ? 'active' : '' %>"><%= t("EN") %></a>
+        <a href="<%= languageUrl('kn') %>" lang="kn" class="nav-lang-switch-option <%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
       </div>
       <% if (currentUser) { %>
-        <a href="/my-profile" class="nav-user-chip" aria-label="View your profile">
+        <a href="/my-profile" class="nav-user-chip" aria-label="<%= t("View your profile") %>">
           <span class="nav-user-chip-avatar"><i class="fa-solid fa-user"></i></span>
           <div class="nav-user-chip-meta">
             <span class="nav-user-chip-label"><%= t('nav.hello') %></span>
@@ -42,7 +47,10 @@
           </div>
           <span class="nav-user-chip-action"><%= t('nav.myProfile') %> <i class="fa-solid fa-arrow-right"></i></span>
         </a>
-        <a href="/logout" class="btn btn-outline-gold btn-block"><i class="fa-solid fa-arrow-right-from-bracket"></i> <%= t('nav.logout') %></a>
+        <form action="/logout" method="post" style="display:inline;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-outline-gold btn-block"><i class="fa-solid fa-arrow-right-from-bracket"></i> <%= t('nav.logout') %></button>
+        </form>
       <% } else { %>
         <div class="nav-auth-buttons">
           <a href="/login" class="btn btn-outline-gold btn-block"><%= t('nav.login') %></a>
@@ -53,28 +61,31 @@
   </nav>
   <div class="nav-actions nav-actions-desktop">
     <div class="lang-toggle lang-toggle-desktop">
-      <a href="/lang/en" class="<%= currentLang === 'en' ? 'active' : '' %>">EN</a>
-      <a href="/lang/kn" class="<%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
+      <a href="<%= languageUrl('en') %>" lang="en" class="<%= currentLang === 'en' ? 'active' : '' %>"><%= t("EN") %></a>
+      <a href="<%= languageUrl('kn') %>" lang="kn" class="<%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a>
     </div>
     <% if (currentUser) { %>
-      <a href="/my-profile" class="nav-profile-link" aria-label="View your profile">
+      <a href="/my-profile" class="nav-profile-link" aria-label="<%= t("View your profile") %>">
         <span class="nav-profile-avatar"><i class="fa-solid fa-user"></i></span>
         <span><%= currentUser.name %></span>
       </a>
-      <a href="/logout" class="btn btn-outline-gold btn-sm"><%= t('nav.logout') %></a>
+      <form action="/logout" method="post" style="display:inline;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-outline-gold btn-sm"><%= t('nav.logout') %></button>
+        </form>
     <% } else { %>
       <a href="/login" class="btn btn-outline-gold"><%= t('nav.login') %></a>
       <a href="/register" class="btn btn-gold"><%= t('nav.registerNow') %></a>
     <% } %>
   </div>
 </header>
+<div class="mobile-language" role="group" aria-label="<%= t("Language") %>"><a href="<%= languageUrl('en') %>" lang="en" class="<%= currentLang === 'en' ? 'active' : '' %>">EN</a><a href="<%= languageUrl('kn') %>" lang="kn" class="<%= currentLang === 'kn' ? 'active' : '' %>">ಕನ್ನಡ</a></div>
+<%- include('member-nav') %>
 <% if (typeof topBannerAds !== 'undefined' && topBannerAds && topBannerAds.length) { %>
   <div class="top-banner-ads">
-    <span class="eyebrow">Sponsored</span>
+    <span class="eyebrow"><%= t("Sponsored") %></span>
     <% topBannerAds.forEach(function(ad) { %>
-      <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="top-banner-ad-item">
-        <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>">
-      </a>
+      <%- include('ad', { ad }) %>
     <% }) %>
   </div>
 <% } %>
@@ -92,6 +103,7 @@
       if (overlay) overlay.classList.add('open');
       document.body.classList.add('nav-drawer-locked');
       toggle.setAttribute('aria-expanded', 'true');
+      if (closeBtn) closeBtn.focus();
     }
     function closeDrawer() {
       links.classList.remove('open');
@@ -99,8 +111,19 @@
       if (overlay) overlay.classList.remove('open');
       document.body.classList.remove('nav-drawer-locked');
       toggle.setAttribute('aria-expanded', 'false');
+      toggle.focus();
     }
 
+    document.addEventListener('keydown', function(e) {
+      if (!links.classList.contains('open')) return;
+      if(e.key === 'Escape') closeDrawer();
+      if(e.key === 'Tab') {
+        var controls = Array.from(links.querySelectorAll('a,button')).filter(function(el){return el.getClientRects().length;});
+        var first=controls[0],last=controls[controls.length-1];
+        if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+        if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    });
     toggle.addEventListener('click', function () {
       links.classList.contains('open') ? closeDrawer() : openDrawer();
     });

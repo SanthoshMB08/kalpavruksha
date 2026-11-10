@@ -1,3 +1,4 @@
+const { establishSession, logout } = require('../utils/security');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
@@ -72,20 +73,9 @@ exports.login = async (req, res) => {
       return renderLoginError(result.message);
     }
 
-    req.session.user = {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      role: user.role,
-      status: user.status,
-      gender: user.gender
-    };
-
+    if (user.status === 'rejected') return renderLoginError('Your profile was not approved. Please contact support.');
+    await establishSession(req, user);
     if (user.status === 'pending') return res.redirect('/pending-approval');
-    if (user.status === 'rejected') {
-      req.session.destroy(() => {});
-      return renderLoginError('Your profile was not approved. Please contact support.');
-    }
     return res.redirect('/dashboard');
   } catch (err) {
     req.log.error(err);
@@ -93,11 +83,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/');
-  });
-};
+exports.logout = (req, res, next) => logout(req, res, next, '/');
 
 exports.pendingApproval = (req, res) => {
   res.render('pending-approval', { title: 'Awaiting Approval' });

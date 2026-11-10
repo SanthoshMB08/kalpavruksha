@@ -1,39 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
 <body>
   <%- include('../partials/portal-shell-open', { portal: 'admin', active, title, logoutUrl: '/portal/admin-logout' }) %>
 
-      <div class="stat-cards">
-        <div class="stat-card"><div class="value"><%= pendingTotal %></div><div class="label">Pending Approvals</div></div>
-        <div class="stat-card"><div class="value"><%= totalProfiles %></div><div class="label">Total Profiles</div></div>
-        <div class="stat-card"><div class="value"><%= recentInterests.length %></div><div class="label">Recent Interests</div></div>
+      <section class="dashboard-intro" aria-labelledby="dashboard-heading">
+        <div>
+          <p class="eyebrow"><%= t("Workspace overview") %></p>
+          <h1 id="dashboard-heading"><%= t("Good to see you,") %> <%= currentUser.name %>.</h1>
+          <p><%= t("Review requests, keep profiles current, and stay on top of member activity.") %></p>
+        </div>
+        <a href="/portal/admin-dashboard/profiles/new" class="btn btn-gold dashboard-primary-action"><i class="fa-solid fa-plus" aria-hidden="true"></i> <%= t("New profile") %></a>
+      </section>
+
+      <div class="stat-cards dashboard-metrics" aria-label="<%= t("Dashboard summary") %>">
+        <a href="/portal/admin-dashboard/users" class="stat-card stat-card-action <%= pendingTotal ? 'is-attention' : '' %>">
+          <span class="stat-card-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>
+          <span><span class="value"><%= pendingTotal %></span><span class="label"><%= t("Pending approvals") %></span></span>
+          <i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i>
+        </a>
+        <a href="/portal/admin-dashboard/profiles" class="stat-card stat-card-action">
+          <span class="stat-card-icon"><i class="fa-solid fa-address-card" aria-hidden="true"></i></span>
+          <span><span class="value"><%= totalProfiles %></span><span class="label"><%= t("Published profiles") %></span></span>
+          <i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i>
+        </a>
+        <a href="/portal/admin-dashboard/profiles" class="stat-card stat-card-action">
+          <span class="stat-card-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>
+          <span><span class="value"><%= recentInterests.length %></span><span class="label"><%= t("Recent interests") %></span></span>
+          <i class="fa-solid fa-arrow-right stat-card-arrow" aria-hidden="true"></i>
+        </a>
       </div>
 
-      <div class="panel">
-        <h3><i class="fa-solid fa-hourglass-half"></i> Pending Approvals <span class="panel-head-link"><a href="/portal/admin-dashboard/users">Manage all &rarr;</a></span></h3>
+      <section class="panel dashboard-panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow"><%= t("Needs your attention") %></p><h2><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> <%= t("Pending approvals") %></h2></div>
+          <a href="/portal/admin-dashboard/users" class="text-action"><%= t("View all") %> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
         <% if (pending.length === 0) { %>
-          <div class="empty-state">No pending registrations right now.</div>
+          <div class="empty-state"><%= t("No pending registrations right now.") %></div>
         <% } else { %>
           <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Mobile</th><th>Username</th><th>Registered</th><th>Action</th></tr></thead>
+            <thead><tr><th><%= t("Name") %></th><th><%= t("Mobile") %></th><th><%= t("Username") %></th><th><%= t("Registered") %></th><th><%= t("Action") %></th></tr></thead>
             <tbody>
               <% pending.slice(0, 5).forEach(function(u) { %>
                 <tr>
-                  <td data-label="Name"><%= u.name %></td>
-                  <td data-label="Mobile"><%= u.mobile_number %></td>
-                  <td data-label="Username"><%= u.username %></td>
-                  <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
-                  <td data-label="Action" class="row-actions">
+                  <td data-label="<%= t("Name") %>"><%= u.name %></td>
+                  <td data-label="<%= t("Mobile") %>"><%= u.mobile_number %></td>
+                  <td data-label="<%= t("Username") %>"><%= u.username %></td>
+                  <td data-label="<%= t("Registered") %>"><%= new Date(u.created_at).toLocaleDateString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %></td>
+                  <td data-label="<%= t("Action") %>" class="row-actions">
                     <div class="row-actions-inner">
                       <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn-gold btn-sm" type="submit">Approve</button>
+                        <button class="btn btn-gold btn-sm" type="submit"><%= t("Approve") %></button>
                       </form>
                       <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn-danger btn-sm" type="submit">Deny</button>
+                        <button class="btn btn-danger btn-sm" type="submit"><%= t("Deny") %></button>
                       </form>
                     </div>
                   </td>
@@ -43,17 +67,19 @@
           </table>
           </div>
         <% } %>
-      </div>
+      </section>
 
-      <div class="panel quick-links">
-        <h3>Quick Links</h3>
-        <div class="quick-link-grid">
-          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check"></i> User Approvals &amp; Direct Creation</a>
-          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card"></i> Manage Profiles</a>
-          <a href="/portal/admin-dashboard/profiles/new" class="quick-link-card"><i class="fa-solid fa-plus"></i> Upload New Profile</a>
-          <a href="/portal/admin-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart"></i> Success Stories</a>
+      <section class="panel quick-links dashboard-panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow"><%= t("Shortcuts") %></p><h2><%= t("Common tasks") %></h2></div>
         </div>
-      </div>
+        <div class="quick-link-grid">
+          <a href="/portal/admin-dashboard/users" class="quick-link-card"><i class="fa-solid fa-user-check" aria-hidden="true"></i><span><strong><%= t("Manage members") %></strong><small><%= t("Approve requests or add a member") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/admin-dashboard/profiles" class="quick-link-card"><i class="fa-solid fa-address-card" aria-hidden="true"></i><span><strong><%= t("Browse profiles") %></strong><small><%= t("Search and update profile records") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/admin-dashboard/profiles/new" class="quick-link-card"><i class="fa-solid fa-plus" aria-hidden="true"></i><span><strong><%= t("Create profile") %></strong><small><%= t("Add a new matrimonial profile") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+          <a href="/portal/admin-dashboard/stories" class="quick-link-card"><i class="fa-solid fa-heart" aria-hidden="true"></i><span><strong><%= t("Success stories") %></strong><small><%= t("Review member stories") %></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+        </div>
+      </section>
   <%- include('../partials/portal-shell-close') %>
 </body>
 </html>

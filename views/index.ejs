@@ -30,37 +30,37 @@
 
       <% if (!currentUser) { %>
       <div class="hero-register-card">
-        <h3>Register Free</h3>
-        <div class="subtitle">Find your perfect life partner today</div>
+        <h3><%= t("Register Free") %></h3>
+        <div class="subtitle"><%= t("Find your perfect life partner today") %></div>
         <form action="/register" method="GET">
           <div class="field">
-            <label>Name</label>
-            <input type="text" name="name" placeholder="Enter your name" required>
+            <label><%= t("Name") %></label>
+            <input type="text" name="name" placeholder="<%= t("Enter your name") %>" required>
           </div>
           <div class="field">
-            <label>Mobile Number</label>
-            <input type="text" name="mobile_number" placeholder="10-digit mobile number" pattern="[6-9][0-9]{9}" maxlength="10" required>
+            <label><%= t("Mobile Number") %></label>
+            <input type="text" name="mobile_number" placeholder="<%= t("10-digit mobile number") %>" pattern="[6-9][0-9]{9}" maxlength="10" required>
           </div>
           <div class="field">
-            <label>I am a</label>
+            <label><%= t("I am a") %></label>
             <select name="gender" required>
-              <option value="">Select</option>
-              <option value="male">Groom</option>
-              <option value="female">Bride</option>
+              <option value=""><%= t("Select") %></option>
+              <option value="male"><%= t("Groom") %></option>
+              <option value="female"><%= t("Bride") %></option>
             </select>
           </div>
-          <button type="submit" class="btn btn-gold">Register Free</button>
+          <button type="submit" class="btn btn-gold"><%= t("Register Free") %></button>
         </form>
-        <div class="fine-print">By continuing, you agree to our <a href="/terms" style="color:var(--maroon-800);">Terms of Use</a>, <a href="/privacy" style="color:var(--maroon-800);">Privacy Policy</a> &amp; <a href="/cookie-policy" style="color:var(--maroon-800);">Cookie Policy</a></div>
+        <div class="fine-print"><%= t("By continuing, you agree to our") %> <a href="/terms" style="color:var(--maroon-800);"><%= t("Terms of Use") %></a>, <a href="/privacy" style="color:var(--maroon-800);"><%= t("Privacy Policy") %></a> &amp; <a href="/cookie-policy" style="color:var(--maroon-800);"><%= t("Cookie Policy") %></a></div>
       </div>
       <% } else { %>
       <div class="hero-register-card">
         <h3><%= t('home.ctaFindMatch') %></h3>
-        <div class="subtitle">Welcome back, <%= currentUser.name %></div>
+        <div class="subtitle"><%= t("Welcome back,") %> <%= currentUser.name %></div>
         <a href="/dashboard" class="btn btn-gold" style="display:block; text-align:center; margin-bottom:10px;"><%= t('home.ctaFindMatch') %></a>
         <a href="/saved-profiles" class="btn btn-outline-gold" style="display:block; text-align:center; border-color:var(--maroon-800); color:var(--maroon-800);"><%= t('home.ctaSavedProfiles') %></a>
-        <a href="/my-profile" class="home-profile-link"><i class="fa-solid fa-user"></i> View my profile</a>
-        <p class="home-admin-note">For profile changes, please contact our admin team.</p>
+        <a href="/my-profile" class="home-profile-link"><i class="fa-solid fa-user"></i> <%= t("View my profile") %></a>
+        <p class="home-admin-note"><%= t("For profile changes, please contact our admin team.") %></p>
       </div>
       <% } %>
     </div>
@@ -70,30 +70,30 @@
   <!-- ================= Search + Filter (leads to Register) ================= -->
   <div class="home-search-wrap">
     <form class="home-search-bar" action="/register" method="GET">
-      <div class="home-search-bar-title"><i class="fa-solid fa-magnifying-glass"></i> Search for Your Life Partner</div>
+      <div class="home-search-bar-title"><i class="fa-solid fa-magnifying-glass"></i> <%= t("Search for Your Life Partner") %></div>
       <div class="home-search-grid">
         <div class="field">
-          <label>Looking For</label>
+          <label><%= t("Looking For") %></label>
           <select name="gender">
-            <option value="">Bride / Groom</option>
-            <option value="female">Bride</option>
-            <option value="male">Groom</option>
+            <option value=""><%= t("Bride / Groom") %></option>
+            <option value="female"><%= t("Bride") %></option>
+            <option value="male"><%= t("Groom") %></option>
           </select>
         </div>
         <div class="field">
-          <label>Age From</label>
+          <label><%= t("Age From") %></label>
           <select name="ageFrom">
-            <% for (let a = 18; a <= 60; a++) { %><option value="<%= a %>"><%= a %></option><% } %>
+            <% for (let a = 18; a <= 60; a++) { %><option value="<%= a %>"><%= t(a) %></option><% } %>
           </select>
         </div>
         <div class="field">
-          <label>Age To</label>
+          <label><%= t("Age To") %></label>
           <select name="ageTo">
             <% for (let a = 18; a <= 60; a++) { %><option value="<%= a %>" <%= a === 35 ? 'selected' : '' %>><%= a %></option><% } %>
           </select>
         </div>
         <div class="field">
-          <button type="submit" class="btn btn-gold" style="width:100%;"><i class="fa-solid fa-magnifying-glass"></i> Search Now</button>
+          <button type="submit" class="btn btn-gold" style="width:100%;"><i class="fa-solid fa-magnifying-glass"></i> <%= t("Search Now") %></button>
         </div>
       </div>
     </form>
@@ -101,24 +101,24 @@
 
   <!-- ================= How It Works ================= -->
   <section class="how-it-works">
-    <div class="section-eyebrow">How It Works</div>
-    <h2>Your Journey to Finding the Perfect Life Partner Starts Here</h2>
-    <p>Finding your soulmate should be simple, secure, and meaningful. Our platform connects genuine brides and grooms through verified profiles and smart matching, making your search for a lifelong partner easier than ever.</p>
+    <div class="section-eyebrow"><%= t("How It Works") %></div>
+    <h2><%= t("Your Journey to Finding the Perfect Life Partner Starts Here") %></h2>
+    <p><%= t("Finding your soulmate should be simple, secure, and meaningful. Our platform connects genuine brides and grooms through verified profiles and smart matching, making your search for a lifelong partner easier than ever.") %></p>
     <div class="how-steps">
       <div class="how-step">
         <div class="step-num">1</div>
-        <h3>Create Your Free Profile</h3>
-        <p>Register in just a few minutes by providing your basic details, uploading your photo, and completing your profile.</p>
+        <h3><%= t("Create Your Free Profile") %></h3>
+        <p><%= t("Register in just a few minutes by providing your basic details, uploading your photo, and completing your profile.") %></p>
       </div>
       <div class="how-step">
         <div class="step-num">2</div>
-        <h3>Discover Compatible Matches</h3>
-        <p>Browse verified profiles and receive personalized recommendations based on your preferences, community, education, profession, location, and more.</p>
+        <h3><%= t("Discover Compatible Matches") %></h3>
+        <p><%= t("Browse verified profiles and receive personalized recommendations based on your preferences, community, education, profession, location, and more.") %></p>
       </div>
       <div class="how-step">
         <div class="step-num">3</div>
-        <h3>Express Interest</h3>
-        <p>Send or receive interests from members you like. Start meaningful conversations once both parties show mutual interest.</p>
+        <h3><%= t("Express Interest") %></h3>
+        <p><%= t("Send or receive interests from members you like. Start meaningful conversations once both parties show mutual interest.") %></p>
       </div>
     </div>
   </section>
@@ -127,11 +127,11 @@
   <!-- ================= Meet Our Brides & Grooms ================= -->
   <% if (!currentUser && ((featuredBrides && featuredBrides.length) || (featuredGrooms && featuredGrooms.length))) { %>
   <section class="members-row-section">
-    <div class="section-eyebrow">Recently Joined</div>
-    <h2>Meet Our Brides &amp; Grooms</h2>
+    <div class="section-eyebrow"><%= t("Recently Joined") %></div>
+    <h2><%= t("Meet Our Brides & Grooms") %></h2>
     <% if (featuredGrooms && featuredGrooms.length) { %>
       <div class="members-row-group">
-        <h4><i class="fa-solid fa-user-tie"></i> Grooms</h4>
+        <h4><i class="fa-solid fa-user-tie"></i> <%= t("Grooms") %></h4>
         <div class="members-row">
           <% featuredGrooms.forEach(function(p) { %>
             <div class="member-card">
@@ -145,7 +145,7 @@
     <% } %>
     <% if (featuredBrides && featuredBrides.length) { %>
       <div class="members-row-group">
-        <h4><i class="fa-solid fa-person-dress"></i> Brides</h4>
+        <h4><i class="fa-solid fa-person-dress"></i> <%= t("Brides") %></h4>
         <div class="members-row">
           <% featuredBrides.forEach(function(p) { %>
             <div class="member-card">
@@ -158,7 +158,7 @@
       </div>
     <% } %>
     <div style="text-align:center; margin-top:24px;">
-      <a href="/register" class="btn btn-gold">Register Free to View Full Profiles</a>
+      <a href="/register" class="btn btn-gold"><%= t("Register Free to View Full Profiles") %></a>
     </div>
   </section>
   <% } %>
@@ -166,46 +166,46 @@
   <!-- ================= About Us ================= -->
   <section class="about-section" id="about">
     <div class="about-section-inner">
-      <div class="section-eyebrow">About Us</div>
-      <h2 class="about-title">Connecting Hearts with Trust, Tradition &amp; Guidance</h2>
+      <div class="section-eyebrow"><%= t("About Us") %></div>
+      <h2 class="about-title"><%= t("Connecting Hearts with Trust, Tradition & Guidance") %></h2>
 
-      <p>Welcome to Kalpavruksha Kalyana, a dedicated matrimony platform committed to helping individuals and families find compatible life partners with confidence. Although our matrimony service is newly launched, it is built on a strong foundation of over 20 years of trusted experience in Vedic astrology and spiritual guidance.</p>
-      <p>For more than two decades, we have helped thousands of families through accurate astrological consultations and traditional guidance. Now, we bring that same expertise to the world of matchmaking by combining timeless values with modern technology.</p>
-      <p>We believe that a successful marriage is built on compatibility, mutual respect, shared values, and informed decisions. Our platform offers a secure, user-friendly, and privacy focused environment where genuine brides, grooms, and families can connect and begin their journey toward a happy and fulfilling married life.</p>
+      <p><%= t("Welcome to Kalpavruksha Kalyana, a dedicated matrimony platform committed to helping individuals and families find compatible life partners with confidence. Although our matrimony service is newly launched, it is built on a strong foundation of over 20 years of trusted experience in Vedic astrology and spiritual guidance.") %></p>
+      <p><%= t("For more than two decades, we have helped thousands of families through accurate astrological consultations and traditional guidance. Now, we bring that same expertise to the world of matchmaking by combining timeless values with modern technology.") %></p>
+      <p><%= t("We believe that a successful marriage is built on compatibility, mutual respect, shared values, and informed decisions. Our platform offers a secure, user-friendly, and privacy focused environment where genuine brides, grooms, and families can connect and begin their journey toward a happy and fulfilling married life.") %></p>
 
-      <h3><i class="fa-solid fa-star-and-crescent"></i> Our Expertise</h3>
-      <p>With over 20 years of experience, we specialize in:</p>
+      <h3><i class="fa-solid fa-star-and-crescent"></i> <%= t("Our Expertise") %></h3>
+      <p><%= t("With over 20 years of experience, we specialize in:") %></p>
       <ul class="about-list">
-        <li>Horoscope Preparation &amp; Analysis</li>
-        <li>Naming Ceremony (Namakarana)</li>
-        <li>Vastu Consultation</li>
-        <li>Transit (Gochara) Predictions</li>
-        <li>Complete Vedic Astrology Guidance</li>
-        <li>Marriage Compatibility &amp; Horoscope Matching</li>
-        <li>Personalized Astrological Consultation</li>
+        <li><%= t("Horoscope Preparation & Analysis") %></li>
+        <li><%= t("Naming Ceremony (Namakarana)") %></li>
+        <li><%= t("Vastu Consultation") %></li>
+        <li><%= t("Transit (Gochara) Predictions") %></li>
+        <li><%= t("Complete Vedic Astrology Guidance") %></li>
+        <li><%= t("Marriage Compatibility & Horoscope Matching") %></li>
+        <li><%= t("Personalized Astrological Consultation") %></li>
       </ul>
 
-      <h3><i class="fa-solid fa-award"></i> Why Choose Us?</h3>
+      <h3><i class="fa-solid fa-award"></i> <%= t("Why Choose Us?") %></h3>
       <ul class="about-list">
-        <li>20+ Years of Trusted Astrology Experience</li>
-        <li>Verified Member Profiles</li>
-        <li>Easy Search &amp; Smart Matchmaking</li>
-        <li>Community-Based Matchmaking</li>
-        <li>Transparent &amp; Reliable Services</li>
+        <li><%= t("20+ Years of Trusted Astrology Experience") %></li>
+        <li><%= t("Verified Member Profiles") %></li>
+        <li><%= t("Easy Search & Smart Matchmaking") %></li>
+        <li><%= t("Community-Based Matchmaking") %></li>
+        <li><%= t("Transparent & Reliable Services") %></li>
       </ul>
 
-      <h3><i class="fa-solid fa-bullseye"></i> Our Mission</h3>
-      <p>Our mission is to create meaningful and lasting relationships by combining traditional values, astrological wisdom, and modern matchmaking technology. We strive to help every individual and family find a compatible life partner in a safe, trustworthy, and respectful environment.</p>
+      <h3><i class="fa-solid fa-bullseye"></i> <%= t("Our Mission") %></h3>
+      <p><%= t("Our mission is to create meaningful and lasting relationships by combining traditional values, astrological wisdom, and modern matchmaking technology. We strive to help every individual and family find a compatible life partner in a safe, trustworthy, and respectful environment.") %></p>
 
-      <h3><i class="fa-solid fa-eye"></i> Our Vision</h3>
-      <p>To become one of the most trusted matrimony platforms, known for authenticity, personalized service, and a commitment to helping people build lifelong relationships based on trust, compatibility, and shared values.</p>
+      <h3><i class="fa-solid fa-eye"></i> <%= t("Our Vision") %></h3>
+      <p><%= t("To become one of the most trusted matrimony platforms, known for authenticity, personalized service, and a commitment to helping people build lifelong relationships based on trust, compatibility, and shared values.") %></p>
 
-      <h3><i class="fa-solid fa-heart"></i> Begin Your Journey Today</h3>
-      <p>Whether you're searching for your soulmate or seeking trusted astrological guidance before marriage, we're here to support you every step of the way. Join Kalpavruksha Kalyana and take the first step toward a happy and meaningful future.</p>
+      <h3><i class="fa-solid fa-heart"></i> <%= t("Begin Your Journey Today") %></h3>
+      <p><%= t("Whether you're searching for your soulmate or seeking trusted astrological guidance before marriage, we're here to support you every step of the way. Join Kalpavruksha Kalyana and take the first step toward a happy and meaningful future.") %></p>
 
       <div class="about-quote">
-        "We understand that marriage is more than a union of two individuals. It's the coming together of two families. Our platform is dedicated to helping you find a compatible life partner through a secure, reliable, and trusted matchmaking experience."
-        <span class="signature">— Sri Markandayya Mahamunigalu</span>
+        <%= t("\"We understand that marriage is more than a union of two individuals. It's the coming together of two families. Our platform is dedicated to helping you find a compatible life partner through a secure, reliable, and trusted matchmaking experience.\"") %>
+        <span class="signature"><%= t("— Sri Markandayya Mahamunigalu") %></span>
       </div>
     </div>
   </section>
@@ -215,13 +215,11 @@
     <% if (sidebarAds && sidebarAds.length) { %>
     <section class="split-grid">
       <div class="ads-corner">
-        <div class="eyebrow">Sponsored</div>
-        <h3>Auspicious Ads Corner</h3>
+        <div class="eyebrow"><%= t("Sponsored") %></div>
+        <h3><%= t("Auspicious Ads Corner") %></h3>
         <% sidebarAds.forEach(function(ad) { %>
           <div class="ad-slot">
-            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener">
-              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
-            </a>
+            <%- include('partials/ad', { ad }) %>
           </div>
         <% }) %>
       </div>
@@ -240,18 +238,16 @@
           <% }) %>
         </div>
       <% } else { %>
-        <div class="empty-state">Success stories will appear here soon.</div>
+        <div class="empty-state"><%= t("Success stories will appear here soon.") %></div>
       <% } %>
     </section>
 
     <% if (midAds && midAds.length) { %>
       <section class="home-ad-banner">
-        <div class="eyebrow">Sponsored</div>
+        <div class="eyebrow"><%= t("Sponsored") %></div>
         <div class="home-ad-banner-row">
           <% midAds.forEach(function(ad) { %>
-            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
-            </a>
+            <%- include('partials/ad', { ad }) %>
           <% }) %>
         </div>
       </section>
@@ -260,27 +256,27 @@
     <section class="contact-section" id="contact">
       <div class="contact-section-inner">
         <div class="contact-heading">
-          <p class="section-eyebrow">We’re here to help</p>
+          <p class="section-eyebrow"><%= t("We’re here to help") %></p>
           <h2><%= t('home.contactTitle') %></h2>
-          <p>Have a question about registration or verification? Send us a note, and our team will be happy to help.</p>
+          <p><%= t("Have a question about registration or verification? Send us a note, and our team will be happy to help.") %></p>
         </div>
 
         <div class="contact-layout">
           <form class="contact-form" action="/contact" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="field">
-              <label for="contact-name">Name</label>
+              <label for="contact-name"><%= t("Name") %></label>
               <input id="contact-name" type="text" name="name" autocomplete="name" required>
             </div>
             <div class="field">
-              <label for="contact-mobile">Mobile Number</label>
+              <label for="contact-mobile"><%= t("Mobile Number") %></label>
               <input id="contact-mobile" type="tel" name="mobile" autocomplete="tel" required>
             </div>
             <div class="field contact-message-field">
-              <label for="contact-message">How can we help?</label>
-              <textarea id="contact-message" name="message" rows="5" placeholder="Write your message here" required></textarea>
+              <label for="contact-message"><%= t("How can we help?") %></label>
+              <textarea id="contact-message" name="message" rows="5" placeholder="<%= t("Write your message here") %>" required></textarea>
             </div>
-            <button type="submit" class="btn btn-gold contact-submit"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Send Message</button>
+            <button type="submit" class="btn btn-gold contact-submit"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> <%= t("Send Message") %></button>
           </form>
 
           <aside class="contact-info-card">
@@ -288,21 +284,21 @@
               <span class="contact-info-icon"><i class="fa-solid fa-hands-praying" aria-hidden="true"></i></span>
               <div>
                 <p class="contact-info-eyebrow">Kalpavruksha Kalyana</p>
-                <h3>Speak with our team</h3>
+                <h3><%= t("Speak with our team") %></h3>
               </div>
             </div>
-            <p class="contact-info-copy">Prefer to get in touch directly? We’re here to help with registration and profile verification.</p>
+            <p class="contact-info-copy"><%= t("Prefer to get in touch directly? We’re here to help with registration and profile verification.") %></p>
             <a class="contact-info-link" href="tel:+918012345678">
               <span class="contact-info-link-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span>
-              <span><small>Admin desk</small><strong>+91 80123 45678</strong></span>
+              <span><small><%= t("Admin desk") %></small><strong>+91 80123 45678</strong></span>
               <i class="fa-solid fa-arrow-up-right-from-square contact-info-arrow" aria-hidden="true"></i>
             </a>
             <a class="contact-info-link" href="https://wa.me/918012345678" target="_blank" rel="noopener">
               <span class="contact-info-link-icon"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
-              <span><small>WhatsApp support</small><strong>Message our team</strong></span>
+              <span><small><%= t("WhatsApp support") %></small><strong><%= t("Message our team") %></strong></span>
               <i class="fa-solid fa-arrow-up-right-from-square contact-info-arrow" aria-hidden="true"></i>
             </a>
-            <div class="contact-info-note"><i class="fa-solid fa-heart" aria-hidden="true"></i> We’ll be glad to guide you through the next step.</div>
+            <div class="contact-info-note"><i class="fa-solid fa-heart" aria-hidden="true"></i> <%= t("We’ll be glad to guide you through the next step.") %></div>
           </aside>
         </div>
       </div>
@@ -310,12 +306,10 @@
 
     <% if (bottomAds && bottomAds.length) { %>
       <section class="home-ad-banner home-ad-banner-bottom">
-        <div class="eyebrow">Sponsored</div>
+        <div class="eyebrow"><%= t("Sponsored") %></div>
         <div class="home-ad-banner-row">
           <% bottomAds.forEach(function(ad) { %>
-            <a href="<%= ad.target_url || '#' %>" target="_blank" rel="noopener" class="home-ad-banner-item">
-              <img src="<%= fileUrl('ads', ad.image_name) %>" alt="<%= ad.ad_title %>" loading="lazy">
-            </a>
+            <%- include('partials/ad', { ad }) %>
           <% }) %>
         </div>
       </section>

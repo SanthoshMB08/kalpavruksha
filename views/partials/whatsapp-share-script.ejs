@@ -1,24 +1,71 @@
 <script nonce="<%= nonce %>">
-document.addEventListener('click', function (e) {
-  var btn = e.target.closest('[data-whatsapp-share]');
-  if (!btn) return;
+(function () {
+  var shareSheet;
+  var activeButton;
 
-  var name = btn.getAttribute('data-share-name') || '';
-  var age = btn.getAttribute('data-share-age') || '';
-  var caste = btn.getAttribute('data-share-caste') || '';
-  var occupation = btn.getAttribute('data-share-occupation') || '';
-  var extra = btn.getAttribute('data-share-extra') || '';
-  var rawLink = btn.getAttribute('data-share-link');
-  var link = rawLink ? new URL(rawLink, window.location.origin).href : window.location.origin;
+  function profileSummary(button) {
+    var name = button.getAttribute('data-share-name') || window.t("Matrimony profile");
+    var age = button.getAttribute('data-share-age') || '';
+    var caste = button.getAttribute('data-share-caste') || '';
+    var occupation = button.getAttribute('data-share-occupation') || '';
+    var extra = button.getAttribute('data-share-extra') || '';
+    var lines = [name + (age ? ', ' + age + ' ' + window.t('years') : '')];
+    if (caste) lines.push(window.t(caste));
+    if (occupation) lines.push(window.t(occupation));
+    if (extra) lines.push(extra);
+    lines.push('', window.t("Shared via Kalpavruksha Kalyana"));
+    return lines.join('\n');
+  }
 
-  var lines = [name + (age ? ', ' + age + ' yrs' : '')];
-  if (caste) lines.push(caste);
-  if (occupation) lines.push(occupation);
-  if (extra) lines.push(extra);
-  lines.push('');
-  lines.push('View more: ' + link);
+  function announce(message) { document.getElementById('shareStatus').textContent = message; }
+  function closeSheet() { shareSheet.hidden = true; if (activeButton) activeButton.focus(); }
+  function openSheet(button) { activeButton = button; shareSheet.hidden = false; shareSheet.querySelector('[data-share-action="native"]').focus(); }
 
-  var url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
-  window.open(url, '_blank', 'noopener');
-});
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    var area = document.createElement('textarea');
+    area.value = text; area.setAttribute('readonly', ''); area.style.position = 'fixed'; area.style.opacity = '0';
+    document.body.appendChild(area); area.select();
+    try { document.execCommand('copy'); } finally { area.remove(); }
+    return Promise.resolve();
+  }
+
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-profile-share]');
+    if (trigger) { openSheet(trigger); return; }
+    if (!shareSheet || shareSheet.hidden) return;
+    if (e.target === shareSheet || e.target.closest('[data-close-share]')) { closeSheet(); return; }
+    var action = e.target.closest('[data-share-action]');
+    if (!action || !activeButton) return;
+    var text = profileSummary(activeButton);
+    var type = action.getAttribute('data-share-action');
+    if (type === 'native') {
+      if (navigator.share) navigator.share({ title: window.t("Kalpavruksha Kalyana profile"), text: text }).catch(function () {});
+      else copyText(text).then(function () { announce(window.t("Profile summary copied.")); });
+      return;
+    }
+    if (type === 'whatsapp') {
+      var popup = window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+      if (popup) popup.opener = null;
+    }
+    if (type === 'copy') copyText(text).then(function () { announce(window.t("Profile summary copied.")); }).catch(function () { announce(window.t("Could not copy the profile summary.")); });
+    closeSheet();
+  });
+
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && shareSheet && !shareSheet.hidden) closeSheet(); });
+  document.addEventListener('DOMContentLoaded', function () { shareSheet = document.getElementById('profileShareSheet'); });
+})();
 </script>
+
+<div class="share-sheet-backdrop" id="profileShareSheet" hidden role="dialog" aria-modal="true" aria-labelledby="shareSheetTitle">
+  <div class="share-sheet">
+    <div class="share-sheet-header"><div><p class="eyebrow"><%= t("Privacy-first sharing") %></p><h2 id="shareSheetTitle"><%= t("Share profile summary") %></h2></div><button type="button" class="share-sheet-close" data-close-share aria-label="<%= t("Close share options") %>"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+    <p class="share-sheet-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> <%= t("Contact details, documents, and portal links stay private.") %></p>
+    <div class="share-sheet-actions">
+      <button type="button" data-share-action="native"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span><%= t("More options") %><small><%= t("Use your device’s share menu") %></small></span></button>
+      <button type="button" data-share-action="whatsapp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span><%= t("WhatsApp") %><small><%= t("Send a profile summary") %></small></span></button>
+      <button type="button" data-share-action="copy"><i class="fa-regular fa-copy" aria-hidden="true"></i><span><%= t("Copy summary") %><small><%= t("Paste it where you choose") %></small></span></button>
+    </div>
+    <p id="shareStatus" class="sr-only" aria-live="polite"></p>
+  </div>
+</div>

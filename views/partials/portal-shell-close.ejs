@@ -1,3 +1,10 @@
+<nav class="portal-bottom-nav" aria-label="<%= t('Staff navigation') %>">
+<a href="<%= currentUser.role === 'superadmin' ? '/portal/super-secure-dashboard' : '/portal/admin-dashboard' %>" class="<%= active === 'overview' ? 'active' : '' %>"><i class="fa-solid fa-house" aria-hidden="true"></i><span><%= t('Overview') %></span></a>
+<a href="/portal/admin-dashboard/users" class="<%= active === 'users' ? 'active' : '' %>"><i class="fa-solid fa-users" aria-hidden="true"></i><span><%= t('Members') %></span></a>
+<% if(currentUser.role !== 'superadmin') { %><a href="/portal/admin-dashboard/profiles/new" class="portal-nav-create"><i class="fa-solid fa-plus" aria-hidden="true"></i><span><%= t('New') %></span></a><% } %>
+<a href="/portal/admin-dashboard/profiles" class="<%= active === 'profiles' ? 'active' : '' %>"><i class="fa-solid fa-address-card" aria-hidden="true"></i><span><%= t('Profiles') %></span></a>
+<% if(currentUser.role === 'superadmin') { %><a href="/portal/super-secure-dashboard/ads" class="<%= active === 'ads' ? 'active' : '' %>"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i><span><%= t('Ads') %></span></a><% } %>
+<button type="button" data-portal-menu aria-expanded="false"><i class="fa-solid fa-bars" aria-hidden="true"></i><span><%= t('More') %></span></button></nav>
     </div>
   </div>
 </div>
@@ -39,11 +46,11 @@
     var el = document.createElement('a');
     el.className = 'notif-item';
     el.href = '/portal/admin-dashboard/profiles/' + item.profileId;
-    var when = new Date(item.createdAt).toLocaleString('en-IN');
+    var when = window.formatLocalDate(item.createdAt);
     el.innerHTML =
-      '<strong>' + escapeHtml(item.userName) + '</strong> is interested in ' +
+      '<strong>' + escapeHtml(item.userName) + '</strong> '+window.t('is interested in')+' ' +
       '<span>' + escapeHtml(item.profileName) + '</span>' +
-      ' &mdash; Call: ' + escapeHtml(item.userMobile) +
+      ' &mdash; '+window.t('Call')+': ' + escapeHtml(item.userMobile) +
       '<span class="notif-time">' + when + '</span>';
     return el;
   }
@@ -53,7 +60,7 @@
     isLoading = true;
     if (loading) loading.hidden = false;
     fetch('/portal/admin-dashboard/activity?offset=' + offset + '&limit=' + limit)
-      .then(function (r) { return r.json(); })
+      .then(function (r) { if (!r.ok || r.redirected) throw new Error(); return r.json(); })
       .then(function (data) {
         loadedOnce = true;
         (data.items || []).forEach(function (item) { list.appendChild(renderItem(item)); });
@@ -70,7 +77,7 @@
         if (empty) empty.hidden = list.children.length > 0;
       })
       .catch(function () {
-        if (empty) { empty.hidden = false; empty.textContent = 'Could not load activity.'; }
+        if (empty) { empty.hidden = false; empty.textContent = window.t('Could not load activity.'); }
       })
       .finally(function () {
         isLoading = false;

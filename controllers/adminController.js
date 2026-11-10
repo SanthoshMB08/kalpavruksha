@@ -1,3 +1,5 @@
+const db = require('../config/db');
+const { establishSession, logout, validPassword, PASSWORD_MESSAGE } = require('../utils/security');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
@@ -16,7 +18,7 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findByUsername(username);
-    if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+    if (!user || user.status !== 'approved' || (user.role !== 'admin' && user.role !== 'superadmin')) {
       return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials.' });
     }
 
@@ -35,13 +37,7 @@ exports.login = async (req, res) => {
       }
     }
 
-    req.session.user = {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      role: user.role,
-      status: user.status
-    };
+    await establishSession(req, user);
 
     if (user.role === 'superadmin') return res.redirect('/portal/super-secure-dashboard');
     return res.redirect('/portal/admin-dashboard');
@@ -51,9 +47,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
-  req.session.destroy(() => res.redirect('/portal/admin-login'));
-};
+exports.logout = (req, res, next) => logout(req, res, next, '/portal/admin-login');
 
 // --- Overview page: at-a-glance stats + recent activity only ---
 exports.dashboard = async (req, res) => {
@@ -111,6 +105,7 @@ exports.userManagement = async (req, res) => {
       pendingPageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
       members: [],
       pageInfo: { page: 1, perPage: 24, total: 0, totalPages: 1 },
+      currentQuery: req.query,
       formErrors: [],
       old: {}
     });
@@ -118,14 +113,14 @@ exports.userManagement = async (req, res) => {
 };
 
 exports.approveUser = async (req, res) => {
-  await User.updateStatus(req.params.id, 'approved');
-  req.flash('success', 'User approved.');
+  const updated = await User.updateStatus(req.params.id, 'approved');
+  req.flash(updated ? 'success' : 'error', updated ? 'User approved.' : 'Only active member accounts can be approved here.');
   res.redirect('/portal/admin-dashboard/users');
 };
 
 exports.rejectUser = async (req, res) => {
-  await User.updateStatus(req.params.id, 'rejected');
-  req.flash('success', 'User denied.');
+  const updated = await User.updateStatus(req.params.id, 'rejected');
+  req.flash(updated ? 'success' : 'error', updated ? 'User denied.' : 'Only active member accounts can be rejected here.');
   res.redirect('/portal/admin-dashboard/users');
 };
 
@@ -144,6 +139,7 @@ exports.createUserDirect = async (req, res) => {
       pendingPageInfo: pendingResult,
       members: membersResult.rows,
       pageInfo: membersResult,
+      currentQuery: req.query,
       formErrors: errors.array().map((e) => e.msg),
       old: { name, mobile_number, username, gender }
     });
@@ -168,8 +164,8 @@ exports.createUserDirect = async (req, res) => {
 // Admin can reset a member's (role='user') password.
 exports.changeUserPassword = async (req, res) => {
   const { password } = req.body;
-  if (!password || password.length < 8) {
-    req.flash('error', 'Password must be at least 8 characters.');
+  if (!validPassword(password)) {
+    req.flash('error', PASSWORD_MESSAGE);
     return res.redirect('/portal/admin-dashboard/users');
   }
   try {
@@ -355,16 +351,17 @@ exports.createProfile = async (req, res) => {
     // Every profile is linked to a login account. Re-check the phone number
     // here rather than trusting whatever the check-mobile AJAX call told the
     // browser earlier — the client could have tampered with a hidden field.
+    let linkedExisting = false;
+    await db.transaction(async () => {
     const existingUser = await User.findByMobile(req.body.phone_number);
     let userId;
-    let linkedExisting = false;
     if (existingUser && existingUser.role === 'user') {
       userId = existingUser.id;
       linkedExisting = true;
     } else {
       const password = req.body.password || '';
       const confirmPassword = req.body.confirm_password || '';
-      const passwordOk = password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+      const passwordOk = validPassword(password);
       if (!passwordOk) {
         return res.render('admin/profile-form', {
           title: 'Upload New Profile',
@@ -410,6 +407,9 @@ exports.createProfile = async (req, res) => {
       created_by: req.session.user.id
     });
 
+    });
+    if (res.headersSent) return;
+
     req.flash('success', linkedExisting ? 'Profile uploaded and linked to the existing account.' : 'Profile uploaded and a new member account was created.');
     res.redirect('/portal/admin-dashboard/profiles');
   } catch (err) {
@@ -454,7 +454,11 @@ exports.updateProfilePhotos = async (req, res) => {
 // Admin capability: mark a profile Married / Unmarried. Married profiles stop
 // appearing to members immediately (enforced in Profile.search()).
 exports.updateMaritalStatus = async (req, res) => {
-  const status = req.body.marital_status === 'married' ? 'married' : 'unmarried';
+  const status = req.body.marital_status === 'unmarried' ? 'never_married' : req.body.marital_status;
+  if (!profileOptions.MARITAL_STATUS_OPTIONS.some(option => option.value === status)) {
+    req.flash('error','Marital status is invalid.');
+    return res.redirect('/portal/admin-dashboard/profiles/' + req.params.id);
+  }
   await Profile.updateFields(req.params.id, { marital_status: status });
   req.flash('success', `Profile marked as ${status}.`);
   res.redirect(`/portal/admin-dashboard/profiles/${req.params.id}`);

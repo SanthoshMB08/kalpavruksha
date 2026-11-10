@@ -1,118 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <%- include('../partials/head') %>
-</head>
+<html lang="<%= currentLang %>">
+<head><%- include('../partials/head') %></head>
 <body>
-  <% const placementLabels = {
-       top_banner: 'Top Banner',
-       sidebar: 'Home Sidebar',
-       home_middle: 'Home — Middle Section',
-       home_bottom: 'Home — Bottom Section',
-       after_search: 'After Search Results'
-     }; %>
-  <%- include('../partials/portal-shell-open', { portal: 'superadmin', active, title, logoutUrl: '/portal/super-secure-logout' }) %>
-
-      <div class="panel">
-        <h3>
-          <i class="fa-solid fa-bullhorn"></i> Sponsorship Hub (Ad Manager)
-          <span class="panel-head-actions">
-            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createAdModal"><i class="fa-solid fa-plus"></i> Upload Ad</button>
-          </span>
-        </h3>
-        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;">Each location below is a single slot — uploading or activating a new ad for a location automatically retires whichever ad was live there. Every ad also expires on its own and switches to Inactive by itself once its time is up.</p>
-        <div class="table-scroll">
-        <table class="data-table" style="margin-bottom:20px;">
-          <thead><tr><th>Preview</th><th>Title</th><th>Placement</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            <% ads.forEach(function(ad) {
-                 const expired = ad.expires_at && new Date(ad.expires_at) <= new Date();
-            %>
-              <tr>
-                <td data-label="Preview"><img src="<%= fileUrl('ads', ad.image_name) %>" class="ad-thumb" alt="<%= ad.ad_title %>"></td>
-                <td data-label="Title"><%= ad.ad_title %></td>
-                <td data-label="Placement"><%= placementLabels[ad.placement] || ad.placement %></td>
-                <td data-label="Expires"><%= ad.expires_at ? new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %><% if (expired) { %> <span class="badge badge-rejected">Expired</span><% } %></td>
-                <td data-label="Status"><span class="badge <%= ad.is_active ? 'badge-approved' : 'badge-rejected' %>"><%= ad.is_active ? 'Active' : 'Inactive' %></span></td>
-                <td data-label="Actions" class="row-actions">
-                  <div class="row-menu">
-                    <button type="button" class="row-menu-btn" aria-label="Actions for <%= ad.ad_title %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                    <div class="row-menu-dropdown">
-                      <% if (ad.is_active) { %>
-                        <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit"><i class="fa-solid fa-toggle-off"></i> Deactivate</button>
-                        </form>
-                      <% } else if (expired) { %>
-                        <button type="button" data-open-modal="reactivateModal-<%= ad.id %>"><i class="fa-solid fa-toggle-on"></i> Activate</button>
-                      <% } else { %>
-                        <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit"><i class="fa-solid fa-toggle-on"></i> Activate</button>
-                        </form>
-                      <% } %>
-                      <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="POST" data-confirm="Delete this ad?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button type="submit" class="danger"><i class="fa-solid fa-trash"></i> Delete</button>
-                      </form>
-                    </div>
-                  </div>
-
-                  <% if (!ad.is_active && expired) { %>
-                    <div class="modal-overlay" id="reactivateModal-<%= ad.id %>">
-                      <div class="modal-box modal-narrow">
-                        <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
-                        <div style="padding:0 24px 24px;">
-                          <h3 style="margin-bottom:4px;">Reactivate Advertisement</h3>
-                          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">"<%= ad.ad_title %>" expired on <%= new Date(ad.expires_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) %>. Set a new expiry to bring it back live.</p>
-                          <form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/reactivate" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <div class="field">
-                              <label class="form-label">New Expiry Date/Time</label>
-                              <input type="datetime-local" name="expires_at" required>
-                            </div>
-                            <div class="field" style="margin-top:16px;">
-                              <button type="submit" class="btn btn-maroon btn-block">Activate with New Expiry</button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  <% } %>
-                </td>
-              </tr>
-            <% }) %>
-            <% if (ads.length === 0) { %><tr><td colspan="6" style="text-align:center; color:#a08a6a;">No advertisements uploaded yet.</td></tr><% } %>
-          </tbody>
-        </table>
-        </div>
-      </div>
-
-      <!-- Upload Ad modal -->
-      <div class="modal-overlay" id="createAdModal">
-        <div class="modal-box">
-          <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
-          <div style="padding:0 24px 24px;">
-            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bullhorn"></i> Upload New Advertisement</h3>
-            <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">Ads can be placed in several spots on the home page, plus one banner slot shown right after a member searches for matches — never mixed in with member profiles.</p>
-            <form class="form-grid" action="/portal/super-secure-dashboard/ads" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <div class="field"><label class="form-label">Ad Title</label><input type="text" name="ad_title" required></div>
-              <div class="field"><label class="form-label">Placement</label>
-                <select name="placement" required>
-                  <option value="top_banner">Top Banner (Home)</option>
-                  <option value="sidebar">Home Sidebar</option>
-                  <option value="home_middle">Home — Middle Section</option>
-                  <option value="home_bottom">Home — Bottom Section</option>
-                  <option value="after_search">After Search Results (Find Matches page)</option>
-                </select>
-              </div>
-              <div class="field"><label class="form-label">Target URL (optional)</label><input type="url" name="target_url" placeholder="https://"></div>
-              <div class="field"><label class="form-label">Expires On</label><input type="datetime-local" name="expires_at" required></div>
-              <div class="field"><label class="form-label">Ad Image</label><input type="file" name="ad_image" accept="image/*" required>
-                <small style="color:#a08a6a; font-size:0.75rem;">Max 5MB — JPG, PNG, or WEBP</small></div>
-              <div class="field full"><button type="submit" class="btn btn-maroon">Upload Ad</button></div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <%- include('../partials/panel-ui-script') %>
-  <%- include('../partials/portal-shell-close') %>
-</body>
-</html>
+<%- include('../partials/portal-shell-open', { portal:'superadmin', active, title, logoutUrl:'/portal/super-secure-logout' }) %>
+<section class="page-intro"><div><span class="section-eyebrow"><%= t('Advertisements') %></span><h1><%= t('Ad manager') %></h1><p><%= t('One active advertisement per placement. Upload, preview and publish in one place.') %></p></div><a href="#newAd" class="btn btn-maroon"><i class="fa-solid fa-plus" aria-hidden="true"></i> <%= t('Create advertisement') %></a></section>
+<div class="ad-manager-grid">
+<section class="panel" id="newAd">
+<h2><%= t('Create advertisement') %></h2>
+<form class="form-grid" id="adUploadForm" action="/portal/super-secure-dashboard/ads" method="post" enctype="multipart/form-data">
+<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+<div class="field full"><label for="adTitle"><%= t('Ad Title') %></label><input id="adTitle" name="ad_title" maxlength="100" required></div>
+<div class="field full"><label for="adPlacement"><%= t('Placement') %></label><select id="adPlacement" name="placement" required><% Object.entries(adPlacements).forEach(([key,frame])=> { %><option value="<%= key %>"><%= t(frame.label) %></option><% }) %></select></div>
+<div class="field full"><label for="adUrl"><%= t('Target URL (optional)') %></label><input id="adUrl" name="target_url" type="url" maxlength="255" placeholder="<%= t("https://") %>"></div>
+<div class="field full"><label for="adExpiry"><%= t('Expiry (India time, IST)') %></label><input id="adExpiry" name="expires_at" type="datetime-local" required><small><%= t('Times use Asia/Kolkata (UTC +05:30).') %></small></div>
+<div class="field full"><label for="adDesktop"><%= t('Desktop image') %></label><p id="desktopSize" class="frame-size"></p><input id="adDesktop" type="file" name="ad_image" accept="image/jpeg,image/png,image/webp" required></div>
+<div class="field full"><label for="adMobile"><%= t('Mobile image (optional)') %></label><p id="mobileSize" class="frame-size"></p><input id="adMobile" type="file" name="ad_mobile_image" accept="image/jpeg,image/png,image/webp"><small><%= t('Without a mobile image, the desktop artwork is fitted into the mobile frame without cropping.') %></small></div>
+<p class="field full muted"><%= t('JPG, PNG or WEBP. Maximum 5 MB per image. Keep important text inside the frame edges.') %></p>
+<div class="field full"><button class="btn btn-maroon" type="submit"><i class="fa-solid fa-upload" aria-hidden="true"></i> <%= t('Publish advertisement') %></button></div>
+</form>
+</section>
+<section class="panel ad-preview-panel" aria-labelledby="previewHeading">
+<h2 id="previewHeading"><%= t('Preview') %></h2><p><%= t('Your artwork is fitted to the frame without cropping.') %></p>
+<div class="ad-preview-device"><h3><i class="fa-solid fa-desktop" aria-hidden="true"></i> <%= t('Desktop') %></h3><div class="creative-preview" id="desktopPreview"><span><%= t('Choose an image to preview') %></span><img alt="<%= t('Desktop preview') %>" hidden></div></div>
+<div class="ad-preview-device"><h3><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> <%= t('Mobile') %></h3><div class="creative-preview mobile-preview" id="mobilePreview"><span><%= t('Choose an image to preview') %></span><img alt="<%= t('Mobile preview') %>" hidden></div></div>
+<p id="adImageFeedback" class="muted" role="status"></p>
+</section>
+</div>
+<section class="panel">
+<h2><%= t('Advertisements') %> <span class="count-chip"><%= ads.length %></span></h2>
+<div class="ad-list">
+<% ads.forEach(ad=>{ const expired=ad.expires_at && new Date(ad.expires_at)<=new Date(); const live=ad.is_active&&!expired; %>
+<article class="ad-management-card">
+<img class="ad-thumb" loading="lazy" src="<%= fileUrl('ads',ad.image_name) %>" alt="<%= ad.ad_title %>">
+<div class="ad-card-copy"><h3><%= ad.ad_title %></h3><p><%= t(adPlacements[ad.placement].label) %></p><span class="badge <%= live?'badge-approved':'badge-rejected' %>"><%= t(t(expired?'Expired':live?'Active':'Inactive')) %></span><p><%= t('Expires') %>: <%= ad.expires_at ? formatDate(ad.expires_at, {dateStyle:'medium',timeStyle:'short'}) : '—' %> <%= t("IST") %></p></div>
+<div class="ad-card-actions">
+<% if(!expired) { %><form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/toggle" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-outline-gold"><%= t(live?'Deactivate':'Activate') %></button></form><% } %>
+<details><summary><%= t('Set new expiry') %></summary><form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/reactivate" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label for="expiry-<%= ad.id %>"><%= t('Expiry (India time, IST)') %></label><input id="expiry-<%= ad.id %>" name="expires_at" type="datetime-local" required><button class="btn btn-maroon"><%= t('Activate with New Expiry') %></button></form></details>
+<form action="/portal/super-secure-dashboard/ads/<%= ad.id %>/delete" method="post" data-confirm="<%= t('Delete this ad?') %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-danger"><%= t('Delete') %></button></form>
+</div></article><% }) %>
+<% if(!ads.length){ %><div class="empty-state"><i class="fa-solid fa-image" aria-hidden="true"></i><p><%= t('No advertisements uploaded yet.') %></p></div><% } %>
+</div>
+</section>
+<script nonce="<%= nonce %>">window.AD_FRAMES = <%- safeJson(adPlacements) %>;</script>
+<script src="/js/ad-editor.js" defer></script>
+<%- include('../partials/portal-shell-close') %>
+</body></html>

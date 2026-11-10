@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -9,15 +9,15 @@
   <% const logoutUrl = portal === 'superadmin' ? '/portal/super-secure-logout' : '/portal/admin-logout'; %>
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
- <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;">&larr; Back </a>
+ <a href="/portal/admin-dashboard/profiles" style="color:var(--maroon-800); font-weight:700; font-size:0.85rem;"><%= t("← Back") %> </a>
     <div class="panel">
-      <h3><i class="fa-solid fa-upload"></i> Upload New Profile</h3>
+      <h3><i class="fa-solid fa-upload"></i> <%= t("Upload New Profile") %></h3>
       <% if (errors && errors.length) { %>
-        <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+        <div class="form-errors"><% errors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= t(e) %></div><% }) %></div>
       <% } %>
       <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %>
         <div class="form-errors" style="background:#fff8e6; border-color:#f0d999; color:#8a6d1f;">
-          <i class="fa-solid fa-triangle-exclamation"></i> <%= duplicateWarning %>
+          <i class="fa-solid fa-triangle-exclamation"></i> <%= t(duplicateWarning) %>
         </div>
       <% } %>
       <form id="profileForm" class="form-sectioned" action="/portal/admin-dashboard/profiles" method="POST" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -25,57 +25,57 @@
 
         <!-- ================= Basic Details ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-user"></i> Basic Details</div>
+          <div class="form-section-title"><i class="fa-solid fa-user"></i> <%= t("Basic Details") %></div>
           <div class="form-grid">
             <div class="field full" style="background:var(--cream-100); border-radius:var(--radius-md); padding:16px;">
-              <label class="form-label">Phone Number <span class="field-tip" data-tip="Check first — if this person already has a login account, their name and gender will fill in automatically.">?</span></label>
+              <label class="form-label"><%= t("Phone Number") %> <span class="field-tip" data-tip="<%= t("Check first — if this person already has a login account, their name and gender will fill in automatically.") %>">?</span></label>
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <select name="phone_country_code" id="phoneCountryCode" style="max-width:200px;">
                   <% opts.COUNTRY_CODES.forEach(function(c) { %>
                     <option value="<%= c.code %>" <%= (old.phone_country_code || '+91') === c.code && c.iso === 'IN' ? 'selected' : '' %>><%= c.name %> (<%= c.code %>)</option>
                   <% }) %>
                 </select>
-                <input type="text" name="phone_number" id="phoneNumberInput" value="<%= old.phone_number || '' %>" pattern="[6-9][0-9]{9}" maxlength="10" title="10 digits, starting 6-9" required style="flex:1; min-width:160px;">
-                <button type="button" id="checkMobileBtn" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); white-space:nowrap;">Check Number</button>
+                <input type="text" name="phone_number" id="phoneNumberInput" value="<%= old.phone_number || '' %>" pattern="[6-9][0-9]{9}" maxlength="10" title="<%= t("10 digits, starting 6-9") %>" required style="flex:1; min-width:160px;">
+                <button type="button" id="checkMobileBtn" class="btn btn-outline-gold" style="border-color:var(--maroon-800); color:var(--maroon-800); white-space:nowrap;"><%= t("Check Number") %></button>
               </div>
               <div id="mobileCheckResult" style="margin-top:10px; font-size:0.85rem; display:none;"></div>
             </div>
 
-            <div class="field"><label class="form-label">Full Name <span class="field-tip" data-tip="Letters only, no numbers.">?</span></label><input type="text" name="full_name" id="fullNameInput" value="<%= old.full_name || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only" required></div>
-            <div class="field"><label class="form-label">Marital Status</label>
+            <div class="field"><label class="form-label"><%= t("Full Name") %> <span class="field-tip" data-tip="<%= t("Letters only, no numbers.") %>">?</span></label><input type="text" name="full_name" id="fullNameInput" value="<%= old.full_name || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" title="<%= t("Letters only") %>" required></div>
+            <div class="field"><label class="form-label"><%= t("Marital Status") %></label>
               <select name="marital_status" id="maritalStatusSelect" required>
                 <% opts.MARITAL_STATUS_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= (old.marital_status || 'never_married') === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= (old.marital_status || 'never_married') === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Date of Birth <span class="field-tip" data-tip="Must be 18 years or older.">?</span></label><input type="date" name="date_of_birth" value="<%= old.date_of_birth || '' %>" required></div>
-            <div class="field"><label class="form-label">Birth Place <span class="field-tip" data-tip="Optional.">?</span></label><input type="text" name="birth_place" value="<%= old.birth_place || '' %>" pattern="[A-Za-z\s.'-]+" title="Letters only"></div>
-            <div class="field"><label class="form-label">Gender</label>
+            <div class="field"><label class="form-label"><%= t("Date of Birth") %> <span class="field-tip" data-tip="<%= t("Must be 18 years or older.") %>">?</span></label><input type="date" name="date_of_birth" value="<%= old.date_of_birth || '' %>" required></div>
+            <div class="field"><label class="form-label"><%= t("Birth Place") %> <span class="field-tip" data-tip="<%= t("Optional.") %>">?</span></label><input type="text" name="birth_place" value="<%= old.birth_place || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" title="<%= t("Letters only") %>"></div>
+            <div class="field"><label class="form-label"><%= t("Gender") %></label>
               <select id="genderSelect" required>
-                <option value="">Select</option>
-                <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male (Groom)</option>
-                <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female (Bride)</option>
+                <option value=""><%= t("Select") %></option>
+                <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>><%= t("Male (Groom)") %></option>
+                <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>><%= t("Female (Bride)") %></option>
               </select>
               <input type="hidden" name="gender" id="genderValue" value="<%= old.gender || '' %>">
             </div>
-            <div class="field"><label class="form-label">Willing to Marry Other Caste?</label>
+            <div class="field"><label class="form-label"><%= t("Willing to Marry Other Caste?") %></label>
               <select name="willing_other_caste" required>
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.YES_NO_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= old.willing_other_caste === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= old.willing_other_caste === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field conditional-field" id="hasChildrenField"><label class="form-label">Do you have children?</label>
+            <div class="field conditional-field" id="hasChildrenField"><label class="form-label"><%= t("Do you have children?") %></label>
               <select name="has_children" id="hasChildrenSelect">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.CHILDREN_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= old.has_children === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= old.has_children === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field conditional-field" id="numChildrenField"><label class="form-label">Number of Children</label>
+            <div class="field conditional-field" id="numChildrenField"><label class="form-label"><%= t("Number of Children") %></label>
               <input type="number" name="number_of_children" min="0" max="20" value="<%= old.number_of_children || '' %>">
             </div>
           </div>
@@ -83,65 +83,65 @@
 
         <!-- ================= Profile Photos ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-camera"></i> Profile Photos</div>
+          <div class="form-section-title"><i class="fa-solid fa-camera"></i> <%= t("Profile Photos") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Profile Photo (1)</label>
+            <div class="field"><label class="form-label"><%= t("Profile Photo (1)") %></label>
               <input type="file" name="profile_image" accept="image/*" required></div>
-            <div class="field"><label class="form-label">Profile Photo (2) <span class="field-tip" data-tip="Optional — up to two photos per profile.">?</span></label>
+            <div class="field"><label class="form-label"><%= t("Profile Photo (2)") %> <span class="field-tip" data-tip="<%= t("Optional — up to two photos per profile.") %>">?</span></label>
               <input type="file" name="profile_image_2" accept="image/*"></div>
           </div>
         </div>
 
         <!-- ================= Religion Details ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-place-of-worship"></i> Religion Details</div>
+          <div class="form-section-title"><i class="fa-solid fa-place-of-worship"></i> <%= t("Religion Details") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Religion</label>
+            <div class="field"><label class="form-label"><%= t("Religion") %></label>
               <select name="religion" id="religionSelect" required>
-                <option value="">Select Religion</option>
+                <option value=""><%= t("Select Religion") %></option>
                 <% opts.RELIGION_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= old.religion === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= old.religion === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field conditional-field" id="religionOtherField"><label class="form-label">Please specify religion</label><input type="text" name="religion_other" id="religionOtherInput" value="<%= old.religion_other || '' %>"></div>
+            <div class="field conditional-field" id="religionOtherField"><label class="form-label"><%= t("Please specify religion") %></label><input type="text" name="religion_other" id="religionOtherInput" value="<%= old.religion_other || '' %>"></div>
 
-            <div class="field"><label class="form-label">Caste <span class="field-tip" data-tip="Only available for Hindu, Muslim, and Christian right now — more religions coming soon.">?</span></label>
-              <input type="text" name="caste" id="casteInput" list="casteOptionsList" value="<%= old.caste || '' %>" placeholder="Select a religion first" disabled>
+            <div class="field"><label class="form-label"><%= t("Caste") %> <span class="field-tip" data-tip="<%= t("Only available for Hindu, Muslim, and Christian right now — more religions coming soon.") %>">?</span></label>
+              <input type="text" name="caste" id="casteInput" list="casteOptionsList" value="<%= old.caste || '' %>" placeholder="<%= t("Select a religion first") %>" disabled>
               <datalist id="casteOptionsList"></datalist>
             </div>
-            <div class="field conditional-field" id="casteOtherField"><label class="form-label">Please specify caste</label><input type="text" name="caste_other" id="casteOtherInput" value="<%= old.caste_other || '' %>"></div>
-            <div class="field"><label class="form-label">Sub-caste <span class="field-tip" data-tip="Optional.">?</span></label><input type="text" name="subcaste" value="<%= old.subcaste || '' %>"></div>
+            <div class="field conditional-field" id="casteOtherField"><label class="form-label"><%= t("Please specify caste") %></label><input type="text" name="caste_other" id="casteOtherInput" value="<%= old.caste_other || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Sub-caste") %> <span class="field-tip" data-tip="<%= t("Optional.") %>">?</span></label><input type="text" name="subcaste" value="<%= old.subcaste || '' %>"></div>
           </div>
         </div>
 
         <!-- ================= Education / Occupation Details ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-graduation-cap"></i> Education / Occupation Details</div>
+          <div class="form-section-title"><i class="fa-solid fa-graduation-cap"></i> <%= t("Education / Occupation Details") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Highest Education</label>
-              <input type="text" name="education" list="educationOptionsList" value="<%= old.education || '' %>" placeholder="Type to search...">
-              <datalist id="educationOptionsList"><% opts.EDUCATION_OPTIONS.forEach(function(e) { %><option value="<%= e %>"><% }) %></datalist>
+            <div class="field"><label class="form-label"><%= t("Highest Education") %></label>
+              <input type="text" name="education" list="educationOptionsList" value="<%= old.education || '' %>" placeholder="<%= t("Type to search...") %>">
+              <datalist id="educationOptionsList"><% opts.EDUCATION_OPTIONS.forEach(function(e) { %><option value="<%= t(e) %>"><% }) %></datalist>
             </div>
-            <div class="field"><label class="form-label">Employed In</label>
+            <div class="field"><label class="form-label"><%= t("Employed In") %></label>
               <select name="employed_in" id="employedInSelect" required>
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.EMPLOYED_IN_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= old.employed_in === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= old.employed_in === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field conditional-field" id="employedInOtherField"><label class="form-label">Please specify</label><input type="text" name="employed_in_other" id="employedInOtherInput" value="<%= old.employed_in_other || '' %>"></div>
-            <div class="field"><label class="form-label">Occupation</label>
-              <input type="text" name="occupation" id="occupationInput" list="occupationOptionsList" value="<%= old.occupation || '' %>" placeholder="Type to search...">
+            <div class="field conditional-field" id="employedInOtherField"><label class="form-label"><%= t("Please specify") %></label><input type="text" name="employed_in_other" id="employedInOtherInput" value="<%= old.employed_in_other || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Occupation") %></label>
+              <input type="text" name="occupation" id="occupationInput" list="occupationOptionsList" value="<%= old.occupation || '' %>" placeholder="<%= t("Type to search...") %>">
               <datalist id="occupationOptionsList"><% opts.OCCUPATION_CATEGORY_OPTIONS.forEach(function(o) { %><option value="<%= o %>"><% }) %></datalist>
             </div>
-            <div class="field conditional-field" id="occupationOtherField"><label class="form-label">Please specify occupation</label><input type="text" name="occupation_other" id="occupationOtherInput" value="<%= old.occupation_other || '' %>"></div>
-            <div class="field"><label class="form-label">Company Name</label><input type="text" name="company_name" value="<%= old.company_name || '' %>"></div>
-            <div class="field"><label class="form-label">Designation</label><input type="text" name="designation" value="<%= old.designation || '' %>"></div>
-            <div class="field"><label class="form-label">Annual Income</label>
+            <div class="field conditional-field" id="occupationOtherField"><label class="form-label"><%= t("Please specify occupation") %></label><input type="text" name="occupation_other" id="occupationOtherInput" value="<%= old.occupation_other || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Company Name") %></label><input type="text" name="company_name" value="<%= old.company_name || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Designation") %></label><input type="text" name="designation" value="<%= old.designation || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Annual Income") %></label>
               <select name="annual_income_band" required>
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.INCOME_BAND_OPTIONS.forEach(function(i) { %>
                   <option value="<%= i %>" <%= old.annual_income_band === i ? 'selected' : '' %>><%= i %></option>
                 <% }) %>
@@ -152,153 +152,153 @@
 
         <!-- ================= Horoscope Information ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-star-and-crescent"></i> Horoscope Information</div>
+          <div class="form-section-title"><i class="fa-solid fa-star-and-crescent"></i> <%= t("Horoscope Information") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Have Dosh?</label>
+            <div class="field"><label class="form-label"><%= t("Have Dosh?") %></label>
               <select name="has_dosh">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.YES_NO_OPTIONS.forEach(function(o) { %>
-                  <option value="<%= o.value %>" <%= old.has_dosh === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <option value="<%= o.value %>" <%= old.has_dosh === o.value ? 'selected' : '' %>><%= t(o.label) %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Time of Birth <span class="field-tip" data-tip="Optional.">?</span></label><input type="time" name="time_of_birth" value="<%= old.time_of_birth || '' %>"></div>
+            <div class="field"><label class="form-label"><%= t("Time of Birth") %> <span class="field-tip" data-tip="<%= t("Optional.") %>">?</span></label><input type="time" name="time_of_birth" value="<%= old.time_of_birth || '' %>"></div>
             <div class="field">
-              <label class="form-label">Rasi</label>
+              <label class="form-label"><%= t("Rasi") %></label>
               <select name="rashi" id="rashi" required>
-                <option value="">Select Rasi</option>
-                <option value="Mesha">Mesha (Aries)</option>
-                <option value="Vrishabha">Vrishabha (Taurus)</option>
-                <option value="Mithuna">Mithuna (Gemini)</option>
-                <option value="Karka">Karka (Cancer)</option>
-                <option value="Simha">Simha (Leo)</option>
-                <option value="Kanya">Kanya (Virgo)</option>
-                <option value="Tula">Tula (Libra)</option>
-                <option value="Vrischika">Vrischika (Scorpio)</option>
-                <option value="Dhanu">Dhanu (Sagittarius)</option>
-                <option value="Makara">Makara (Capricorn)</option>
-                <option value="Kumbha">Kumbha (Aquarius)</option>
-                <option value="Meena">Meena (Pisces)</option>
+                <option value=""><%= t("Select Rasi") %></option>
+                <option value="Mesha"><%= t("Mesha (Aries)") %></option>
+                <option value="Vrishabha"><%= t("Vrishabha (Taurus)") %></option>
+                <option value="Mithuna"><%= t("Mithuna (Gemini)") %></option>
+                <option value="Karka"><%= t("Karka (Cancer)") %></option>
+                <option value="Simha"><%= t("Simha (Leo)") %></option>
+                <option value="Kanya"><%= t("Kanya (Virgo)") %></option>
+                <option value="Tula"><%= t("Tula (Libra)") %></option>
+                <option value="Vrischika"><%= t("Vrischika (Scorpio)") %></option>
+                <option value="Dhanu"><%= t("Dhanu (Sagittarius)") %></option>
+                <option value="Makara"><%= t("Makara (Capricorn)") %></option>
+                <option value="Kumbha"><%= t("Kumbha (Aquarius)") %></option>
+                <option value="Meena"><%= t("Meena (Pisces)") %></option>
               </select>
             </div>
             <div class="field">
-              <label class="form-label">Nakshatra (Star)</label>
+              <label class="form-label"><%= t("Nakshatra (Star)") %></label>
               <select name="nakshatra" id="nakshatra" required>
-                <option value="">Select Rasi First</option>
+                <option value=""><%= t("Select Rasi First") %></option>
               </select>
             </div>
-            <div class="field full"><label class="form-label">Horoscope PDF (optional)</label>
+            <div class="field full"><label class="form-label"><%= t("Horoscope PDF (optional)") %></label>
               <input type="file" name="jathaka_pdf" accept="application/pdf"></div>
-            <div class="field full"><label class="form-label">Bio-Data PDF (optional) <span class="field-tip" data-tip="A ready-made bio-data document, separate from the horoscope.">?</span></label>
+            <div class="field full"><label class="form-label"><%= t("Bio-Data PDF (optional)") %> <span class="field-tip" data-tip="<%= t("A ready-made bio-data document, separate from the horoscope.") %>">?</span></label>
               <input type="file" name="biodata_pdf" accept="application/pdf"></div>
           </div>
         </div>
 
         <!-- ================= Family Details ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-people-roof"></i> Family Details</div>
+          <div class="form-section-title"><i class="fa-solid fa-people-roof"></i> <%= t("Family Details") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Family Type</label>
+            <div class="field"><label class="form-label"><%= t("Family Type") %></label>
               <select name="family_type">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.FAMILY_TYPE_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_type === f ? 'selected' : '' %>><%= f %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Family Values</label>
+            <div class="field"><label class="form-label"><%= t("Family Values") %></label>
               <select name="family_values">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.FAMILY_VALUES_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_values === f ? 'selected' : '' %>><%= f %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Family Status</label>
+            <div class="field"><label class="form-label"><%= t("Family Status") %></label>
               <select name="family_status">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.FAMILY_STATUS_OPTIONS.forEach(function(f) { %><option value="<%= f %>" <%= old.family_status === f ? 'selected' : '' %>><%= f %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Father's Name</label><input type="text" name="father_name" value="<%= old.father_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-            <div class="field"><label class="form-label">Father's Occupation</label><input type="text" name="father_occupation" value="<%= old.father_occupation || '' %>" required></div>
-            <div class="field"><label class="form-label">Mother's Name</label><input type="text" name="mother_name" value="<%= old.mother_name || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-            <div class="field"><label class="form-label">Mother's Occupation</label><input type="text" name="mother_occupation" value="<%= old.mother_occupation || '' %>" required></div>
-            <div class="field full"><small style="color:#a08a6a;">Sibling details (optional)</small></div>
-            <div class="field"><label class="form-label">Number of Brothers</label><input type="number" name="num_brothers" min="0" value="<%= old.num_brothers || 0 %>"></div>
-            <div class="field"><label class="form-label">Married Brothers</label><input type="number" name="married_brothers" min="0" value="<%= old.married_brothers || 0 %>"></div>
-            <div class="field"><label class="form-label">Number of Sisters</label><input type="number" name="num_sisters" min="0" value="<%= old.num_sisters || 0 %>"></div>
-            <div class="field"><label class="form-label">Married Sisters</label><input type="number" name="married_sisters" min="0" value="<%= old.married_sisters || 0 %>"></div>
+            <div class="field"><label class="form-label"><%= t("Father's Name") %></label><input type="text" name="father_name" value="<%= old.father_name || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" required></div>
+            <div class="field"><label class="form-label"><%= t("Father's Occupation") %></label><input type="text" name="father_occupation" value="<%= old.father_occupation || '' %>" required></div>
+            <div class="field"><label class="form-label"><%= t("Mother's Name") %></label><input type="text" name="mother_name" value="<%= old.mother_name || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" required></div>
+            <div class="field"><label class="form-label"><%= t("Mother's Occupation") %></label><input type="text" name="mother_occupation" value="<%= old.mother_occupation || '' %>" required></div>
+            <div class="field full"><small style="color:#a08a6a;"><%= t("Sibling details (optional)") %></small></div>
+            <div class="field"><label class="form-label"><%= t("Number of Brothers") %></label><input type="number" name="num_brothers" min="0" value="<%= old.num_brothers || 0 %>"></div>
+            <div class="field"><label class="form-label"><%= t("Married Brothers") %></label><input type="number" name="married_brothers" min="0" value="<%= old.married_brothers || 0 %>"></div>
+            <div class="field"><label class="form-label"><%= t("Number of Sisters") %></label><input type="number" name="num_sisters" min="0" value="<%= old.num_sisters || 0 %>"></div>
+            <div class="field"><label class="form-label"><%= t("Married Sisters") %></label><input type="number" name="married_sisters" min="0" value="<%= old.married_sisters || 0 %>"></div>
           </div>
         </div>
 
         <!-- ================= Location Details ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> Location Details</div>
+          <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> <%= t("Location Details") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Country</label>
+            <div class="field"><label class="form-label"><%= t("Country") %></label>
               <input type="text" name="country" id="countryInput" list="countryOptionsList" value="<%= old.country || 'India' %>" required>
               <datalist id="countryOptionsList"><% opts.COUNTRIES.forEach(function(c) { %><option value="<%= c %>"><% }) %></datalist>
             </div>
-            <div class="field"><label class="form-label">State <span class="field-tip" data-tip="Indian states — leave blank if outside India.">?</span></label>
+            <div class="field"><label class="form-label"><%= t("State") %> <span class="field-tip" data-tip="<%= t("Indian states — leave blank if outside India.") %>">?</span></label>
               <input type="text" name="state" list="stateOptionsList" value="<%= old.state || 'Karnataka' %>">
               <datalist id="stateOptionsList"><% opts.INDIA_STATES.forEach(function(s) { %><option value="<%= s %>"><% }) %></datalist>
             </div>
-            <div class="field"><label class="form-label">City</label><input type="text" name="city" value="<%= old.city || '' %>" pattern="[A-Za-z\s.'-]+" required></div>
-            <div class="field full"><label class="form-label">Address</label><textarea name="address" rows="2" required><%= old.address || '' %></textarea></div>
+            <div class="field"><label class="form-label"><%= t("City") %></label><input type="text" name="city" value="<%= old.city || '' %>" pattern="[\p{L}\p{M}\s.'\-]+" required></div>
+            <div class="field full"><label class="form-label"><%= t("Address") %></label><textarea name="address" rows="2" required><%= old.address || '' %></textarea></div>
           </div>
         </div>
 
         <!-- ================= Habits & Hobbies ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-heart-circle-check"></i> Habits &amp; Hobbies</div>
+          <div class="form-section-title"><i class="fa-solid fa-heart-circle-check"></i> <%= t("Habits & Hobbies") %></div>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Eating Habit</label>
+            <div class="field"><label class="form-label"><%= t("Eating Habit") %></label>
               <select name="eating_habit">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.EATING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.eating_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Smoking Habit</label>
+            <div class="field"><label class="form-label"><%= t("Smoking Habit") %></label>
               <select name="smoking_habit">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.SMOKING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.smoking_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Drinking Habit</label>
+            <div class="field"><label class="form-label"><%= t("Drinking Habit") %></label>
               <select name="drinking_habit">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.DRINKING_HABIT_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.drinking_habit === o ? 'selected' : '' %>><%= o %></option><% }) %>
               </select>
             </div>
-            <div class="field"><label class="form-label">Mother Tongue</label>
+            <div class="field"><label class="form-label"><%= t("Mother Tongue") %></label>
               <select name="mother_tongue" id="motherTongueSelect">
-                <option value="">Select</option>
+                <option value=""><%= t("Select") %></option>
                 <% opts.MOTHER_TONGUE_OPTIONS.forEach(function(o) { %><option value="<%= o %>" <%= old.mother_tongue === o ? 'selected' : '' %>><%= o %></option><% }) %>
               </select>
             </div>
-            <div class="field conditional-field" id="motherTongueOtherField"><label class="form-label">Please specify</label><input type="text" name="mother_tongue_other" id="motherTongueOtherInput" value="<%= old.mother_tongue_other || '' %>"></div>
+            <div class="field conditional-field" id="motherTongueOtherField"><label class="form-label"><%= t("Please specify") %></label><input type="text" name="mother_tongue_other" id="motherTongueOtherInput" value="<%= old.mother_tongue_other || '' %>"></div>
           </div>
         </div>
 
         <!-- ================= Assets ================= -->
         <div class="form-section-card">
-          <div class="form-section-title"><i class="fa-solid fa-vault"></i> Assets</div>
+          <div class="form-section-title"><i class="fa-solid fa-vault"></i> <%= t("Assets") %></div>
           <div class="form-grid">
-            <div class="field full"><label class="form-label">Assets</label><textarea name="assets" rows="2" required><%= old.assets || '' %></textarea></div>
-            <div class="field full"><label class="form-label">Loans (if any)</label><textarea name="loans" rows="2"><%= old.loans || '' %></textarea></div>
+            <div class="field full"><label class="form-label"><%= t("Assets") %></label><textarea name="assets" rows="2" required><%= old.assets || '' %></textarea></div>
+            <div class="field full"><label class="form-label"><%= t("Loans (if any)") %></label><textarea name="loans" rows="2"><%= old.loans || '' %></textarea></div>
           </div>
         </div>
 
         <!-- ================= New account (only if phone check found no match) ================= -->
         <div class="form-section-card conditional-section" id="newAccountBlock">
-          <div class="form-section-title"><i class="fa-solid fa-key"></i> Create Login Account</div>
-          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;">No account found for this number — set a login password to create one.</p>
+          <div class="form-section-title"><i class="fa-solid fa-key"></i> <%= t("Create Login Account") %></div>
+          <p style="font-size:0.82rem; color:#8a7156; margin-bottom:12px;"><%= t("No account found for this number — set a login password to create one.") %></p>
           <div class="form-grid">
-            <div class="field"><label class="form-label">Password</label><input type="password" name="password" id="newPassword" minlength="8"></div>
-            <div class="field"><label class="form-label">Confirm Password</label><input type="password" name="confirm_password" id="confirmPassword" minlength="8"></div>
+            <div class="field"><label class="form-label"><%= t("Password") %></label><input type="password" name="password" id="newPassword" minlength="8"></div>
+            <div class="field"><label class="form-label"><%= t("Confirm Password") %></label><input type="password" name="confirm_password" id="confirmPassword" minlength="8"></div>
           </div>
-          <small style="color:#a08a6a; font-size:0.75rem;">8+ characters, with an uppercase letter, a lowercase letter, and a number.</small>
+          <small style="color:#a08a6a; font-size:0.75rem;"><%= t("8+ characters, with an uppercase letter, a lowercase letter, and a number.") %></small>
         </div>
 
         <div class="field full">
-          <button type="submit" class="btn btn-gold">Save Profile</button>
+          <button type="submit" class="btn btn-gold"><%= t("Save Profile") %></button>
         </div>
       </form>
     </div>
@@ -465,12 +465,12 @@ wireOtherToggle(document.getElementById('motherTongueSelect'), 'motherTongueOthe
       return;
     }
     checkBtn.disabled = true;
-    checkBtn.textContent = 'Checking...';
+    checkBtn.textContent = window.t('Checking...');
     fetch('/portal/admin-dashboard/profiles/check-mobile?mobile=' + encodeURIComponent(mobile))
       .then(function (r) { return r.json(); })
       .then(function (data) {
         checkBtn.disabled = false;
-        checkBtn.textContent = 'Check Number';
+        checkBtn.textContent = window.t('Check Number');
         if (data.error) {
           showResult(data.error, 'error');
           return;
@@ -495,7 +495,7 @@ wireOtherToggle(document.getElementById('motherTongueSelect'), 'motherTongueOthe
       })
       .catch(function () {
         checkBtn.disabled = false;
-        checkBtn.textContent = 'Check Number';
+        checkBtn.textContent = window.t('Check Number');
         showResult('Could not check that number right now. Please try again.', 'error');
       });
   });

@@ -11,20 +11,22 @@ if (!process.env.SESSION_SECRET) {
 
 const express = require('express');
 const session = require('express-session');
-const PgSession = require('connect-pg-simple')(session);
+const MySQLSession = require('express-mysql-session')(session);
 const flash = require('connect-flash');
 const helmet = require('helmet');
 const pinoHttp = require('pino-http');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const crypto = require('crypto');
-const { URL } = require('url');
+const { safeRedirect } = require('./utils/security');
+const { refreshSessionUser } = require('./middleware/auth');
 const { pool } = require('./config/db');
 const Advertisement = require('./models/Advertisement');
+const { AD_PLACEMENTS } = require('./utils/adPlacements');
 const { getPublicUrl } = require('./utils/storage');
 const logger = require('./utils/logger');
 const { attachCsrfToken, invalidCsrfTokenError } = require('./middleware/csrf');
-const { getTranslator, SUPPORTED_LANGS } = require('./utils/i18n');
+const { getTranslator, SUPPORTED_LANGS, clientMessages, catalogVersion } = require('./utils/i18n');
 
 const publicRoutes = require('./routes/public');
 const userRoutes = require('./routes/user');
@@ -32,8 +34,15 @@ const adminRoutes = require('./routes/admin');
 const superAdminRoutes = require('./routes/superadmin');
 
 const app = express();
+app.locals.t = getTranslator('en');
+app.locals.currentLang = 'en';
+app.locals.catalogVersion = catalogVersion;
+app.locals.safeJson = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
+if (isProduction && (Buffer.byteLength(process.env.SESSION_SECRET, 'utf8') < 32 || /change_this|change_me|test.*secret/i.test(process.env.SESSION_SECRET))) {
+  throw new Error('Production SESSION_SECRET must be a unique random secret of at least 32 bytes.');
+}
 
 function buildFlashHandler(req) {
   if (typeof req.flash === 'function') {
@@ -64,7 +73,14 @@ function buildFlashHandler(req) {
 // proxy/load balancer (Render, Railway, Hostinger + Nginx, etc.) — without
 // this, Express doesn't trust the X-Forwarded-* headers and every request
 // looks like plain HTTP even when the proxy terminated real HTTPS.
-app.set('trust proxy', 1);
+// Trust only explicitly configured proxy addresses/subnets. The default ignores
+// client-supplied X-Forwarded-* headers, including attempts to bypass IP limits.
+const trustedProxies = (process.env.TRUST_PROXY || '').split(',').map(value => value.trim()).filter(Boolean);
+if (trustedProxies.some(value => /^(true|\d+)$/i.test(value))) {
+  throw new Error('TRUST_PROXY must contain proxy IPs/subnets, not true or a hop count.');
+}
+app.set('trust proxy', trustedProxies.length ? trustedProxies : false);
+app.set('query parser', 'simple');
 
 // View engine
 app.set('view engine', 'ejs');
@@ -78,6 +94,11 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(
   pinoHttp({
     logger,
+    serializers: {
+      // Query strings may contain member names/mobile numbers. Never log cookies.
+      req: req => ({ id: req.id, method: req.method, url: req.url.split('?')[0] }),
+      res: res => ({ statusCode: res.statusCode })
+    },
     autoLogging: {
       ignore: (req) => req.url === '/health' || isTest
     }
@@ -111,7 +132,7 @@ app.use(
         scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com'],
-        imgSrc: ["'self'", 'data:', 'https:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
         connectSrc: ["'self'"]
       }
     },
@@ -131,18 +152,27 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.get('/assets/locale/:code.js', (req,res) => {
+  if (!SUPPORTED_LANGS.includes(req.params.code)) return res.sendStatus(404);
+  res.set('Cache-Control','public, max-age=86400');
+  res.type('application/javascript').send('window.KK_MESSAGES = '+app.locals.safeJson(req.params.code === 'kn' ? clientMessages : {})+';');
+});
+
 // Body parsing & static assets
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: false, limit: '64kb', parameterLimit: 100, inflate: false }));
+app.use(express.json({ limit: '64kb', inflate: false }));
 app.use(cookieParser()); // required by csrf-csrf, which manages its own cookie separate from the session cookie
+app.use('/uploads/:bucket', (req, res, next) => {
+  if (['biodata', 'jathaka'].includes(req.params.bucket.toLowerCase())) return res.sendStatus(404);
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Sessions (stored in Supabase Postgres so admins stay logged in across restarts)
-const sessionStore = new PgSession({
-  pool,
-  tableName: 'session',
-  createTableIfMissing: true
-});
+// MySQL sessions use the schema imported during deployment; runtime needs no DDL grants.
+const sessionStore = new MySQLSession({
+  createDatabaseTable: false, clearExpired: !isTest, endConnectionOnClose: false,
+  schema: { tableName: 'session', columnNames: { session_id: 'sid', expires: 'expires', data: 'sess' } }
+}, pool);
 app.use(
   session({
     key: 'kalpavruksha_sid',
@@ -159,6 +189,15 @@ app.use(
   })
 );
 
+// Sensitive member and staff pages should never be kept in browser or shared
+// proxy caches, where another person using the same device could revisit them.
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'private, no-store, max-age=0');
+  res.set('Pragma', 'no-cache');
+  next();
+});
+app.use(refreshSessionUser);
+
 app.use((req, res, next) => {
   req.flash = buildFlashHandler(req);
   next();
@@ -167,22 +206,31 @@ app.use((req, res, next) => {
 app.use(flash());
 app.use(attachCsrfToken); // generates res.locals.csrfToken for every request, used by every POST form
 
-// Language selection — cookie-based (no account setting needed, works for
-// logged-out visitors too). Scoped to the member-facing entry points
-// (header/footer, login, register, home, dashboard, saved profiles) — the
-// Admin/Super Admin portal stays English-only since it's an internal staff
-// tool. Defaults to English if no cookie is set or it holds an unknown value.
-app.use((req, res, next) => {
-  const lang = SUPPORTED_LANGS.includes(req.cookies.lang) ? req.cookies.lang : 'en';
+app.use((req,res,next) => {
+  const preferred = req.session.user?.locale || req.cookies.lang;
+  const lang = SUPPORTED_LANGS.includes(preferred) ? preferred : (req.acceptsLanguages('en','kn') || 'en');
   res.locals.currentLang = lang;
-  res.locals.t = getTranslator(lang);
+  res.locals.t = req.t = getTranslator(lang);
+  res.locals.currentPath = req.path;
+  res.locals.currentTab = req.query.tab;
+  const languageReturnTo = safeRedirect(req, req.originalUrl, '/');
+  res.locals.languageUrl = code => `/lang/${SUPPORTED_LANGS.includes(code) ? code : 'en'}?next=${encodeURIComponent(languageReturnTo)}`;
+  res.locals.formatDate = (value, options={dateStyle:'medium'}) => value ? new Intl.DateTimeFormat(lang === 'kn' ? 'kn-IN' : 'en-IN', {timeZone:'Asia/Kolkata',...options}).format(new Date(value)) : '';
   next();
 });
-app.get('/lang/:code', (req, res) => {
-  if (SUPPORTED_LANGS.includes(req.params.code)) {
-    res.cookie('lang', req.params.code, { maxAge: 1000 * 60 * 60 * 24 * 365, sameSite: 'lax' });
-  }
-  res.redirect(req.get('Referrer') || '/');
+app.get('/lang/:code', async (req,res,next) => {
+  try {
+    if(SUPPORTED_LANGS.includes(req.params.code)) {
+      if(req.session.user) await require('./config/db').query('UPDATE users SET locale = ? WHERE id = ?', [req.params.code,req.session.user.id]);
+      if(req.session.user) req.session.user.locale = req.params.code;
+      res.cookie('lang', req.params.code, { maxAge:31536000000,sameSite:'lax',secure:isProduction });
+    }
+    const roleHome = req.session.user?.role === 'superadmin' ? '/portal/super-secure-dashboard'
+      : req.session.user?.role === 'admin' ? '/portal/admin-dashboard'
+        : req.session.user ? '/dashboard' : '/';
+    const referrerTarget = safeRedirect(req, req.get('Referrer'), roleHome);
+    res.redirect(safeRedirect(req, req.query.next, referrerTarget));
+  } catch(error) { next(error); }
 });
 
 // Make session user and flash messages available in every view
@@ -191,10 +239,10 @@ app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.successMsg = flash('success');
   res.locals.errorMsg = flash('error');
-  // Views used to hardcode "/uploads/<bucket>/<filename>" (served from local
-  // disk). Files now live wherever STORAGE_PROVIDER points (Supabase / S3-
-  // compatible / local disk), so views call this helper instead, e.g.
+  // Views use this helper for files stored on local disk or S3-compatible
+  // storage instead of hardcoding upload paths, e.g.
   // fileUrl('profiles', profile.image_name).
+  res.locals.adPlacements = AD_PLACEMENTS;
   res.locals.fileUrl = (bucket, filename) => getPublicUrl(bucket, filename);
   next();
 });
@@ -203,7 +251,8 @@ app.use((req, res, next) => {
 // once here so the shared header partial can render them on every page.
 app.use(async (req, res, next) => {
   try {
-    res.locals.topBannerAds = await Advertisement.listActiveByPlacement('top_banner');
+    res.locals.topBannerAds = req.method === 'GET' && !req.path.startsWith('/portal') && !req.path.endsWith('/modal')
+      ? await Advertisement.listActiveByPlacement('top_banner') : [];
   } catch (err) {
     req.log.error(err);
     res.locals.topBannerAds = [];
@@ -224,11 +273,12 @@ app.use((req, res) => {
 
 // Error handler (e.g. multer file-type/size errors, CSRF token failures)
 app.use((err, req, res, next) => {
+  const translate = res.locals.t || app.locals.t;
   const flash = buildFlashHandler(req);
 
   if (res.headersSent) {
     req.log.error({ err }, 'Error occurred after response had already been sent');
-    return;
+    return next(err);
   }
 
   // Database/infra-class errors (e.g. the DB is unreachable) can't be recovered
@@ -237,55 +287,30 @@ app.use((err, req, res, next) => {
   // static, self-contained page instead of trying to render/redirect further.
   const isInfraError =
     err.severity === 'FATAL' ||
-    ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EAI_AGAIN'].includes(err.code) ||
+    ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EAI_AGAIN', 'ER_CON_COUNT_ERROR', 'PROTOCOL_CONNECTION_LOST'].includes(err.code) ||
     /tenant or user|connection.*(closed|terminated|refused)/i.test(err.message || '');
   if (isInfraError) {
     req.log.error({ err }, 'Infrastructure error (likely database unreachable) — showing static error page instead of redirecting');
     return res.status(503).render('service-error');
   }
 
-  // Never redirect back to the exact URL that just failed — that's how the
-  // loop above happens for any error type, not just infra ones.
-  const referrer = req.get('Referrer');
-  let safeTarget = referrer || '/';
-  if (referrer) {
-    try {
-      const referrerPath = new URL(referrer).pathname;
-      if (referrerPath === req.originalUrl.split('?')[0]) {
-        // The referrer is the exact URL that just failed — redirecting there
-        // would just fail the same way again (the loop this fix exists for).
-        safeTarget = null;
-      }
-    } catch {
-      // Malformed Referrer header — treat as absent; safeTarget stays '/' from above.
-    }
-  }
-
   if (err === invalidCsrfTokenError || err.code === 'EBADCSRFTOKEN') {
-    req.log.warn({ err }, 'Rejected request with invalid/missing CSRF token');
-    flash('error', 'Your session expired or this form was already submitted. Please try again.');
-    return safeTarget ? res.redirect(safeTarget) : res.status(400).render('service-error');
+    req.log.warn('Rejected request with invalid/missing CSRF token');
+    return res.status(403).type('text').send(translate('Your session expired or the form token is invalid. Reload the page and try again.'));
   }
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    // Multer's own message ("File too large") doesn't say which limit — our
-    // enforceFieldSizeLimits() in middleware/upload.js already gives a
-    // specific one for image-vs-PDF; this is the fallback for the rare case
-    // where multer's own 15MB ceiling rejects the file first.
-    flash('error', err.message !== 'File too large' ? err.message : 'File too large — images must be 5MB or smaller, PDFs 15MB or smaller.');
-    return safeTarget ? res.redirect(safeTarget) : res.status(400).render('service-error');
+  if (err.code === 'LIMIT_FILE_SIZE' || err.code === 'INVALID_FILE_TYPE' || err.name === 'MulterError') {
+    req.log.warn({ code: err.code }, 'Rejected upload');
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Images must be 5MB or smaller; PDFs must be 15MB or smaller.'
+      : err.code === 'INVALID_FILE_TYPE' ? 'Only genuine JPG, PNG, WEBP images or PDF documents are allowed.' : 'Invalid upload. Check the files and form fields.';
+    flash('error', message);
+    return res.status(400).type('text').send(translate(message));
   }
-  // Routine user-input problems (bad file type from multer's fileFilter)
-  // aren't server errors — log at warn so they don't get buried among (or
-  // mistaken for) real bugs, but don't pollute error-level logs/alerts either.
-  const isRoutineUploadError = err.name === 'MulterError' || /only .* (are|is) allowed/i.test(err.message || '');
-  if (isRoutineUploadError) {
-    req.log.warn({ err }, 'Rejected upload');
-  } else {
-    req.log.error(err);
-  }
-  flash('error', err.message || 'Something went wrong.');
-  if (safeTarget) return res.redirect(safeTarget);
-  res.status(500).render('service-error');
+  if (['entity.too.large', 'parameters.too.many'].includes(err.type)) return res.status(413).type('text').send(translate('Request is too large.'));
+  if (err.type === 'encoding.unsupported') return res.status(415).type('text').send(translate('Compressed request bodies are not supported.'));
+  if (err.type === 'entity.parse.failed') return res.status(400).type('text').send(translate('Invalid request body.'));
+  req.log.error({ err }, 'Request failed');
+  return res.status(500).render('service-error');
 });
 
 app.buildFlashHandler = buildFlashHandler;

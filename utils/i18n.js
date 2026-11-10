@@ -78,7 +78,7 @@ const translations = {
     'dashboard.subcastePlaceholder': 'Enter sub-caste',
     'dashboard.anyLanguage': 'Any language',
     'dashboard.pickCaste': 'Choose a religion first',
-    'dashboard.ageHint': '18–90',
+    'dashboard.ageHint': 'Choose ages from 18 to 90.',
     'dashboard.activeFilters': 'Active filters',
     'dashboard.keyword': 'Keyword',
     'dashboard.noActiveFilters': 'No filters applied — showing everyone.',
@@ -180,7 +180,7 @@ const translations = {
     'dashboard.subcastePlaceholder': 'ಉಪಜಾತಿ ನಮೂದಿಸಿ',
     'dashboard.anyLanguage': 'ಯಾವುದೇ ಭಾಷೆ',
     'dashboard.pickCaste': 'ಮೊದಲು ಧರ್ಮ ಆಯ್ಕೆಮಾಡಿ',
-    'dashboard.ageHint': '18–90',
+    'dashboard.ageHint': '18 ರಿಂದ 90 ವರ್ಷದೊಳಗಿನ ವಯಸ್ಸನ್ನು ಆಯ್ಕೆಮಾಡಿ.',
     'dashboard.activeFilters': 'ಅನ್ವಯವಾದ ಫಿಲ್ಟರ್‌ಗಳು',
     'dashboard.keyword': 'ಪದಕೀಯ',
     'dashboard.noActiveFilters': 'ಯಾವುದೇ ಫಿಲ್ಟರ್ ಅನ್ವಯವಾಗಿಲ್ಲ — ಎಲ್ಲರನ್ನೂ ತೋರಿಸಲಾಗುತ್ತಿದೆ.',
@@ -211,11 +211,47 @@ const translations = {
 
 const SUPPORTED_LANGS = ['en', 'kn'];
 
+
+const phrases = require('./locales/kn.json');
+const { createHash } = require('crypto');
+const options = require('./profileOptions');
+const canonicalLabels = {};
+for (const list of Object.values(options)) {
+  if (Array.isArray(list)) for (const item of list) if (item && typeof item === 'object' && item.value && item.label) canonicalLabels[item.value] = item.label;
+}
+const dictionary = { ...phrases };
+for (const key of Object.keys(translations.en)) dictionary[translations.en[key]] = translations.kn[key];
+const normalized = Object.fromEntries(Object.entries(dictionary).map(([key,value]) => [key.toLowerCase(),value]));
+const messagePatterns = Object.keys(dictionary).filter(key => key.includes('{')).map(key => {
+  const names=[];
+  const escaped=key.replace(/[.*+?^$()|[\]\\]/g,'\\$&').replace(/\{(\w+)\}/g,(_,name)=>{names.push(name);return '(.+?)';});
+  return { pattern:new RegExp('^'+escaped+'$'), names, value:dictionary[key] };
+});
 function getTranslator(lang) {
-  const dict = translations[lang] || translations.en;
-  return function t(key) {
-    return dict[key] || translations.en[key] || key;
+  return function t(key, params = {}) {
+    if (key === null || key === undefined) return '';
+    const input = String(key);
+    const english = translations.en[input] || canonicalLabels[input] || input;
+    let value = english;
+    let variables = params;
+    if (lang === 'kn') {
+      value = translations.kn[input] || dictionary[english] || normalized[english.toLowerCase()];
+      if (!value) {
+        for (const message of messagePatterns) {
+          const match=english.match(message.pattern);
+          if (match) {
+            value=message.value;
+            variables={...params,...Object.fromEntries(message.names.map((name,index)=>[name,name==='field'?t(match[index+1]):match[index+1]]))};
+            break;
+          }
+        }
+      }
+      value ||= english;
+    }
+    return value.replace(/\{(\w+)\}/g,(whole,name)=>Object.hasOwn(variables,name)?String(variables[name]):whole);
   };
 }
-
-module.exports = { getTranslator, SUPPORTED_LANGS };
+const clientMessages = { ...dictionary };
+for (const [key,label] of Object.entries(canonicalLabels)) clientMessages[key]=dictionary[label] || normalized[label.toLowerCase()] || label;
+const catalogVersion = createHash('sha256').update(JSON.stringify(clientMessages)).digest('hex').slice(0,12);
+module.exports = { getTranslator, SUPPORTED_LANGS, clientMessages, catalogVersion };

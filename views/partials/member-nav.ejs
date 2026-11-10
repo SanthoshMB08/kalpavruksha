@@ -1,0 +1,9 @@
+<% if (currentUser && currentUser.role === 'user') { %>
+<nav class="portal-bottom-nav mobile-bottom-nav" aria-label="<%= t('Member navigation') %>">
+<a href="/saved-profiles?tab=interested" data-member-destination="liked" class="<%= currentPath === '/saved-profiles' && currentTab === 'interested' ? 'active' : '' %>" <%- currentPath === '/saved-profiles' && currentTab === 'interested' ? 'aria-current="page"' : '' %>><i class="fa-solid fa-heart" aria-hidden="true"></i><span><%= t('Liked Profiles') %></span></a>
+<a href="/saved-profiles" data-member-destination="saved" class="<%= currentPath === '/saved-profiles' && currentTab !== 'interested' ? 'active' : '' %>" <%- currentPath === '/saved-profiles' && currentTab !== 'interested' ? 'aria-current="page"' : '' %>><i class="fa-solid fa-bookmark" aria-hidden="true"></i><span><%= t('Saved Profiles') %></span></a>
+<a href="/" data-member-destination="home" class="<%= currentPath === '/' ? 'active' : '' %>" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><i class="fa-solid fa-house" aria-hidden="true"></i><span><%= t('Home') %></span></a>
+<a href="/dashboard#matchSearch" data-member-destination="find"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span><%= t('Find Match') %></span></a>
+<a href="/my-profile" data-member-destination="profile" class="<%= currentPath === '/my-profile' ? 'active' : '' %>" <%- currentPath === '/my-profile' ? 'aria-current="page"' : '' %>><i class="fa-solid fa-user" aria-hidden="true"></i><span><%= t('User Profile') %></span></a>
+</nav>
+<% } %>

@@ -1,92 +1,69 @@
-const { Pool, types } = require('pg');
+const mysql = require('mysql2');
 const fs = require('fs');
+const { AsyncLocalStorage } = require('async_hooks');
 require('dotenv').config();
 const logger = require('../utils/logger');
 
-// The app was originally written against mysql2, which (with dateStrings:true)
-// returns DATE/TIME/TIMESTAMP columns as plain strings like "1995-06-15".
-// node-postgres returns JS Date objects for those OIDs by default, which would
-// break the EJS views that print date_of_birth / time_of_birth directly.
-// Registering identity parsers keeps the exact same "plain string" behavior.
-types.setTypeParser(1082, (val) => val); // date
-types.setTypeParser(1083, (val) => val); // time
-types.setTypeParser(1114, (val) => val); // timestamp without time zone
-types.setTypeParser(1184, (val) => val); // timestamptz
-types.setTypeParser(1266, (val) => val); // timetz
-
-if (!process.env.DATABASE_URL) {
-  logger.warn('DATABASE_URL is not set. Set it to your Postgres connection string in .env');
-}
-
-// SSL configuration:
-//   DB_SSL=false                    -> no TLS at all (only for a genuinely non-TLS local/
-//                                      self-hosted Postgres — never use this against a
-//                                      real managed provider over the public internet)
-//   DB_SSL_CA_PATH=/...             -> validates against a specific CA bundle (needed by
-//                                      a few providers/self-hosted setups with private CAs)
-//   DB_SSL_REJECT_UNAUTHORIZED=true/false -> override the default verification behavior
-//   (default)                       -> validate in production; allow self-signed/local certs
-//                                      in development so local Supabase/pgBouncer/SSL setups
-//                                      work without needing a custom CA bundle.
-function buildSslConfig() {
-  if (process.env.DB_SSL === 'false') return false;
-
-  const explicitRejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED;
-  const rejectUnauthorized = explicitRejectUnauthorized === 'true'
-    ? true
-    : explicitRejectUnauthorized === 'false'
-      ? false
-      : process.env.NODE_ENV === 'production'
-        ? true
-        : false;
-
-  if (process.env.DB_SSL_CA_PATH) {
-    return { rejectUnauthorized, ca: fs.readFileSync(process.env.DB_SSL_CA_PATH, 'utf8') };
+function connectionOptions(env = process.env) {
+  let credentials;
+  if (env.DATABASE_URL) {
+    const url = new URL(env.DATABASE_URL);
+    if (!['mysql:', 'mariadb:'].includes(url.protocol)) {
+      throw new Error('DATABASE_URL must use mysql:// or mariadb://. Import migrations/schema.sql into a new Hostinger database first.');
+    }
+    credentials = { host: url.hostname, port: Number(url.port || 3306), user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password), database: decodeURIComponent(url.pathname.slice(1)) };
+  } else {
+    credentials = { host: env.DB_HOST || '127.0.0.1', port: Number(env.DB_PORT || 3306),
+      user: env.DB_USER, password: env.DB_PASSWORD, database: env.DB_NAME };
   }
-
-  if (explicitRejectUnauthorized) {
-    logger.warn(`Using Postgres TLS rejectUnauthorized=${rejectUnauthorized} because DB_SSL_REJECT_UNAUTHORIZED was explicitly set`);
-  } else if (process.env.NODE_ENV !== 'production') {
-    logger.warn('Using relaxed Postgres TLS validation in development so self-signed/local certificates work');
-  }
-
-  return { rejectUnauthorized };
+  if (!credentials.user || !credentials.database) throw new Error('Set DB_USER and DB_NAME, or a MySQL DATABASE_URL.');
+  const local = ['127.0.0.1', 'localhost', '::1'].includes(credentials.host);
+  const useTls = env.DB_SSL === 'true' || (env.DB_SSL !== 'false' && !local);
+  if (!local && env.NODE_ENV === 'production' && !useTls) throw new Error('Remote production database connections require TLS.');
+  const ssl = useTls ? { rejectUnauthorized: true,
+    ...(env.DB_SSL_CA_PATH ? { ca: fs.readFileSync(env.DB_SSL_CA_PATH, 'utf8') } : {}) } : undefined;
+  return { ...credentials, ssl, charset: 'utf8mb4_unicode_ci', timezone: 'Z',
+    supportBigNumbers: true, bigNumberStrings: true, decimalNumbers: false,
+    waitForConnections: true, connectionLimit: Number(env.DB_POOL_SIZE || 10),
+    queueLimit: 100, connectTimeout: 10000, enableKeepAlive: true, multipleStatements: false,
+    dateStrings: true
+  };
 }
 
-const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: buildSslConfig(),
-  max: 20, // max simultaneous connections in the pool
-  idleTimeoutMillis: 30000, // close idle connections after 30s
-  connectionTimeoutMillis: 5000, // fail fast if the DB is unreachable, rather than hanging
-  statement_timeout: 15000 // kill any single query that runs over 15s instead of blocking the pool indefinitely
+const rawPool = mysql.createPool(connectionOptions());
+rawPool.on('connection', connection => {
+  // This command is queued before the connection is handed to application work.
+  connection.query("SET time_zone = '+00:00'");
 });
+rawPool.on('error', err => logger.error({ err }, 'MySQL pool error'));
+const pool = rawPool.promise();
+const context = new AsyncLocalStorage();
 
-pgPool.on('error', (err) => {
-  logger.error({ err }, 'Unexpected Postgres pool error');
-});
-
-// Converts mysql-style '?' positional placeholders to Postgres-style $1, $2, ...
-function toPgPlaceholders(sql) {
-  let i = 0;
-  return sql.replace(/\?/g, () => `$${++i}`);
-}
-
-// mysql2/promise-compatible query wrapper: models throughout this app do
-//   const [rows] = await pool.query('SELECT ...', [params]);
-//   const [result] = await pool.query('INSERT ... RETURNING id', [params]);
-//   result.insertId
-// This wrapper preserves that call shape on top of node-postgres, so model
-// files only needed their SQL text updated (RETURNING id, function names),
-// not their call sites.
 async function query(sql, params = []) {
-  const text = toPgPlaceholders(sql);
-  const result = await pgPool.query(text, params);
-  const rows = result.rows;
-  if (/^\s*INSERT/i.test(sql) && rows.length && Object.prototype.hasOwnProperty.call(rows[0], 'id')) {
-    rows.insertId = rows[0].id;
+  const [rows,fields] = await (context.getStore() || pool).execute(sql, params);
+  if (Array.isArray(rows)) for (const row of rows) for (const field of fields) {
+    const value = row[field.name];
+    if (value === null) continue;
+    if (field.columnType === 1 && field.columnLength === 1) row[field.name] = Boolean(Number(value));
+    else if ([7,12].includes(field.columnType) && typeof value === 'string') row[field.name] = value.replace(' ', 'T') + 'Z';
+    else if (/^(count|total|total_users|pending_users|approved_users|total_admins)$/.test(field.name)) row[field.name] = Number(value);
   }
-  return [rows, result.fields];
+  return [rows,fields];
 }
-
-module.exports = { query, pool: pgPool };
+async function transaction(work) {
+  if (context.getStore()) return work();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await context.run(connection, work);
+    await connection.commit();
+    return result;
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
+}
+module.exports = { query, transaction, pool, connectionOptions };

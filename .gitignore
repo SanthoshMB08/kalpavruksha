@@ -3,4 +3,10 @@ node_modules/
 .env.test
 public/uploads/**/*
 !public/uploads/**/.gitkeep
+private-uploads/
 coverage/
+
+# Local, disposable implementation verification
+.local/
+test-results/
+playwright-report/

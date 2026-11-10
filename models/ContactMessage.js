@@ -3,7 +3,7 @@ const pool = require('../config/db');
 const ContactMessage = {
   async create({ name, mobile, message }) {
     const [result] = await pool.query(
-      'INSERT INTO contact_messages (name, mobile, message) VALUES (?, ?, ?) RETURNING id',
+      'INSERT INTO contact_messages (name, mobile, message) VALUES (?, ?, ?)',
       [name, mobile, message]
     );
     return result.insertId;
@@ -23,7 +23,7 @@ const ContactMessage = {
   },
 
   async countUnread() {
-    const [rows] = await pool.query('SELECT COUNT(*)::int AS count FROM contact_messages WHERE is_read = FALSE');
+    const [rows] = await pool.query('SELECT COUNT(*) AS count FROM contact_messages WHERE is_read = FALSE');
     return rows[0].count;
   }
 };

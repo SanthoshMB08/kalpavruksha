@@ -86,7 +86,7 @@
 
       function renderOptions() {
         var query = search.value.trim().toLocaleLowerCase();
-        list.textContent = '';
+        list.textContent = window.t('');
         var visibleCount = 0;
         Array.prototype.forEach.call(select.options, function (option) {
           if (option.disabled) return;
@@ -110,7 +110,7 @@
         if (!visibleCount) {
           var empty = document.createElement('p');
           empty.className = 'fc-searchable-empty';
-          empty.textContent = 'No matching options';
+          empty.textContent = window.t('No matching options');
           list.appendChild(empty);
         }
       }

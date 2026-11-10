@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= currentLang %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -9,28 +9,28 @@
   <%- include('../partials/portal-shell-open', { portal, active, title, logoutUrl }) %>
 
       <div class="panel">
-        <h3><i class="fa-solid fa-hourglass-half"></i> Pending Approvals</h3>
+        <h3><i class="fa-solid fa-hourglass-half"></i> <%= t("Pending Approvals") %></h3>
         <% if (pending.length === 0) { %>
-          <div class="empty-state">No pending registrations right now.</div>
+          <div class="empty-state"><%= t("No pending registrations right now.") %></div>
         <% } else { %>
           <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Registered</th><th>Action</th></tr></thead>
+            <thead><tr><th><%= t("Name") %></th><th><%= t("Gender") %></th><th><%= t("Mobile") %></th><th><%= t("Username") %></th><th><%= t("Registered") %></th><th><%= t("Action") %></th></tr></thead>
             <tbody>
               <% pending.forEach(function(u) { %>
                 <tr>
-                  <td data-label="Name"><%= u.name %></td>
-                  <td data-label="Gender"><%= u.gender ? (u.gender === 'male' ? 'Male' : 'Female') : '—' %></td>
-                  <td data-label="Mobile"><%= u.mobile_number %></td>
-                  <td data-label="Username"><%= u.username %></td>
-                  <td data-label="Registered"><%= new Date(u.created_at).toLocaleDateString('en-IN') %></td>
-                  <td data-label="Action" class="row-actions">
+                  <td data-label="<%= t("Name") %>"><%= u.name %></td>
+                  <td data-label="<%= t("Gender") %>"><%= t(u.gender ? (u.gender === 'male' ? 'Male' : 'Female') : '—') %></td>
+                  <td data-label="<%= t("Mobile") %>"><%= u.mobile_number %></td>
+                  <td data-label="<%= t("Username") %>"><%= u.username %></td>
+                  <td data-label="<%= t("Registered") %>"><%= new Date(u.created_at).toLocaleDateString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %></td>
+                  <td data-label="<%= t("Action") %>" class="row-actions">
                     <div class="row-actions-inner">
                       <form action="/portal/admin-dashboard/users/<%= u.id %>/approve" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn-gold btn-sm" type="submit">Approve Profile</button>
+                        <button class="btn btn-gold btn-sm" type="submit"><%= t("Approve Profile") %></button>
                       </form>
                       <form action="/portal/admin-dashboard/users/<%= u.id %>/reject" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn-danger btn-sm" type="submit">Deny Profile</button>
+                        <button class="btn btn-danger btn-sm" type="submit"><%= t("Deny Profile") %></button>
                       </form>
                     </div>
                   </td>
@@ -45,37 +45,37 @@
 
       <div class="panel">
         <h3>
-          <i class="fa-solid fa-users"></i> Active Members
+          <i class="fa-solid fa-users"></i> <%= t("Active Members") %>
           <span class="panel-head-actions">
-            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createUserModal"><i class="fa-solid fa-plus"></i> Create User</button>
+            <button type="button" class="btn btn-gold btn-sm" data-open-modal="createUserModal"><i class="fa-solid fa-plus"></i> <%= t("Create User") %></button>
           </span>
         </h3>
         <% if (members.length === 0) { %>
-          <div class="empty-state">No approved members yet.</div>
+          <div class="empty-state"><%= t("No approved members yet.") %></div>
         <% } else { %>
           <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Username</th><th>Actions</th></tr></thead>
+            <thead><tr><th><%= t("Name") %></th><th><%= t("Gender") %></th><th><%= t("Mobile") %></th><th><%= t("Username") %></th><th><%= t("Actions") %></th></tr></thead>
             <tbody>
               <% members.forEach(function(m) { %>
                 <% const isLocked = m.locked_until && new Date(m.locked_until) > new Date(); %>
                 <tr>
-                  <td data-label="Name"><%= m.name %> <% if (isLocked) { %><span class="badge badge-rejected" title="Locked until <%= new Date(m.locked_until).toLocaleString('en-IN') %>">Locked</span><% } %></td>
-                  <td data-label="Gender"><%= m.gender ? (m.gender === 'male' ? 'Male' : 'Female') : '—' %></td>
-                  <td data-label="Mobile"><%= m.mobile_number %></td>
-                  <td data-label="Username"><%= m.username %></td>
-                  <td data-label="Actions" class="row-actions">
+                  <td data-label="<%= t("Name") %>"><%= m.name %> <% if (isLocked) { %><span class="badge badge-rejected" title="Locked until <%= new Date(m.locked_until).toLocaleString(currentLang === 'kn' ? 'kn-IN' : 'en-IN') %>"><%= t("Locked") %></span><% } %></td>
+                  <td data-label="<%= t("Gender") %>"><%= t(m.gender ? (m.gender === 'male' ? 'Male' : 'Female') : '—') %></td>
+                  <td data-label="<%= t("Mobile") %>"><%= m.mobile_number %></td>
+                  <td data-label="<%= t("Username") %>"><%= m.username %></td>
+                  <td data-label="<%= t("Actions") %>" class="row-actions">
                     <div class="row-menu">
                       <button type="button" class="row-menu-btn" aria-label="Actions for <%= m.username %>"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                       <div class="row-menu-dropdown">
-                        <button type="button" data-open-modal="pwModal-<%= m.id %>"><i class="fa-solid fa-key"></i> Change Password</button>
+                        <button type="button" data-open-modal="pwModal-<%= m.id %>"><i class="fa-solid fa-key"></i> <%= t("Change Password") %></button>
                         <% if (isLocked && currentUser.role === 'superadmin') { %>
                           <form action="/portal/admin-dashboard/users/<%= m.id %>/unlock" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <button type="submit"><i class="fa-solid fa-lock-open"></i> Unlock Account</button>
+                            <button type="submit"><i class="fa-solid fa-lock-open"></i> <%= t("Unlock Account") %></button>
                           </form>
                         <% } %>
                         <form action="/portal/admin-dashboard/users/<%= m.id %>/delete" method="POST" data-confirm="Permanently delete user &quot;<%= m.username %>&quot;? This cannot be undone."><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <button type="submit" class="danger"><i class="fa-solid fa-user-xmark"></i> Delete User</button>
+                          <button type="submit" class="danger"><i class="fa-solid fa-user-xmark"></i> <%= t("Delete User") %></button>
                         </form>
                       </div>
                     </div>
@@ -84,15 +84,15 @@
                       <div class="modal-box modal-narrow">
                         <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
                         <div style="padding:0 24px 24px;">
-                          <h3 style="margin-bottom:4px;">Change Password</h3>
+                          <h3 style="margin-bottom:4px;"><%= t("Change Password") %></h3>
                           <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= m.username %></p>
                           <form action="/portal/admin-dashboard/users/<%= m.id %>/password" method="POST" data-confirm="Reset password for <%= m.username %>?"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="field">
-                              <label class="form-label">New Password</label>
+                              <label class="form-label"><%= t("New Password") %></label>
                               <input type="password" name="password" minlength="8" required autofocus>
                             </div>
                             <div class="field" style="margin-top:16px;">
-                              <button type="submit" class="btn btn-maroon btn-block">Update Password</button>
+                              <button type="submit" class="btn btn-maroon btn-block"><%= t("Update Password") %></button>
                             </div>
                           </form>
                         </div>
@@ -113,38 +113,39 @@
         <div class="modal-box">
           <div class="modal-close"><button type="button" data-close-modal>&times;</button></div>
           <div style="padding:0 24px 24px;">
-            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus"></i> Direct User Creation</h3>
-            <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;">Bypasses approval, activates instantly.</p>
+            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus"></i> <%= t("Direct User Creation") %></h3>
+            <p style="font-size:0.82rem; color:#8a7156; margin-bottom:16px;"><%= t("Bypasses approval, activates instantly.") %></p>
             <% if (formErrors && formErrors.length) { %>
-              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= e %></div><% }) %></div>
+              <div class="form-errors"><% formErrors.forEach(function(e) { %><div><i class="fa-solid fa-circle-exclamation"></i> <%= t(e) %></div><% }) %></div>
             <% } %>
             <form class="form-grid" action="/portal/admin-dashboard/users/create-direct" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="field">
-                <label class="form-label">Full Name</label>
-                <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="Letters only, no numbers" required>
+                <label class="form-label"><%= t("Full Name") %></label>
+                <input type="text" name="name" value="<%= old.name || '' %>" pattern="[A-Za-z\\s.'-]+" title="<%= t("Letters only, no numbers") %>" required>
               </div>
               <div class="field">
-                <label class="form-label">Mobile Number</label>
-                <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="Exactly 10 digits" required>
+                <label class="form-label"><%= t("Mobile Number") %></label>
+                <input type="text" name="mobile_number" value="<%= old.mobile_number || '' %>" pattern="[0-9]{10}" maxlength="10" title="<%= t("Exactly 10 digits") %>" required>
               </div>
               <div class="field">
-                <label class="form-label">Username</label>
+                <label class="form-label"><%= t("Username") %></label>
                 <input type="text" name="username" value="<%= old.username || '' %>" required>
               </div>
               <div class="field">
-                <label class="form-label">Gender <span class="field-tip" data-tip="Determines which members this account will be matched with.">?</span></label>
+                <label class="form-label"><%= t("Gender") %> <span class="field-tip" data-tip="<%= t("Determines which members this account will be matched with.") %>">?</span></label>
                 <select name="gender" required>
-                  <option value="">Select Gender</option>
-                  <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>>Male</option>
-                  <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>>Female</option>
+                  <option value=""><%= t("Select Gender") %></option>
+                  <option value="male" <%= old.gender === 'male' ? 'selected' : '' %>><%= t("Male") %></option>
+                  <option value="female" <%= old.gender === 'female' ? 'selected' : '' %>><%= t("Female") %></option>
                 </select>
               </div>
               <div class="field">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" required minlength="8">
+                <label class="form-label"><%= t("Password") %></label>
+                <input type="password" name="password" data-password-strength-input required minlength="8" autocomplete="new-password">
+                <%- include('../partials/password-strength') %>
               </div>
               <div class="field full">
-                <button type="submit" class="btn btn-maroon">Create &amp; Activate User</button>
+                <button type="submit" class="btn btn-maroon"><%= t("Create & Activate User") %></button>
               </div>
             </form>
           </div>

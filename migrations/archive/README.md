@@ -1,7 +1,3 @@
-These four files are kept for history only.
+# Database history
 
-Their contents were merged into `migrations/schema.sql` (the single
-consolidated migration) on this date. Do not run these individually —
-`migrations/schema.sql` already contains every change they made, and running
-it is safe on both a brand-new database and one that already has some or all
-of these applied.
+The former PostgreSQL upgrade scripts are retained in Git history. Use ../schema.sql for a fresh MySQL/MariaDB database and the documented export/import commands to transfer existing PostgreSQL records. Do not apply old PostgreSQL patches to MySQL.

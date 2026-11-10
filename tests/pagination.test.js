@@ -1,6 +1,5 @@
 const request = require('supertest');
 const app = require('../app');
-const { pool: appPool } = require('../config/db');
 const { pool, applySchema, resetTables, closePool } = require('./helpers/db');
 const { loginAs, createUser } = require('./helpers/auth');
 
@@ -14,7 +13,6 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await closePool();
-  await appPool.end();
 });
 
 async function loginAsSuperAdmin() {
@@ -43,8 +41,8 @@ async function seedMaleProfiles(count) {
         occupation, annual_salary, father_name, father_occupation, father_salary,
         mother_name, mother_occupation, mother_salary, phone_number, address, city, state,
         assets, rashi, nakshatra
-      ) VALUES ($1,'male','x.png','Hindu','Test','Test','1995-01-01','Kannada','Eng',500000,
-        'F','B',100000,'M','T',100000,$2,'addr','Blr','KA','flat','Simha','Magha')`,
+      ) VALUES (?,'male','x.png','Hindu','Test','Test','1995-01-01','Kannada','Eng',500000,
+        'F','B',100000,'M','T',100000,?,'addr','Blr','KA','flat','Simha','Magha')`,
       [`Search Target ${i}`, `63${String(i).padStart(8, '0')}`]
     );
   }

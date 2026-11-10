@@ -15,6 +15,7 @@ module.exports = [
         __dirname: 'readonly',
         __filename: 'readonly',
         Buffer: 'readonly',
+        URL: 'readonly', AbortSignal: 'readonly',
         setInterval: 'readonly',
         setTimeout: 'readonly',
         fetch: 'readonly' // built into Node 18+ (this app's minimum, per package.json engines)
@@ -44,6 +45,6 @@ module.exports = [
     }
   },
   {
-    ignores: ['node_modules/**', 'public/**', 'coverage/**']
+    ignores: ['node_modules/**', 'public/**', 'coverage/**', '.local/**', 'test-results/**']
   }
 ];

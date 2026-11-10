@@ -1,256 +1,82 @@
 # Kalpavruksha Kalyana
 
-Matrimony service exclusively for Lingayats — Node.js + Express + EJS +
-Postgres.
+A server-rendered matrimony application using Node.js 22+, Express, EJS and MySQL/MariaDB. Member, admin and superadmin workflows, approvals, detailed profiles, independent Saved/Interested lists, sharing, documents, success stories, contact messages and trash/restore are retained.
 
-The app is written to be **provider-portable** on both of its external
-dependencies:
+## Hostinger setup
 
-- **Database** — plain `pg` (node-postgres) against any standard Postgres
-  13+ connection string. Nothing Supabase-specific in the schema or queries.
-- **File storage** (profile photos, jathaka PDFs, biodata PDFs, ad images) —
-  a pluggable storage layer (`utils/storage/`) with drivers for Supabase
-  Storage, any S3-compatible provider (AWS S3, Cloudflare R2, Backblaze B2,
-  DigitalOcean Spaces, Wasabi, self-hosted MinIO), or plain local disk.
-  Switching providers is a `.env` change, not a code change.
+Use a Hostinger plan that supports Node.js applications. Web/Cloud databases may run MariaDB even when the control panel calls them MySQL. This schema targets MySQL 8.0.16+ and MariaDB 10.6+.
 
-## Setup (new install)
+1. Create a **new, empty database** and database user in Hostinger.
+2. Select that database in phpMyAdmin and import [migrations/schema.sql](migrations/schema.sql). It includes application tables, indexes, constraints, sessions and advertisement slots. It does not require permission to create a database.
+3. Configure your application's environment using `.env.example`. Replace the previous PostgreSQL `DATABASE_URL` with your MySQL URL, or remove it and use `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`.
+4. Use `DB_HOST=127.0.0.1` for Hostinger's local database endpoint when specified by your plan. Use TLS with certificate verification for remote production connections.
+5. Set `NODE_ENV=production`, a random `SESSION_SECRET` of at least 32 bytes, and the actual trusted reverse-proxy IP/subnet in `TRUST_PROXY`. Do not use `true` or an arbitrary hop count.
+6. Deploy with `npm ci --omit=dev`; startup command: `npm start`. The platform supplies `PORT`.
+7. For a fresh installation, set a strong `SUPERADMIN_PASSWORD` and run `npm run seed`. Do not seed before importing existing records.
+8. Check `/health`, all three login flows, file access and an advertisement on mobile/desktop.
 
-1. **Install dependencies**
-   ```
-   npm install
-   ```
-   Requires **Node.js 18+** (the storage migration script uses the built-in
-   `fetch`).
+Example connection string: `mysql://USER:URL_ENCODED_PASSWORD@127.0.0.1:3306/DATABASE`. Percent-encode reserved characters in URL credentials; separate DB variables avoid that requirement. Never commit real environment files.
 
-2. **Create a Postgres database**
-   Any provider works — [Supabase](https://supabase.com), [Neon](https://neon.tech),
-   [Railway](https://railway.app), Render Postgres, AWS RDS, or a local
-   Postgres install. Get its connection string (URI form).
+Uploads use local disk by default (`STORAGE_PROVIDER=local`); optionally use an S3-compatible provider with `STORAGE_PROVIDER=s3` and the S3 settings in `.env.example`. Local storage requires a persistent upload directory across deployments. Use `npm run migrate-storage` to copy referenced files between local, S3, and Hostinger FTP storage before switching providers; both source and destination must remain available until the copy is verified.
 
-3. **Create your `.env` file**
-   ```
-   cp .env.example .env
-   ```
-   Paste your connection string into `DATABASE_URL`. The app runs on
-   **port 5000** by default. See `.env.example` for every option, including
-   the storage section below.
+### Hostinger FTP image storage
 
-4. **Create the database schema**
-   One file, safe to run on a brand-new database:
-   ```
-   psql "$DATABASE_URL" -f migrations/schema.sql
-   ```
-   (Or paste its contents into your provider's SQL editor, e.g. Supabase's
-   **SQL Editor**.) This single file replaces the old sequence of
-   `schema.sql` + `002_upgrade_features.sql` + `003_stage2_superadmin.sql` +
-   `004_biodata_upload.sql` + `005_ad_slot_expiry.sql` — those four are kept
-   in `migrations/archive/` for history only; don't run them.
+For local development with uploads sent directly to Hostinger, set `PORT=3000` and `STORAGE_PROVIDER=hostinger-ftp` in your local `.env`, then fill in `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_PORT`, `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASSWORD`, and `HOSTINGER_FTP_PUBLIC_URL` using the FTP account details and website HTTPS origin from Hostinger hPanel. Keep these values backend-only; never add them to browser code. The provider requires verified explicit FTPS and does not retry using plaintext FTP.
 
-5. **Set up file storage** — pick ONE:
+The provided FTP account is rooted at `public_html`, so `HOSTINGER_FTP_ROOT=.` stores profile photos under `uploads/profiles` and ad creatives under `uploads/advertisements` without creating a duplicate `public_html` directory. The provider also supports `success-stories` for a future image upload route; the current app has no story-image upload field. The frontend image URL is built from `HOSTINGER_FTP_PUBLIC_URL` and the generated upload path. Biodata and jathaka PDFs are never sent to Hostinger's public FTP folders; they remain on the backend's private filesystem under `PRIVATE_STORAGE_DIR` (defaults to `private-uploads/`, outside `public/`) and are served only through the admin-protected route. This private path is not a remote Hostinger backup. Persistent private storage must be configured and verified separately before deploying or switching providers. See [HOSTINGER_STORAGE.md](HOSTINGER_STORAGE.md) for setup and manual tests.
 
-   **Option A — Supabase Storage** (`STORAGE_PROVIDER=supabase`, the default)
-   - In the Supabase dashboard → **Storage**, create four **Public** buckets:
-     `profiles`, `jathaka`, `biodata`, `ads`.
-   - In **Project Settings → API**, copy the **Project URL** and
-     **service_role secret key** into `SUPABASE_URL` and
-     `SUPABASE_SERVICE_ROLE_KEY`. Use the service_role key, not the anon key —
-     uploads run server-side and need to bypass bucket RLS.
+Before switching `STORAGE_PROVIDER`, copy existing public files from the current backend, for example `MIGRATE_FROM=local MIGRATE_TO=hostinger-ftp node scripts/migrate-storage.js` (use `MIGRATE_FROM=s3` if that's where the current images live). The command preserves filenames, skips biodata/jathaka PDFs, and requires the app's MySQL and Hostinger FTPS settings to be available in the local environment.
 
-   **Option B — S3-compatible** (`STORAGE_PROVIDER=s3`) — AWS S3, Cloudflare
-   R2, Backblaze B2, DigitalOcean Spaces, Wasabi, self-hosted MinIO, etc.
-   - Create one bucket (e.g. `kalpavruksha-uploads`) on your provider of
-     choice and make it publicly readable (a bucket policy, since most
-     providers now reject ACLs — see your provider's docs for "public read
-     bucket policy").
-   - Fill in `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`,
-     `S3_SECRET_ACCESS_KEY` in `.env`. Only set `S3_ENDPOINT` if you're
-     **not** using real AWS S3 (R2/Spaces/MinIO all need it — see their docs
-     for the exact endpoint URL). Set `S3_FORCE_PATH_STYLE=true` if your
-     provider needs path-style URLs (commonly MinIO).
+## Migrate existing PostgreSQL records
 
-   **Option C — local disk** (`STORAGE_PROVIDER=local`) — no cloud account
-   needed; files save under `public/uploads/`. Only use this if your host has
-   a **persistent** filesystem (a VPS, or a PaaS volume) — most PaaS hosts
-   (Render, Railway, Heroku free/hobby tiers, etc.) wipe the filesystem on
-   every deploy/restart, which would silently delete uploaded photos/PDFs.
+The application runtime no longer uses PostgreSQL. The development-only `pg` dependency supports a one-time, read-only source export.
 
-6. **Seed the first Super Admin account**
-   ```
-   npm run seed
-   ```
-   This reads `SUPERADMIN_USERNAME` / `SUPERADMIN_PASSWORD` / `SUPERADMIN_MOBILE`
-   from `.env` and creates the account. Change the password after first login.
+- Back up PostgreSQL and storage. Rehearse using a separate target database.
+- Install development dependencies on the migration machine with `npm ci`.
+- Set `SOURCE_DATABASE_URL` to PostgreSQL. Remote source TLS is verified; use `SOURCE_DB_SSL_CA_PATH` for a private CA.
+- Run `npm run db:export -- .local/postgres-export.json`. The destination file must not already exist. The export uses a consistent read-only transaction and includes checksums.
+- Import the MySQL schema into the empty target and set `DATABASE_URL` to that target.
+- Run `npm run db:import -- .local/postgres-export.json`. It refuses nonempty application tables and imports in a transaction, preserving IDs, password hashes, Unicode, soft deletion and independent Saved/Interested flags. It does not rerun legacy backfills.
+- Check counts, representative field values, account roles, matching, documents and all file references. Active phone/username conflicts must be resolved deliberately if the import reports them.
+- Schedule a write freeze for the final export/import and application switch. Users sign in again because PostgreSQL sessions are not transferred.
+- Keep the source backup. Rollback after accepting new MySQL writes requires reconciling those writes before switching back.
 
-7. **Add your logo**
-   Two placeholder SVGs ship in `public/assets/logo/` so the header renders
-   correctly out of the box:
-   - `logo-desktop.svg` — wide horizontal lockup, shown ≥901px wide
-   - `logo-mobile.svg` — compact icon-only mark, shown ≤900px wide
-   Replace either file with your real artwork (same filename, similar
-   proportions) and it picks up automatically — no template changes needed.
-   If your real logo is a raster image (PNG/JPG) instead of SVG, either file
-   can just as easily be `logo-desktop.png` / `logo-mobile.png`; update the
-   two `<img src="...">` paths in `views/partials/header.ejs` to match.
+Exports contain sensitive records and password hashes. Keep them outside version control and remove the transfer copy after backup/cutover requirements are satisfied. The ignored `.local` folder is suitable for local rehearsals.
 
-8. **Run the app**
-   ```
-   npm start
-   ```
-   or, for auto-reload during development:
-   ```
-   npm run dev
-   ```
-   Visit http://localhost:5000
+## Advertisements
 
-## Migrating an existing install
+The superadmin ad manager displays exact recommended frame sizes and live previews:
 
-### Moving to a different Postgres provider
-
-Because the app only ever uses a standard `DATABASE_URL` connection string
-(via plain `pg`), moving databases is provider-agnostic:
-
-1. Dump the old database: `pg_dump "$OLD_DATABASE_URL" -Fc -f backup.dump`
-2. Create the new database on the new provider, and run
-   `migrations/schema.sql` against it (step 4 above) — or skip this and let
-   the restore recreate everything, then just re-run `schema.sql` afterwards
-   to pick up anything the dump might have missed.
-3. Restore: `pg_restore -d "$NEW_DATABASE_URL" --no-owner --no-privileges backup.dump`
-4. Update `DATABASE_URL` in `.env` (or your host's environment variables) to
-   the new connection string and restart the app.
-5. `session` table: it's fine either way — `connect-pg-simple` recreates it
-   automatically on first boot (`createTableIfMissing: true`) if the dump
-   didn't include it or you'd rather start logged-out sessions fresh.
-
-### Moving to a different file-storage provider
-
-1. Set up the destination provider's `.env` variables (see Setup step 5
-   above) **without removing** the current/source provider's variables yet —
-   the migration script needs both at once.
-2. Run the generic migration script, telling it the two providers by name
-   (`supabase` | `s3` | `local`):
-   ```
-   MIGRATE_FROM=supabase MIGRATE_TO=s3 node scripts/migrate-storage.js
-   ```
-   This reads the database for every file actually referenced (profile
-   photos, jathaka/biodata PDFs, ad images), downloads each from the old
-   provider, and re-uploads it to the new one **under the exact same
-   filename** — so no database rows need updating. It's safe to re-run.
-3. Once it finishes without failures, set `STORAGE_PROVIDER` in `.env` to the
-   new provider's name and restart the app.
-4. Confirm a few profile photos/PDFs load correctly, then you can remove the
-   old provider's credentials from `.env` and delete the old bucket/files.
-
-(There's also `scripts/migrate-uploads-to-supabase.js`, the original
-one-directional "local disk → Supabase" script from before this storage
-layer existed. It still works for that one specific case; the new
-`migrate-storage.js` above is the general-purpose one for any pair of
-providers, including local disk as either the source or destination.)
-
-## Portals
-
-| Portal | URL | Notes |
+| Placement | Desktop artwork | Mobile artwork |
 |---|---|---|
-| Public site | `/` | Home, registration, login |
-| User dashboard | `/dashboard` | Requires an **approved** account |
-| Admin portal | `/portal/admin-login` | Approve users, upload profiles, view interest activity |
-| Super Admin portal | `/portal/super-secure-login` | Manage sub-admins, manage ads, view platform stats |
+| Top banner | 1440 × 180 px | 720 × 240 px |
+| Home ads corner | 600 × 500 px | 720 × 600 px |
+| Home middle | 1200 × 300 px | 720 × 360 px |
+| Home bottom | 1200 × 300 px | 720 × 360 px |
+| After search results | 1200 × 300 px | 720 × 360 px |
 
-Admin and Super Admin accounts are **not** created through public registration —
-create the first Super Admin via `npm run seed`, then use the Super Admin
-dashboard to create Admin (sub-admin) accounts.
+Upload JPG, PNG or WEBP, at most 5 MB per image. A mobile image is optional; otherwise the desktop artwork is fitted into the mobile frame without cropping. Images are optimized to WEBP on upload. Keep text inside the frame edges.
 
-## Folder structure
+Expiry inputs and displayed dates use India time (Asia/Kolkata); the database stores UTC. Expired ads are excluded by the selection query, so correctness does not depend on a timer. Slot changes use transactions and stable placement locks. An invalid replacement leaves the existing advertisement active.
 
+Schedule `npm run cleanup-uploads` hourly using the hosting plan's scheduler, from the project directory. This retries removal of unreferenced uploads; files still referenced by profiles or inactive advertisements are retained.
+
+## Languages and interface
+
+English and Kannada apply across public/member/staff views, forms, dialogs, validation and legal pages. Locale preference is stored for signed-in accounts and in a cookie for visitors, with browser-language fallback. Catalogs are local: no translation API charges or page-render translation calls.
+
+Edit `utils/locales/kn.json` for interface text. The existing semantic keys remain in `utils/i18n.js`. Canonical database values stay unchanged; their display labels are localized. Member names and authored free-text content are preserved. Kannada fonts are bundled under the SIL Open Font License in `public/fonts`.
+
+Shared responsive components live in `public/css/experience.css` and `public/js/dashboard.js`. Members and staff have mobile bottom navigation; profile details retain browsing position, and Saved/Interested actions update without reloading. Server forms remain the fallback.
+
+## Validation
+
+Copy `.env.test.example` to `.env.test` and configure a **disposable database ending in `_test`**. Integration tests reset its tables.
+
+```text
+npm test
+npm run lint
+npm audit --omit=dev
 ```
-config/           DB pool (config/db.js) + Supabase client (config/supabase.js, only used by the supabase storage driver)
-middleware/       auth guards + multer upload handlers
-models/           raw SQL query modules (User, Profile, Interest, Advertisement)
-controllers/      route handlers
-routes/           Express routers (public, user, admin, superadmin)
-views/            EJS templates
-public/           CSS, JS, uploaded files (if STORAGE_PROVIDER=local), logo assets
-public/assets/logo/  placeholder desktop + mobile logo SVGs (see Setup step 7)
-utils/storage/    pluggable file-storage layer — index.js picks the driver via STORAGE_PROVIDER
-migrations/       schema.sql (single consolidated migration) + seed.js
-migrations/archive/  superseded step-by-step migration files, kept for history only
-scripts/          one-off maintenance scripts (storage migration, etc.)
-```
 
-## Notes / things to revisit
-
-- Passwords are hashed with **bcrypt** before storage.
-- If `STORAGE_PROVIDER=local`, uploaded files live on this server's own disk
-  under `public/uploads/`. Most PaaS hosts wipe this on every deploy/restart
-  unless you attach a persistent volume — see Setup step 5, Option C.
-- The `/portal/...` routes are unlisted, not authenticated by obscurity alone —
-  real role-based session middleware (`middleware/auth.js`) guards every route.
-- The logo files in `public/assets/logo/` are placeholders (a simple diya
-  emblem + wordmark in the site's existing colors) — swap them for real
-  designed artwork whenever it's ready.
-
-## Recent updates
-
-**Security & reliability hardening:**
-- **CSRF protection** on every form (`csrf-csrf`, double-submit cookie pattern).
-- **Rate limiting** on all three login forms (member/admin/super admin) and
-  registration — 10 attempts per 15 min per IP+username, 429 response.
-- **Security headers** via `helmet` (clickjacking, MIME-sniffing, HSTS in production).
-- **Session cookies** now set `httpOnly`, `sameSite: 'lax'`, and `secure` in production.
-- App now **refuses to start** if `SESSION_SECRET` is missing, instead of
-  silently running with a hardcoded fallback secret.
-- **Structured logging** via `pino`/`pino-http` — JSON logs in production,
-  pretty-printed in development, every request/error correlated by request ID.
-- **`GET /health`** — unauthenticated endpoint that checks real DB
-  connectivity, for uptime monitors and hosting-platform health checks.
-- **Graceful shutdown** (SIGTERM/SIGINT drain the Postgres pool cleanly).
-- **Pagination** on profile search (member + admin) and the admin members
-  list — previously a hardcoded `LIMIT 200` / unbounded full-table pulls.
-- **Contact form** now actually saves to the database (`contact_messages`
-  table) and shows up on a new Super Admin "Contact Messages" page, instead
-  of being silently discarded.
-- Fixed a validation gap where `/profile/:id/save` and `/profile/:id/express-interest`
-  didn't check the target profile's gender/marital status server-side (the
-  profile-detail modal already did; the direct POST routes didn't).
-
-**Advertisement expiry UX:** reactivating an ad now behaves differently
-depending on whether it's actually expired — if it's still within its
-original expiry window, "Activate" instantly turns it back on with the same
-expiry (same as before). If it's expired, "Activate" opens a small form
-asking for a new expiry date/time before reactivating.
-
-**Admin/Super Admin UX:** "Create User" / "Create Sub-Admin" / "Upload
-Advertisement" now open in a modal instead of sitting inline on the page
-permanently. Each row in a management table has a "⋮" action menu (Change
-Password, Delete User, Remove Admin, etc.) instead of separate always-visible
-buttons/forms per row.
-
-**Mobile layout, sidebar portals, more ad slots, YouTube-style search,
-saved/interested tabs:**
-
-1. **Mobile-friendly.** The public nav, admin/super admin portals, search bar,
-   and profile grids all collapse to single/two-column layouts with a
-   hamburger menu below ~900px, down to small phones (~400px). The header
-   logo also swaps to a compact mobile mark at that same breakpoint.
-
-2. **Professional Admin & Super Admin portals.** Both are now a sidebar +
-   page layout instead of one long scrolling dashboard:
-   - **Admin:** Overview, User Approvals, Profiles, Success Stories.
-   - **Super Admin:** Overview, Sub-Admins, Advertisements, Success Stories.
-   Both admins and super admins can add/edit/hide/delete the "Success
-   Stories" shown on the home page (previously hard-coded in the template).
-
-3. **More ad placements.** Beyond the original Top Banner / Sidebar spots,
-   the home page now has Middle-of-page and Bottom-of-page ad banners, plus
-   a dedicated **"after search results" banner** on the Find Matches page —
-   always a clearly-labeled "Sponsored" banner, never mixed in with member
-   profile cards. Manage all of this from Super Admin → Advertisements.
-
-4. **YouTube/LinkedIn-style search.** The "Find Matches" page now has a top
-   search bar (search by name/occupation/city) with a **Filters** dropdown
-   for Caste, Language, Age Range, Religion, Sub-caste, and Gender.
-
-   **Saved vs. Interested are now independent.** Saving a profile no longer
-   overwrites an "Express Interest" on that same profile (or vice versa) —
-   each member has a **Saved** tab and a separate **Interested** tab on the
-   "My Profiles" page.
+CI checks MySQL 8.0 and MariaDB 10.11. Never point integration tests at the application database. `npm run db:init` imports the fresh schema through Node when phpMyAdmin is unavailable.
