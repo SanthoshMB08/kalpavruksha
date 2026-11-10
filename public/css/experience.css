@@ -1,7 +1,7 @@
 @font-face{font-family:'Noto Sans Kannada';src:url('/fonts/NotoSansKannada.ttf') format('truetype');font-weight:100 900;font-display:swap}
 /* Shared responsive components. Existing routes and controls remain available. */
 :root{--ui-bg:#f4f6f5;--ui-surface:#fff;--ui-ink:#17352e;--ui-muted:#53675f;--ui-line:#dfe7e2;--ui-accent:#17654f;--ui-radius:16px}
-html{font-size:17px}
+html{font-size:18px}
 body{color:var(--ui-ink)}
 button,a,input,select,textarea{touch-action:manipulation}
 button,input,select,textarea{font:inherit}
@@ -14,8 +14,8 @@ textarea{min-height:110px}
 .btn i{font-size:1.15rem}
 .btn-sm{min-height:42px}
 .btn-maroon{background:var(--ui-accent);border-color:var(--ui-accent)}
-.brand-logo-desktop{width:96px;height:96px;object-fit:contain}
-.brand-logo-mobile{width:84px;height:84px;object-fit:contain}
+.brand-logo-desktop{width:108px;height:108px;object-fit:contain}
+.brand-logo-mobile{width:92px;height:92px;object-fit:contain}
 .navbar{min-height:100px;padding-block:6px}
 .brand-name-primary{font-size:1.8rem}
 .brand-name-secondary{letter-spacing:.1em}
@@ -30,7 +30,7 @@ textarea{min-height:110px}
 .panel h2{font-size:1.25rem;margin:0 0 18px}
 .portal-sidebar{background:#fff;color:var(--ui-ink);border-right:1px solid var(--ui-line)}
 .portal-sidebar-brand{color:var(--ui-ink);font-size:1.15rem;line-height:1.4}
-.portal-brand-logo{display:block;width:96px;height:96px;object-fit:contain;margin-bottom:8px}
+.portal-brand-logo{display:block;width:108px;height:108px;object-fit:contain;margin-bottom:8px}
 .portal-sidebar-brand span{color:var(--ui-muted)}
 .portal-nav a{color:var(--ui-muted);min-height:48px;border-radius:10px;margin:3px 10px;font-size:.98rem}
 .portal-nav a i{font-size:23px;width:26px;text-align:center}
@@ -183,10 +183,10 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
  .footer-credit{align-self:flex-end}
 }
 @media(max-width:700px){
- html{font-size:16.5px}
+ html{font-size:17px}
  body:has(.mobile-bottom-nav),body:has(.portal-bottom-nav){padding-bottom:calc(76px + env(safe-area-inset-bottom))}
  .navbar{min-height:92px;padding:5px 14px;gap:10px}
- .brand-logo-mobile{width:80px;height:80px}
+ .brand-logo-mobile{width:88px;height:88px}
  .brand-name-primary{font-size:1.38rem}
  .brand-name-secondary{font-size:.72rem}
  .nav-toggle{margin-left:auto}
@@ -203,7 +203,7 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
  .portal-language{margin-left:auto}
  .portal-language a{padding:8px 6px}
  .portal-sidebar-brand{padding:18px}
- .portal-brand-logo{width:82px;height:82px}
+ .portal-brand-logo{width:90px;height:90px}
  .panel{padding:18px 14px;border-radius:14px}
  .page-intro{align-items:flex-start;flex-direction:column;gap:12px}
  .page-intro h1{font-size:1.55rem}
@@ -352,7 +352,7 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
 @media(max-width:700px){
  .member-app-navbar{position:sticky;top:0;z-index:150;min-height:64px;height:64px;padding:5px 12px;background:rgba(255,255,255,.97);background-image:none;border-bottom:1px solid var(--ui-line);box-shadow:0 4px 18px rgba(23,53,46,.06);backdrop-filter:blur(18px)}
  .member-app-navbar .brand{gap:8px;color:var(--ui-ink)}
- .member-app-navbar .brand-logo-mobile{width:50px;height:50px}
+ .member-app-navbar .brand-logo-mobile{width:56px;height:56px}
  .member-app-navbar .brand-name-primary{color:var(--ui-ink);font-size:1.15rem;letter-spacing:0}
  .member-app-navbar .brand-name-secondary{display:none}
  .member-app-navbar .member-top-profile{display:grid;place-items:center;order:1;flex:0 0 38px;width:38px;height:38px;margin-left:auto;color:#fff;background:linear-gradient(135deg,#17654f,#2e8a70);border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px var(--ui-line);font-size:.92rem;font-weight:700;text-decoration:none}
