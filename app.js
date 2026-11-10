@@ -34,6 +34,11 @@ const adminRoutes = require('./routes/admin');
 const superAdminRoutes = require('./routes/superadmin');
 
 const app = express();
+const trustProxy = Number(process.env.TRUST_PROXY || 1);
+if (!Number.isInteger(trustProxy) || trustProxy < 0 || trustProxy > 10) {
+  throw new Error('TRUST_PROXY must be an integer from 0 to 10.');
+}
+app.set('trust proxy', trustProxy);
 app.locals.t = getTranslator('en');
 app.locals.currentLang = 'en';
 app.locals.catalogVersion = catalogVersion;
@@ -69,21 +74,7 @@ function buildFlashHandler(req) {
   };
 }
 
-// Needed so `secure` cookies and req.ip work correctly behind a reverse
-// proxy/load balancer (Render, Railway, Hostinger + Nginx, etc.) — without
-// this, Express doesn't trust the X-Forwarded-* headers and every request
-// looks like plain HTTP even when the proxy terminated real HTTPS.
-// Trust only explicitly configured proxy addresses/subnets. The default ignores
-// client-supplied X-Forwarded-* headers, including attempts to bypass IP limits.
-const trustedProxies = (process.env.TRUST_PROXY || '').split(',').map(value => value.trim()).filter(Boolean);
-if (trustedProxies.some(value => /^(true|\d+)$/i.test(value))) {
-  throw new Error('TRUST_PROXY must contain proxy IPs/subnets, not true or a hop count.');
-}
-app.set('trust proxy', trustedProxies.length ? trustedProxies : false);
 app.set('query parser', 'simple');
-if (isProduction && !trustedProxies.length) {
-  logger.warn('TRUST_PROXY is not configured; HTTPS-only session cookies may fail behind the hosting reverse proxy.');
-}
 
 // View engine
 app.set('view engine', 'ejs');

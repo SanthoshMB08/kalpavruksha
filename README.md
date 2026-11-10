@@ -10,14 +10,14 @@ Use a Hostinger plan that supports Node.js applications. Web/Cloud databases may
 2. Select that database in phpMyAdmin and import [migrations/schema.sql](migrations/schema.sql). It includes application tables, indexes, constraints, sessions and advertisement slots. It does not require permission to create a database.
 3. Configure your application's environment using `.env.example`. Replace the previous PostgreSQL `DATABASE_URL` with your MySQL URL, or remove it and use `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`.
 4. Use `DB_HOST=127.0.0.1` for Hostinger's local database endpoint when specified by your plan. Use TLS with certificate verification for remote production connections.
-5. Set `NODE_ENV=production`, a random `SESSION_SECRET` of at least 32 bytes, and the actual trusted reverse-proxy IP/subnet in `TRUST_PROXY`. Do not use `true` or an arbitrary hop count.
+5. Set `NODE_ENV=production`, a random `SESSION_SECRET` of at least 32 bytes, and `TRUST_PROXY=1` when requests reach Express through exactly one trusted hosting proxy. If Hostinger uses a different proxy chain, set the verified hop count they provide; do not use `true`.
 6. Deploy with `npm ci --omit=dev`; startup command: `npm start`. The platform supplies `PORT`.
 7. For a fresh installation, set a strong `SUPERADMIN_PASSWORD` and run `npm run seed`. Do not seed before importing existing records.
 8. Check `/health`, all three login flows, file access and an advertisement on mobile/desktop.
 
 ### Login says the session or form token is invalid
 
-Open the app using its HTTPS temporary-domain URL, then reload the login page before submitting. If the error persists, confirm `NODE_ENV=production`, `SESSION_SECRET` is a stable random value (do not regenerate it on each start), and `TRUST_PROXY` contains the exact trusted reverse-proxy IP/subnet supplied by Hostinger. Express needs to recognize the original HTTPS request to issue its secure session cookie. Do not set `TRUST_PROXY=true` or use an unverified proxy address. After changing environment values, restart the Node.js app and clear cookies for the temporary domain before trying again. CSRF rejection logs include only booleans indicating whether the request, session, and cookies were present; they do not log cookie/token contents.
+Open the app using its HTTPS temporary-domain URL, then reload the login page before submitting. If the error persists, confirm `NODE_ENV=production`, `SESSION_SECRET` is a stable random value (do not regenerate it on each start), and `TRUST_PROXY=1` matches Hostinger's proxy chain. Express needs to recognize the original HTTPS request to issue its secure session cookie. Do not set `TRUST_PROXY=true`; use only the verified hop count for the hosting proxy. After changing environment values, restart the Node.js app and clear cookies for the temporary domain before trying again. CSRF rejection logs include only booleans indicating whether the request, session, and cookies were present; they do not log cookie/token contents.
 
 Example connection string: `mysql://USER:URL_ENCODED_PASSWORD@127.0.0.1:3306/DATABASE`. Percent-encode reserved characters in URL credentials; separate DB variables avoid that requirement. Never commit real environment files.
 
