@@ -15,6 +15,10 @@ Use a Hostinger plan that supports Node.js applications. Web/Cloud databases may
 7. For a fresh installation, set a strong `SUPERADMIN_PASSWORD` and run `npm run seed`. Do not seed before importing existing records.
 8. Check `/health`, all three login flows, file access and an advertisement on mobile/desktop.
 
+### Login says the session or form token is invalid
+
+Open the app using its HTTPS temporary-domain URL, then reload the login page before submitting. If the error persists, confirm `NODE_ENV=production`, `SESSION_SECRET` is a stable random value (do not regenerate it on each start), and `TRUST_PROXY` contains the exact trusted reverse-proxy IP/subnet supplied by Hostinger. Express needs to recognize the original HTTPS request to issue its secure session cookie. Do not set `TRUST_PROXY=true` or use an unverified proxy address. After changing environment values, restart the Node.js app and clear cookies for the temporary domain before trying again. CSRF rejection logs include only booleans indicating whether the request, session, and cookies were present; they do not log cookie/token contents.
+
 Example connection string: `mysql://USER:URL_ENCODED_PASSWORD@127.0.0.1:3306/DATABASE`. Percent-encode reserved characters in URL credentials; separate DB variables avoid that requirement. Never commit real environment files.
 
 Uploads use local disk by default (`STORAGE_PROVIDER=local`); optionally use an S3-compatible provider with `STORAGE_PROVIDER=s3` and the S3 settings in `.env.example`. Local storage requires a persistent upload directory across deployments. Use `npm run migrate-storage` to copy referenced files between local, S3, and Hostinger FTP storage before switching providers; both source and destination must remain available until the copy is verified.

@@ -81,6 +81,9 @@ if (trustedProxies.some(value => /^(true|\d+)$/i.test(value))) {
 }
 app.set('trust proxy', trustedProxies.length ? trustedProxies : false);
 app.set('query parser', 'simple');
+if (isProduction && !trustedProxies.length) {
+  logger.warn('TRUST_PROXY is not configured; HTTPS-only session cookies may fail behind the hosting reverse proxy.');
+}
 
 // View engine
 app.set('view engine', 'ejs');
@@ -295,7 +298,15 @@ app.use((err, req, res, next) => {
   }
 
   if (err === invalidCsrfTokenError || err.code === 'EBADCSRFTOKEN') {
-    req.log.warn('Rejected request with invalid/missing CSRF token');
+    req.log.warn({
+      csrfDiagnostics: {
+        secureRequest: req.secure,
+        proxyReportsHttps: String(req.get('x-forwarded-proto') || '').split(',')[0].trim().toLowerCase() === 'https',
+        sessionPresent: Boolean(req.session && req.session.id),
+        sessionCookiePresent: Boolean(req.cookies && req.cookies.kalpavruksha_sid),
+        csrfCookiePresent: Boolean(req.cookies && req.cookies.kalpavruksha_csrf)
+      }
+    }, 'Rejected request with invalid/missing CSRF token');
     return res.status(403).type('text').send(translate('Your session expired or the form token is invalid. Reload the page and try again.'));
   }
   if (err.code === 'LIMIT_FILE_SIZE' || err.code === 'INVALID_FILE_TYPE' || err.name === 'MulterError') {
