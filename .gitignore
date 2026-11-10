@@ -8,5 +8,3 @@ coverage/
 
 # Local, disposable implementation verification
 .local/
-test-results/
-playwright-report/

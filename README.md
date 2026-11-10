@@ -81,12 +81,9 @@ Shared responsive components live in `public/css/experience.css` and `public/js/
 
 ## Validation
 
-Copy `.env.test.example` to `.env.test` and configure a **disposable database ending in `_test`**. Integration tests reset its tables.
-
 ```text
-npm test
 npm run lint
 npm audit --omit=dev
 ```
 
-CI checks MySQL 8.0 and MariaDB 10.11. Never point integration tests at the application database. `npm run db:init` imports the fresh schema through Node when phpMyAdmin is unavailable.
+Run `npm run db:init` to import the fresh schema through Node when phpMyAdmin is unavailable. Before launch, manually verify `/health`, sign-in, profile search, uploads, private document access, and mobile layouts on a staging deployment.

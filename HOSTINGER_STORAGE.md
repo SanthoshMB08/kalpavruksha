@@ -52,16 +52,9 @@ npm run migrate-private-documents
 
 Set `PRIVATE_STORAGE_DIR` first if the destination must be somewhere other than `private-uploads/`. The command copies only PDFs referenced by profile records, preserves filenames, verifies existing destination files, and does not delete the originals. Verify the protected admin links before manually removing any old public copies. If legacy files exist only on a remote FTP host, securely download them into the matching local folders first; the script does not connect to or clean up legacy public FTP files.
 
-## Test
+## Manual verification
 
-Automated tests mock the FTPS server and validate paths, TLS requirements, image validation, URL construction, interrupted uploads, and private PDF routing. They do not prove that your Hostinger account accepts a live connection. Run:
-
-```powershell
-npm test -- --runInBand tests/hostingerStorage.test.js
-npm run lint
-```
-
-For a live check, configure the environment and:
+To check your live Hostinger account, configure the environment and:
 
 1. Start the server with `npm run dev` and sign in to the local admin dashboard.
 2. Create or edit a profile and upload a profile photo. Create an advertisement and upload desktop/mobile images.

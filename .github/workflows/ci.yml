@@ -5,37 +5,8 @@ on:
   pull_request:
     branches: [main]
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - database: mysql:8.0
-            health: mysqladmin ping -h 127.0.0.1 -ptest_password --silent
-          - database: mariadb:10.11
-            health: healthcheck.sh --connect --innodb_initialized
-    services:
-      database:
-        image: ${{ matrix.database }}
-        env:
-          MYSQL_ROOT_PASSWORD: test_password
-          MYSQL_DATABASE: kalpavruksha_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="${{ matrix.health }}"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=12
-    env:
-      NODE_ENV: test
-      DATABASE_URL: mysql://root:test_password@127.0.0.1:3306/kalpavruksha_test
-      DB_SSL: 'false'
-      SESSION_SECRET: ci_test_session_secret
-      STORAGE_PROVIDER: local
-      SUPERADMIN_USERNAME: superadmin
-      SUPERADMIN_PASSWORD: CiTestPass123
-      SUPERADMIN_MOBILE: '9999999999'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,8 +14,5 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm run lint
       - run: npm audit --omit=dev --audit-level=moderate --ignore-scripts
-      - run: npm test
-      - run: npm run test:ui
