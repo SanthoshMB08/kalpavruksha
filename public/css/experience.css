@@ -14,9 +14,9 @@ textarea{min-height:110px}
 .btn i{font-size:1.15rem}
 .btn-sm{min-height:42px}
 .btn-maroon{background:var(--ui-accent);border-color:var(--ui-accent)}
-.brand-logo-desktop{width:108px;height:108px;object-fit:contain}
-.brand-logo-mobile{width:92px;height:92px;object-fit:contain}
-.navbar{min-height:100px;padding-block:6px}
+.brand-logo-desktop{width:120px;height:120px;object-fit:contain}
+.brand-logo-mobile{width:100px;height:100px;object-fit:contain}
+.navbar{min-height:100px;padding:2px 20px}
 .brand-name-primary{font-size:1.8rem}
 .brand-name-secondary{letter-spacing:.1em}
 .nav-toggle,.nav-drawer-close,.row-menu-btn,.notif-bell-btn,.portal-menu-btn,.btn-share,.share-sheet-close{min-width:46px;min-height:46px}
@@ -185,8 +185,9 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
 @media(max-width:700px){
  html{font-size:17px}
  body:has(.mobile-bottom-nav),body:has(.portal-bottom-nav){padding-bottom:calc(76px + env(safe-area-inset-bottom))}
- .navbar{min-height:92px;padding:5px 14px;gap:10px}
- .brand-logo-mobile{width:88px;height:88px}
+ .navbar{min-height:92px;padding:2px 8px;gap:8px}
+ .navbar .brand{gap:6px}
+ .brand-logo-mobile{width:96px;height:96px}
  .brand-name-primary{font-size:1.38rem}
  .brand-name-secondary{font-size:.72rem}
  .nav-toggle{margin-left:auto}
@@ -338,6 +339,8 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
  .admin-profile-search-console{position:relative;top:auto;margin:0 -4px 16px;padding:10px;background:#f4f7f5;border:1px solid var(--ui-line);border-radius:14px;box-shadow:none}
  .admin-profile-search-console .fc-locked{display:none}
  .admin-profile-search-console .fc-filter-actions{position:sticky;bottom:0;background:#f4f7f5}
+ .admin-profiles-table .admin-profile-photo-cell{align-items:center;min-height:144px}
+ .admin-profiles-table .admin-profile-photo{width:104px;height:132px;flex:0 0 104px;border-radius:10px!important}
 }
 @media(min-width:420px) and (max-width:700px){
  .profile-card{border:1px solid var(--ui-line);border-radius:15px;overflow:hidden}
@@ -350,9 +353,9 @@ html[lang=kn] .btn,html[lang=kn] input,html[lang=kn] select{line-height:1.5}
 .profile-photo-open{display:block;width:100%;height:100%;min-height:0;padding:0;background:transparent;border:0;cursor:pointer}
 .profile-photo-open img{width:100%;height:100%;object-fit:cover}
 @media(max-width:700px){
- .member-app-navbar{position:sticky;top:0;z-index:150;min-height:64px;height:64px;padding:5px 12px;background:rgba(255,255,255,.97);background-image:none;border-bottom:1px solid var(--ui-line);box-shadow:0 4px 18px rgba(23,53,46,.06);backdrop-filter:blur(18px)}
- .member-app-navbar .brand{gap:8px;color:var(--ui-ink)}
- .member-app-navbar .brand-logo-mobile{width:56px;height:56px}
+ .member-app-navbar{position:sticky;top:0;z-index:150;min-height:64px;height:64px;padding:2px 8px;background:rgba(255,255,255,.97);background-image:none;border-bottom:1px solid var(--ui-line);box-shadow:0 4px 18px rgba(23,53,46,.06);backdrop-filter:blur(18px)}
+ .member-app-navbar .brand{gap:6px;color:var(--ui-ink)}
+ .member-app-navbar .brand-logo-mobile{width:60px;height:60px}
  .member-app-navbar .brand-name-primary{color:var(--ui-ink);font-size:1.15rem;letter-spacing:0}
  .member-app-navbar .brand-name-secondary{display:none}
  .member-app-navbar .member-top-profile{display:grid;place-items:center;order:1;flex:0 0 38px;width:38px;height:38px;margin-left:auto;color:#fff;background:linear-gradient(135deg,#17654f,#2e8a70);border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px var(--ui-line);font-size:.92rem;font-weight:700;text-decoration:none}

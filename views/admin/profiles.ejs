@@ -161,12 +161,12 @@
         </div>
 
         <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table admin-profiles-table">
           <thead><tr><th><%= t("Photo") %></th><th><%= t("Name") %></th><th><%= t("Gender") %></th><th><%= t("Caste") %></th><th><%= t("Age") %></th><th><%= t("City") %></th><th><%= t("Status") %></th><th><%= t("Uploaded") %></th><th><%= t("Actions") %></th></tr></thead>
           <tbody>
             <% profiles.forEach(function(p) { %>
               <tr>
-                <td data-label="<%= t("Photo") %>"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb" style="border-radius:8px;"></td>
+                <td data-label="<%= t("Photo") %>" class="admin-profile-photo-cell"><img src="<%= fileUrl('profiles', p.image_name) %>" class="ad-thumb admin-profile-photo" style="border-radius:8px;"></td>
                 <td data-label="<%= t("Name") %>"><%= p.full_name %></td>
                 <td data-label="<%= t("Gender") %>"><%= t(p.gender === 'male' ? 'Male' : 'Female') %></td>
                 <td data-label="<%= t("Caste") %>"><%= t(p.caste) %></td>
