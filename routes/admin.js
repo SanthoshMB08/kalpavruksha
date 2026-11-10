@@ -6,7 +6,7 @@ router.param('id', validateId);
 const adminController = wrapHandlers(require('../controllers/adminController'));
 const privateDocumentController = wrapHandlers(require('../controllers/privateDocumentController'));
 const { isAdmin, isSuperAdmin } = require('../middleware/auth');
-const { parseProfileAssets, uploadProfileAssets } = require('../middleware/upload');
+const { parseProfileAssets, uploadCapacity, uploadProfileAssets } = require('../middleware/upload');
 const { profileValidators, memberCreateValidators } = require('../middleware/validators');
 const { doubleCsrfProtection } = require('../middleware/csrf');
 const { loginIpLimiter, loginLimiter, uploadLimiter } = require('../middleware/rateLimiters');
@@ -31,10 +31,10 @@ router.get('/admin-dashboard/profiles', isAdmin, adminController.listProfiles);
 router.get('/admin-dashboard/profiles/new', isAdmin, adminController.showNewProfileForm);
 router.get('/admin-dashboard/profiles/check-mobile', isAdmin, adminController.checkMobile);
 // Parse multipart before CSRF; persist files only after CSRF and validation.
-router.post('/admin-dashboard/profiles', isAdmin, uploadLimiter, parseProfileAssets, doubleCsrfProtection, profileValidators, uploadProfileAssets, adminController.createProfile);
+router.post('/admin-dashboard/profiles', isAdmin, uploadLimiter, uploadCapacity, parseProfileAssets, doubleCsrfProtection, profileValidators, uploadProfileAssets, adminController.createProfile);
 router.get('/admin-dashboard/profiles/:id', isAdmin, adminController.viewProfileFull);
 router.get('/admin-dashboard/profiles/:id/pdf', isAdmin, adminController.exportProfilePdf);
-router.post('/admin-dashboard/profiles/:id/photos', isAdmin, uploadLimiter, parseProfileAssets, doubleCsrfProtection, uploadProfileAssets, adminController.updateProfilePhotos);
+router.post('/admin-dashboard/profiles/:id/photos', isAdmin, uploadLimiter, uploadCapacity, parseProfileAssets, doubleCsrfProtection, uploadProfileAssets, adminController.updateProfilePhotos);
 router.post('/admin-dashboard/profiles/:id/marital-status', isAdmin, doubleCsrfProtection, adminController.updateMaritalStatus);
 router.post('/admin-dashboard/profiles/:id/delete', isSuperAdmin, doubleCsrfProtection, adminController.deleteProfile);
 

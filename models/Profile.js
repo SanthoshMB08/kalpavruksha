@@ -1,5 +1,28 @@
 const pool = require('../config/db');
 const { normalizePagination, buildPageMeta } = require('../utils/pagination');
+const { scheduleCleanup, cancelCleanup } = require('../utils/storageCleanup');
+
+function profileFiles(profile) {
+  return [
+    ['profiles', profile.image_name],
+    ['profiles', profile.image_name_2],
+    ['biodata', profile.biodata_pdf_name],
+    ['jathaka', profile.jathaka_pdf_name]
+  ].filter(([, filename]) => filename);
+}
+
+const FILTER_OPTION_CACHE_MS = 60 * 1000;
+let filterOptionCache = null;
+let filterOptionCacheExpiresAt = 0;
+let filterOptionCachePending = null;
+let filterOptionRevision = 0;
+
+function invalidateFilterOptionCache() {
+  filterOptionRevision += 1;
+  filterOptionCache = null;
+  filterOptionCacheExpiresAt = 0;
+  filterOptionCachePending = null;
+}
 
 const PUBLIC_FIELDS = `
   id, full_name, gender, image_name, image_name_2, caste, subcaste, language, occupation,
@@ -225,6 +248,7 @@ const Profile = {
         data.user_id || null, data.created_by || null
       ]
     );
+    invalidateFilterOptionCache();
     return result.insertId;
   },
 
@@ -254,22 +278,60 @@ const Profile = {
     if (sets.length === 0) return;
     params.push(id);
     await pool.query(`UPDATE profiles SET ${sets.join(', ')} WHERE id = ?`, params);
+    invalidateFilterOptionCache();
   },
 
   // --- Soft delete / Trash ---
 
   async deleteById(id) {
-    await pool.query('UPDATE profiles SET deleted_at = NOW() WHERE id = ?', [id]);
+    await pool.transaction(async () => {
+      const [rows] = await pool.query('SELECT * FROM profiles WHERE id = ? FOR UPDATE', [id]);
+      const profile = rows[0];
+      if (!profile || profile.deleted_at) return;
+      await pool.query('UPDATE profiles SET deleted_at = UTC_TIMESTAMP(6) WHERE id = ?', [id]);
+      for (const [bucket, filename] of profileFiles(profile)) {
+        await scheduleCleanup(bucket, filename);
+      }
+    });
+    invalidateFilterOptionCache();
   },
 
   async restoreById(id) {
-    await pool.query('UPDATE profiles SET deleted_at = NULL WHERE id = ?', [id]);
+    const restored = await pool.transaction(async () => {
+      const [rows] = await pool.query('SELECT * FROM profiles WHERE id = ? FOR UPDATE', [id]);
+      const profile = rows[0];
+      if (!profile || !profile.deleted_at) return false;
+      const [result] = await pool.query(
+        `UPDATE profiles SET deleted_at = NULL
+         WHERE id = ? AND deleted_at > DATE_SUB(UTC_TIMESTAMP(6), INTERVAL 1 DAY)`,
+        [id]
+      );
+      if (!result.affectedRows) return false;
+      for (const [bucket, filename] of profileFiles(profile)) {
+        await cancelCleanup(bucket, [filename]);
+      }
+      return true;
+    });
+    invalidateFilterOptionCache();
+    return restored;
   },
 
   // Only allowed on rows already soft-deleted — a real safety backstop
   // against ever hard-deleting an active profile by accident.
   async purgeById(id) {
-    await pool.query('DELETE FROM profiles WHERE id = ? AND deleted_at IS NOT NULL', [id]);
+    await pool.transaction(async () => {
+      const [rows] = await pool.query(
+        'SELECT * FROM profiles WHERE id = ? AND deleted_at IS NOT NULL FOR UPDATE',
+        [id]
+      );
+      const profile = rows[0];
+      if (!profile) return;
+      for (const [bucket, filename] of profileFiles(profile)) {
+        await scheduleCleanup(bucket, filename, 0);
+      }
+      await pool.query('DELETE FROM profiles WHERE id = ? AND deleted_at IS NOT NULL', [id]);
+    });
+    invalidateFilterOptionCache();
   },
 
   async listDeleted(pagination = {}) {
@@ -303,26 +365,43 @@ const Profile = {
   // to them so real data is never unreachable.
   // → { religion: [...], subcaste: [...], language: [...] }
   async filterOptionIndex() {
-    const [rows] = await pool.query(
-      `SELECT DISTINCT religion, subcaste, language
-       FROM profiles
-       WHERE deleted_at IS NULL`
-    );
+    if (filterOptionCache && Date.now() < filterOptionCacheExpiresAt) return filterOptionCache;
+    if (filterOptionCachePending) return filterOptionCachePending;
 
-    const religion = new Set();
-    const subcaste = new Set();
-    const language = new Set();
-    for (const r of rows) {
-      if (r.religion) religion.add(r.religion);
-      if (r.subcaste) subcaste.add(r.subcaste);
-      if (r.language) language.add(r.language);
+    const revision = filterOptionRevision;
+    const pending = (async () => {
+      const [rows] = await pool.query(
+        `SELECT DISTINCT religion, subcaste, language
+         FROM profiles
+         WHERE deleted_at IS NULL`
+      );
+
+      const religion = new Set();
+      const subcaste = new Set();
+      const language = new Set();
+      for (const row of rows) {
+        if (row.religion) religion.add(row.religion);
+        if (row.subcaste) subcaste.add(row.subcaste);
+        if (row.language) language.add(row.language);
+      }
+
+      const result = {
+        religion: [...religion].sort(),
+        subcaste: [...subcaste].sort(),
+        language: [...language].sort()
+      };
+      if (revision === filterOptionRevision) {
+        filterOptionCache = result;
+        filterOptionCacheExpiresAt = Date.now() + FILTER_OPTION_CACHE_MS;
+      }
+      return result;
+    })();
+    filterOptionCachePending = pending;
+    try {
+      return await pending;
+    } finally {
+      if (filterOptionCachePending === pending) filterOptionCachePending = null;
     }
-
-    return {
-      religion: [...religion].sort(),
-      subcaste: [...subcaste].sort(),
-      language: [...language].sort()
-    };
   },
 
   async count() {

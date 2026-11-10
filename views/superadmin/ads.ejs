@@ -3,7 +3,7 @@
 <head><%- include('../partials/head') %></head>
 <body>
 <%- include('../partials/portal-shell-open', { portal:'superadmin', active, title, logoutUrl:'/portal/super-secure-logout' }) %>
-<section class="page-intro"><div><span class="section-eyebrow"><%= t('Advertisements') %></span><h1><%= t('Ad manager') %></h1><p><%= t('One active advertisement per placement. Upload, preview and publish in one place.') %></p></div><a href="#newAd" class="btn btn-maroon"><i class="fa-solid fa-plus" aria-hidden="true"></i> <%= t('Create advertisement') %></a></section>
+<section class="page-intro"><div><span class="section-eyebrow"><%= t('Advertisements') %></span><h1><%= t('Ad manager') %></h1><p><%= t('One active advertisement per placement. Upload, preview and publish in one place.') %></p><p><%= t('Deactivated ads can be reactivated within 24 hours. After that, the ad and its uploaded images are permanently deleted.') %></p></div><a href="#newAd" class="btn btn-maroon"><i class="fa-solid fa-plus" aria-hidden="true"></i> <%= t('Create advertisement') %></a></section>
 <div class="ad-manager-grid">
 <section class="panel" id="newAd">
 <h2><%= t('Create advertisement') %></h2>

@@ -43,6 +43,7 @@
 
       <div class="panel">
         <h3><i class="fa-solid fa-address-card"></i> <%= t("Deleted Profiles") %></h3>
+        <p style="font-size:0.82rem; color:#8a7156; margin-bottom:14px;"><%= t("Deleted profiles can be restored for 24 hours. After that, the profile and its uploaded files are permanently deleted.") %></p>
         <% if (deletedProfiles.length === 0) { %>
           <div class="empty-state"><%= t("No deleted profiles.") %></div>
         <% } else { %>

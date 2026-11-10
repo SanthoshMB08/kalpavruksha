@@ -421,7 +421,7 @@ exports.createProfile = async (req, res) => {
 
 exports.deleteProfile = async (req, res) => {
   await Profile.deleteById(req.params.id);
-  req.flash('success', 'Profile removed.');
+  req.flash('success', 'Profile moved to Trash. Restore it within 24 hours; after that it and its files are permanently deleted.');
   res.redirect('/portal/admin-dashboard/profiles');
 };
 

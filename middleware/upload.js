@@ -8,6 +8,8 @@ const { uploadFiles, deleteFile } = require('../utils/storage');
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const PDF_MAX_BYTES = 15 * 1024 * 1024;
+const MAX_CONCURRENT_UPLOADS = 2;
+let activeUploads = 0;
 const IMAGE_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 const FIELD_TO_BUCKET = { profile_image: 'profiles', profile_image_2: 'profiles', jathaka_pdf: 'jathaka', biodata_pdf: 'biodata', ad_image: 'ads', ad_mobile_image: 'ads' };
 
@@ -55,6 +57,24 @@ const parseAdImage = multer({
   storage: multer.memoryStorage(), fileFilter,
   limits: { ...limits, fileSize: IMAGE_MAX_BYTES, files: 2, parts: 102 }
 }).fields([{ name: 'ad_image', maxCount: 1 }, { name: 'ad_mobile_image', maxCount: 1 }]);
+
+function uploadCapacity(req, res, next) {
+  if (activeUploads >= MAX_CONCURRENT_UPLOADS) {
+    res.set('Retry-After', '30');
+    return res.status(503).type('text').send('Uploads are busy. Please try again in a moment.');
+  }
+
+  activeUploads += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeUploads -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
 
 // Routes must parse multipart, check CSRF and form validation, then persist.
 // Validate the entire batch before the first write; clean up partial writes.
@@ -114,4 +134,4 @@ async function uploadAdImage(req, res, next) {
   } catch(err) { if (!err.code) err.code = 'INVALID_FILE_TYPE'; next(err); }
 }
 
-module.exports = { parseProfileAssets, parseAdImage, uploadProfileAssets, uploadAdImage };
+module.exports = { parseProfileAssets, parseAdImage, uploadCapacity, uploadProfileAssets, uploadAdImage };

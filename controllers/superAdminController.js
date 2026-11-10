@@ -214,7 +214,7 @@ exports.toggleAd = async (req, res) => {
   try {
     await Advertisement.toggleActive(req.params.id);
   } catch (err) {
-    if (err.code === 'AD_EXPIRED') {
+    if (['AD_EXPIRED', 'AD_DEACTIVATION_EXPIRED'].includes(err.code)) {
       req.flash('error', err.message);
     } else {
       req.log.error(err);
@@ -242,15 +242,19 @@ exports.reactivateAd = async (req, res) => {
     await Advertisement.reactivateWithNewExpiry(req.params.id, expiresAt);
     req.flash('success', 'Advertisement reactivated with the new expiry.');
   } catch (err) {
-    req.log.error(err);
-    req.flash('error', 'Could not reactivate advertisement.');
+    if (['AD_EXPIRED', 'AD_DEACTIVATION_EXPIRED'].includes(err.code)) {
+      req.flash('error', err.message);
+    } else {
+      req.log.error(err);
+      req.flash('error', 'Could not reactivate advertisement.');
+    }
   }
   res.redirect('/portal/super-secure-dashboard/ads');
 };
 
 exports.deleteAd = async (req, res) => {
   await Advertisement.deleteById(req.params.id);
-  req.flash('success', 'Advertisement removed.');
+  req.flash('success', 'Advertisement removed. Its uploaded images will be deleted after 24 hours.');
   res.redirect('/portal/super-secure-dashboard/ads');
 };
 
@@ -313,8 +317,10 @@ exports.purgeUser = async (req, res) => {
 };
 
 exports.restoreProfile = async (req, res) => {
-  await Profile.restoreById(req.params.id);
-  req.flash('success', 'Profile restored.');
+  const restored = await Profile.restoreById(req.params.id);
+  req.flash(restored ? 'success' : 'error', restored
+    ? 'Profile restored.'
+    : 'This profile can only be restored within 24 hours of deletion.');
   res.redirect('/portal/super-secure-dashboard/trash');
 };
 

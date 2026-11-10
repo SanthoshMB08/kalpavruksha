@@ -3,8 +3,11 @@ const sharp=require('sharp');
 const app=require('../app');
 const db=require('../config/db');
 const Ad=require('../models/Advertisement');
+const Profile=require('../models/Profile');
 const Interest=require('../models/Interest');
 const {AD_PLACEMENTS,parseAdExpiry}=require('../utils/adPlacements');
+const storage=require('../utils/storage');
+const {cleanupUploads}=require('../utils/storageCleanup');
 const {pool,applySchema,resetTables,closePool}=require('./helpers/db');
 const {createUser,loginAs,getCsrfToken}=require('./helpers/auth');
 const {getTranslator}=require('../utils/i18n');
@@ -77,6 +80,65 @@ describe('Advertisement lifecycle',()=>{
     await Ad.deleteById(id);
     expect(await Ad.listActiveByPlacement('home_middle')).toHaveLength(0);
     expect((await db.query("SELECT filename FROM storage_cleanup WHERE bucket='ads'"))[0]).toHaveLength(1);
+  });
+  it('keeps deactivated ad images for 24 hours and cancels cleanup on reactivation',async()=>{
+    const id=await Ad.create({ad_title:'Sponsor',placement:'home_middle',image_name:'desktop.webp',mobile_image_name:'mobile.webp',expiresAt:future()});
+    await Ad.toggleActive(id);
+    const [queued]=await db.query("SELECT filename,run_after > UTC_TIMESTAMP(6) AS pending FROM storage_cleanup WHERE bucket='ads' ORDER BY filename");
+    expect(queued).toHaveLength(2);
+    expect(queued.every(file=>Boolean(Number(file.pending)))).toBe(true);
+
+    await Ad.reactivateWithNewExpiry(id,future());
+    expect((await db.query("SELECT filename FROM storage_cleanup WHERE bucket='ads'"))[0]).toHaveLength(0);
+    expect(String((await Ad.listActiveByPlacement('home_middle'))[0].id)).toBe(String(id));
+  });
+  it('purges a deactivated ad and its images after the cleanup deadline',async()=>{
+    const id=await Ad.create({ad_title:'Sponsor',placement:'home_middle',image_name:'desktop.webp',mobile_image_name:'mobile.webp',expiresAt:future()});
+    await Ad.toggleActive(id);
+    await db.query("UPDATE storage_cleanup SET run_after=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 MINUTE) WHERE bucket='ads'");
+    const deleteFile=jest.spyOn(storage,'deleteFile').mockResolvedValue();
+
+    await cleanupUploads();
+
+    expect((await db.query('SELECT id FROM advertisements WHERE id=?',[id]))[0]).toHaveLength(0);
+    expect(deleteFile).toHaveBeenCalledTimes(2);
+    deleteFile.mockRestore();
+  });
+  it('purges a deleted profile and all its files after 24 hours',async()=>{
+    const id=await profile();
+    await db.query('UPDATE profiles SET image_name_2=?,biodata_pdf_name=?,jathaka_pdf_name=? WHERE id=?',
+      ['second.webp','bio.pdf','chart.pdf',id]);
+    await Profile.deleteById(id);
+    expect((await db.query('SELECT filename FROM storage_cleanup'))[0]).toHaveLength(4);
+    expect(await Profile.restoreById(id)).toBe(true);
+    expect((await db.query('SELECT filename FROM storage_cleanup'))[0]).toHaveLength(0);
+    await Profile.deleteById(id);
+    await db.query('UPDATE profiles SET deleted_at=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 DAY) WHERE id=?',[id]);
+    await db.query('UPDATE storage_cleanup SET run_after=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 MINUTE)');
+    const deleteFile=jest.spyOn(storage,'deleteFile').mockResolvedValue();
+
+    await cleanupUploads();
+
+    expect((await db.query('SELECT id FROM profiles WHERE id=?',[id]))[0]).toHaveLength(0);
+    expect(deleteFile).toHaveBeenCalledTimes(4);
+    expect((await db.query('SELECT filename FROM storage_cleanup'))[0]).toHaveLength(0);
+    deleteFile.mockRestore();
+  });
+  it('refuses to restore a profile after its 24-hour recovery window',async()=>{
+    const id=await profile();
+    await Profile.deleteById(id);
+    await db.query('UPDATE profiles SET deleted_at=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 DAY) WHERE id=?',[id]);
+
+    expect(await Profile.restoreById(id)).toBe(false);
+    expect((await db.query('SELECT deleted_at FROM profiles WHERE id=?',[id]))[0][0].deleted_at).not.toBeNull();
+  });
+  it('refuses to reactivate an ad after its 24-hour recovery window',async()=>{
+    const id=await Ad.create({ad_title:'Sponsor',placement:'home_middle',image_name:'desktop.webp',expiresAt:future()});
+    await Ad.toggleActive(id);
+    await db.query("UPDATE storage_cleanup SET run_after=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 MINUTE) WHERE bucket='ads'");
+
+    await expect(Ad.reactivateWithNewExpiry(id,future())).rejects.toMatchObject({code:'AD_DEACTIVATION_EXPIRED'});
+    expect(await Ad.listActiveByPlacement('home_middle')).toHaveLength(0);
   });
   it('parses labelled India time consistently and rejects impossible dates',()=>{
     expect(parseAdExpiry('2099-01-01T12:00').toISOString()).toBe('2099-01-01T06:30:00.000Z');

@@ -19,6 +19,16 @@ Example connection string: `mysql://USER:URL_ENCODED_PASSWORD@127.0.0.1:3306/DAT
 
 Uploads use local disk by default (`STORAGE_PROVIDER=local`); optionally use an S3-compatible provider with `STORAGE_PROVIDER=s3` and the S3 settings in `.env.example`. Local storage requires a persistent upload directory across deployments. Use `npm run migrate-storage` to copy referenced files between local, S3, and Hostinger FTP storage before switching providers; both source and destination must remain available until the copy is verified.
 
+### Cloud Startup capacity and safeguards
+
+The current app is a reasonable starting point for about 1,000 registered accounts and 10,000 profile rows, but those counts do not guarantee support for 1,000 simultaneous visitors. Hostinger resource limits, database connection limits, image traffic, and request mix determine concurrency; verify the exact Cloud Startup quotas in hPanel and load-test a staging copy before advertising a concurrency target. Keep the MySQL pool at its conservative default of 10 unless Hostinger confirms a higher database connection allowance.
+
+The member dashboard caches distinct profile-filter values for 60 seconds and coalesces simultaneous refreshes; profile writes invalidate that cache. Multipart image/PDF uploads are admitted two at a time per Node.js process to bound memory and image-processing pressure; excess upload requests receive HTTP 503 with `Retry-After`. This upload limit is process-local, not shared between multiple app instances. Keep a single app instance while private documents use local disk; multiple instances require a shared, private persistent document store first. Set and back up `PRIVATE_STORAGE_DIR` outside the public web root, retain database/file backups, monitor memory and 5xx/503 responses, and rehearse restoring both database records and private documents.
+
+Profile lists are paginated (up to 100 rows per page); page numbers are capped to prevent unbounded SQL offsets. Search text filters remain substring matches and can still scan rows, so measure query latency and MySQL CPU as the profile table grows. The `/health` endpoint checks the database, not remote FTPS reachability or whether private-file backups are current.
+
+Deleted profiles and deactivated advertisements have a 24-hour recovery window. Restore/reactivate them within that window; afterward the cleanup worker permanently removes the record and its stored files. The worker runs at startup and every 15 minutes while the Node.js server is running. It uses a MySQL advisory lock so multiple app instances do not process the same cleanup batch concurrently. Ensure the Hostinger app stays running; if it is stopped during a due cleanup, processing resumes at the next startup.
+
 ### Hostinger FTP image storage
 
 For local development with uploads sent directly to Hostinger, set `PORT=3000` and `STORAGE_PROVIDER=hostinger-ftp` in your local `.env`, then fill in `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_PORT`, `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASSWORD`, and `HOSTINGER_FTP_PUBLIC_URL` using the FTP account details and website HTTPS origin from Hostinger hPanel. Keep these values backend-only; never add them to browser code. The provider requires verified explicit FTPS and does not retry using plaintext FTP.

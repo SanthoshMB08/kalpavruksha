@@ -6,7 +6,7 @@ router.param('id', validateId);
 const superAdminController = wrapHandlers(require('../controllers/superAdminController'));
 const { validateAd } = require('../utils/adPlacements');
 const { isSuperAdmin } = require('../middleware/auth');
-const { parseAdImage, parseProfileAssets, uploadAdImage, uploadProfileAssets } = require('../middleware/upload');
+const { parseAdImage, parseProfileAssets, uploadCapacity, uploadAdImage, uploadProfileAssets } = require('../middleware/upload');
 const { userCreateValidators, profileEditValidators } = require('../middleware/validators');
 const { doubleCsrfProtection } = require('../middleware/csrf');
 const { loginIpLimiter, loginLimiter, uploadLimiter } = require('../middleware/rateLimiters');
@@ -29,6 +29,7 @@ router.post(
   '/super-secure-dashboard/profiles/:id/edit',
   isSuperAdmin,
   uploadLimiter,
+  uploadCapacity,
   parseProfileAssets,
   doubleCsrfProtection,
   profileEditValidators,
@@ -37,7 +38,7 @@ router.post(
 );
 
 router.get('/super-secure-dashboard/ads', isSuperAdmin, superAdminController.adsPage);
-router.post('/super-secure-dashboard/ads', isSuperAdmin, uploadLimiter, parseAdImage, doubleCsrfProtection, validateAd, uploadAdImage, superAdminController.createAd);
+router.post('/super-secure-dashboard/ads', isSuperAdmin, uploadLimiter, uploadCapacity, parseAdImage, doubleCsrfProtection, validateAd, uploadAdImage, superAdminController.createAd);
 router.post('/super-secure-dashboard/ads/:id/toggle', isSuperAdmin, doubleCsrfProtection, superAdminController.toggleAd);
 router.post('/super-secure-dashboard/ads/:id/reactivate', isSuperAdmin, doubleCsrfProtection, superAdminController.reactivateAd);
 router.post('/super-secure-dashboard/ads/:id/delete', isSuperAdmin, doubleCsrfProtection, superAdminController.deleteAd);

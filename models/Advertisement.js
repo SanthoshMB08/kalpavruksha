@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { scheduleCleanup } = require('../utils/storageCleanup');
+const { scheduleCleanup, cancelCleanup } = require('../utils/storageCleanup');
 const { AD_PLACEMENTS } = require('../utils/adPlacements');
 
 async function lockPlacement(placement) {
@@ -15,8 +15,41 @@ async function lockedAd(id) {
   if (!rows[0]) throw adError('AD_NOT_FOUND', 'Advertisement not found.');
   return rows[0];
 }
-async function retireSlot(placement) {
-  await db.query('UPDATE advertisements SET is_active = FALSE WHERE placement = ? AND is_active = TRUE', [placement]);
+async function retireSlot(placement, exceptId = null) {
+  const exclude = exceptId ? ' AND id <> ?' : '';
+  const params = exceptId ? [placement, exceptId] : [placement];
+  const [ads] = await db.query(
+    `SELECT image_name, mobile_image_name FROM advertisements
+     WHERE placement = ? AND is_active = TRUE${exclude} FOR UPDATE`,
+    params
+  );
+  await db.query(
+    `UPDATE advertisements SET is_active = FALSE WHERE placement = ? AND is_active = TRUE${exclude}`,
+    params
+  );
+  for (const ad of ads) {
+    await scheduleCleanup('ads', ad.image_name);
+    await scheduleCleanup('ads', ad.mobile_image_name);
+  }
+}
+
+function adImages(ad) {
+  return [ad.image_name, ad.mobile_image_name].filter(Boolean);
+}
+
+async function ensureReactivationWindow(ad) {
+  const filenames = adImages(ad);
+  if (!filenames.length) return;
+  const [due] = await db.query(
+    `SELECT filename FROM storage_cleanup
+     WHERE bucket = 'ads' AND filename IN (${filenames.map(() => '?').join(',')})
+       AND (run_after <= UTC_TIMESTAMP(6) OR attempts > 0)
+     LIMIT 1`,
+    filenames
+  );
+  if (due.length) {
+    throw adError('AD_DEACTIVATION_EXPIRED', 'This advertisement has been inactive for over 24 hours and can no longer be reactivated.');
+  }
 }
 
 const Advertisement = {
@@ -55,11 +88,14 @@ const Advertisement = {
       const ad = await lockedAd(id);
       if (ad.is_active) {
         await db.query('UPDATE advertisements SET is_active = FALSE WHERE id = ?', [id]);
+        for (const filename of adImages(ad)) await scheduleCleanup('ads', filename);
       } else {
+        await ensureReactivationWindow(ad);
         if (ad.expires_at && new Date(ad.expires_at) <= new Date()) {
           throw adError('AD_EXPIRED', 'This advertisement has expired. Set a new expiry to activate it.');
         }
-        await retireSlot(ad.placement);
+        await cancelCleanup('ads', adImages(ad));
+        await retireSlot(ad.placement, id);
         await db.query('UPDATE advertisements SET is_active = TRUE WHERE id = ?', [id]);
       }
     });
@@ -70,15 +106,17 @@ const Advertisement = {
       if (!(expiresAt instanceof Date) || !Number.isFinite(+expiresAt) || expiresAt <= new Date()) {
         throw adError('AD_EXPIRED', 'Expiry must be a valid date/time in the future.');
       }
-      await retireSlot(ad.placement);
+      if (!ad.is_active) await ensureReactivationWindow(ad);
+      await cancelCleanup('ads', adImages(ad));
+      await retireSlot(ad.placement, id);
       await db.query('UPDATE advertisements SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
     });
   },
   async deleteById(id) {
     return db.transaction(async () => {
       const ad = await lockedAd(id);
-      await scheduleCleanup('ads', ad.image_name, 0);
-      await scheduleCleanup('ads', ad.mobile_image_name, 0);
+      await scheduleCleanup('ads', ad.image_name);
+      await scheduleCleanup('ads', ad.mobile_image_name);
       await db.query('DELETE FROM advertisements WHERE id = ?', [id]);
     });
   }

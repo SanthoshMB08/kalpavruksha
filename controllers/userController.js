@@ -13,6 +13,10 @@ function oppositeGender(gender) {
   return null;
 }
 
+function boundedQueryText(value, maxLength = 100) {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) || undefined : undefined;
+}
+
 exports.dashboard = async (req, res) => {
   // Age inputs are strings off the query string. Clamp them once, here, so the
   // view, the chips and the SQL all agree on the same range.
@@ -26,7 +30,7 @@ exports.dashboard = async (req, res) => {
 
   // Sub-caste is typed, so it arrives with whatever spacing the member used. A
   // box holding only spaces is an empty filter, not a search for "   ".
-  const subcaste = typeof req.query.subcaste === 'string' ? req.query.subcaste.trim() : req.query.subcaste;
+  const subcaste = boundedQueryText(req.query.subcaste);
 
   // The canonical dropdown contents are the same lists the create-profile form
   // offers, so what a member can filter by is exactly what staff can record.
@@ -51,12 +55,12 @@ exports.dashboard = async (req, res) => {
   try {
     const myGender = req.session.user.gender;
     const filters = {
-      religion: req.query.religion,
-      caste: req.query.caste,
-      language: req.query.language,
+      religion: boundedQueryText(req.query.religion),
+      caste: boundedQueryText(req.query.caste),
+      language: boundedQueryText(req.query.language),
       subcaste,
       gender: oppositeGender(myGender),
-      keyword: req.query.keyword,
+      keyword: boundedQueryText(req.query.keyword),
       minAge,
       maxAge
     };
