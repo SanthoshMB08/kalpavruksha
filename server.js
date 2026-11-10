@@ -2,14 +2,26 @@ const app = require('./app');
 const { pool } = require('./config/db');
 const logger = require('./utils/logger');
 const { cleanupUploads } = require('./utils/storageCleanup');
+const storage = require('./utils/storage');
 
 const PORT = process.env.PORT || 5000;
 const CLEANUP_INTERVAL_MS = 15 * 60 * 1000;
 let cleanupRunning = false;
 
-const server = app.listen(PORT, () => {
-  logger.info(`Kalpavruksha Kalyana running at http://localhost:${PORT}`);
-  runStorageCleanup();
+let server;
+
+async function startServer() {
+  await storage.protectProfileFiles();
+  server = app.listen(PORT, () => {
+    logger.info(`Kalpavruksha Kalyana running at http://localhost:${PORT}`);
+    runStorageCleanup();
+  });
+}
+
+startServer().catch(async err => {
+  logger.fatal({ err }, 'Could not protect profile photos; refusing to start');
+  await pool.end();
+  process.exit(1);
 });
 
 async function runStorageCleanup() {
@@ -33,6 +45,10 @@ setInterval(runStorageCleanup, CLEANUP_INTERVAL_MS).unref();
 // cleanly instead of dropping connections mid-query on deploy/restart.
 function shutdown(signal) {
   logger.info(`${signal} received, shutting down gracefully`);
+  if (!server) {
+    pool.end().finally(() => process.exit(0));
+    return;
+  }
   server.close(() => {
     pool.end().then(() => {
       logger.info('MySQL pool closed. Exiting.');

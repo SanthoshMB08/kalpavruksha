@@ -96,13 +96,14 @@
         const label=window.t(interestedAction?(selected?'Unlike':'Express Interest'):(selected?'Unsave':'Save'));
         const textNode=btn.querySelector('[data-action-text]');
         const icon=btn.querySelector('i');
-        if(textNode)textNode.textContent=label;else btn.textContent=label;
+        if(textNode)textNode.textContent=label;
         if(icon)icon.className=selected
           ? (interestedAction?'fa-solid fa-heart':'fa-solid fa-bookmark')
           : (interestedAction?'fa-regular fa-heart':'fa-regular fa-bookmark');
         btn.classList.toggle('is-selected',Boolean(selected));
         btn.setAttribute('aria-pressed',String(Boolean(selected)));
         btn.setAttribute('aria-label',label);
+        btn.setAttribute('title',label);
       });
       announce(result.message);
     }catch(error){announce(error.message || window.t('Could not save. Please try again.'),true);}

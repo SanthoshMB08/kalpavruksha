@@ -22,8 +22,9 @@ const { safeRedirect } = require('./utils/security');
 const { refreshSessionUser } = require('./middleware/auth');
 const { pool } = require('./config/db');
 const Advertisement = require('./models/Advertisement');
+const Profile = require('./models/Profile');
 const { AD_PLACEMENTS } = require('./utils/adPlacements');
-const { getPublicUrl } = require('./utils/storage');
+const { getPublicUrl, getFile } = require('./utils/storage');
 const logger = require('./utils/logger');
 const { attachCsrfToken, invalidCsrfTokenError } = require('./middleware/csrf');
 const { getTranslator, SUPPORTED_LANGS, clientMessages, catalogVersion } = require('./utils/i18n');
@@ -157,7 +158,7 @@ app.use(express.urlencoded({ extended: false, limit: '64kb', parameterLimit: 100
 app.use(express.json({ limit: '64kb', inflate: false }));
 app.use(cookieParser()); // required by csrf-csrf, which manages its own cookie separate from the session cookie
 app.use('/uploads/:bucket', (req, res, next) => {
-  if (['biodata', 'jathaka'].includes(req.params.bucket.toLowerCase())) return res.sendStatus(404);
+  if (['biodata', 'jathaka', 'profiles'].includes(req.params.bucket.toLowerCase())) return res.sendStatus(404);
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
@@ -191,6 +192,41 @@ app.use((req, res, next) => {
   next();
 });
 app.use(refreshSessionUser);
+
+app.get('/media/profiles/:filename', async (req, res, next) => {
+  const viewer = req.session?.user;
+  if (!viewer || viewer.status !== 'approved' ||
+      !['user', 'admin', 'superadmin'].includes(viewer.role) ||
+      !/^[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i.test(req.params.filename)) {
+    return res.sendStatus(404);
+  }
+
+  try {
+    const profile = await Profile.findByImageFilename(req.params.filename);
+    if (!profile || (viewer.role === 'user' && (
+      profile.deleted_at ||
+      (profile.marital_status === 'married' && String(profile.user_id) !== String(viewer.id))
+    ))) {
+      return res.sendStatus(404);
+    }
+
+    const file = await getFile('profiles', req.params.filename);
+    res.set({
+      'Cache-Control': 'private, no-store, max-age=0',
+      'Content-Type': file.contentType,
+      'Content-Length': file.buffer.length,
+      'Cross-Origin-Resource-Policy': 'same-origin',
+      'X-Content-Type-Options': 'nosniff'
+    });
+    return res.send(file.buffer);
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'INVALID_FILE_TYPE' ||
+        error.code === 'FILE_TOO_LARGE' || error.code === 'NoSuchKey') {
+      return res.sendStatus(404);
+    }
+    return next(error);
+  }
+});
 
 app.use((req, res, next) => {
   req.flash = buildFlashHandler(req);

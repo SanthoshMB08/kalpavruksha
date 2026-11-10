@@ -168,6 +168,17 @@ const Profile = {
     return rows[0];
   },
 
+  async findByImageFilename(filename) {
+    const [rows] = await pool.query(
+      `SELECT user_id, marital_status, deleted_at
+       FROM profiles
+       WHERE image_name = ? OR image_name_2 = ?
+       LIMIT 1`,
+      [filename, filename]
+    );
+    return rows[0] || null;
+  },
+
   // Unfiltered by design — Super Admin's edit page and the Trash page both
   // need to be able to load a soft-deleted profile.
   async findByIdFull(id) {

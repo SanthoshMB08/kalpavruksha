@@ -125,7 +125,7 @@
   <% } %>
 
   <!-- ================= Meet Our Brides & Grooms ================= -->
-  <% if (!currentUser && ((featuredBrides && featuredBrides.length) || (featuredGrooms && featuredGrooms.length))) { %>
+  <% if (currentUser && currentUser.status === 'approved' && ((featuredBrides && featuredBrides.length) || (featuredGrooms && featuredGrooms.length))) { %>
   <section class="members-row-section">
     <div class="section-eyebrow"><%= t("Recently Joined") %></div>
     <h2><%= t("Meet Our Brides & Grooms") %></h2>
@@ -288,12 +288,12 @@
               </div>
             </div>
             <p class="contact-info-copy"><%= t("Prefer to get in touch directly? We’re here to help with registration and profile verification.") %></p>
-            <a class="contact-info-link" href="tel:+918012345678">
+            <a class="contact-info-link" href="tel:+919611365055">
               <span class="contact-info-link-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span>
-              <span><small><%= t("Admin desk") %></small><strong>+91 80123 45678</strong></span>
+              <span><small><%= t("Admin desk") %></small><strong>+91 96113 65055</strong></span>
               <i class="fa-solid fa-arrow-up-right-from-square contact-info-arrow" aria-hidden="true"></i>
             </a>
-            <a class="contact-info-link" href="https://wa.me/918012345678" target="_blank" rel="noopener">
+            <a class="contact-info-link" href="https://wa.me/919611365055" target="_blank" rel="noopener">
               <span class="contact-info-link-icon"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
               <span><small><%= t("WhatsApp support") %></small><strong><%= t("Message our team") %></strong></span>
               <i class="fa-solid fa-arrow-up-right-from-square contact-info-arrow" aria-hidden="true"></i>

@@ -87,7 +87,7 @@
              dropdowns of exactly the list the create-profile form offers;
              sub-caste is free text on that form, so it is typed here too, with
              the values already in use offered as suggestions. -->
-        <details class="fc-controls" id="fcControls" open>
+        <details class="fc-controls" id="fcControls">
           <summary class="fc-filter-toggle" aria-label="<%= t('dashboard.filters') %>">
             <i class="fa-solid fa-sliders" aria-hidden="true"></i>
             <span><%= t('dashboard.filters') %></span>
@@ -244,12 +244,12 @@
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-outline-gold profile-card-action profile-view-action" style="border-color:var(--maroon-800); color:var(--maroon-800);" data-open-profile-id="<%= p.id %>" aria-label="<%= t('dashboard.viewDetails') %>"><i class="fa-regular fa-eye" aria-hidden="true"></i> <span class="profile-action-text"><%= t('dashboard.viewDetails') %></span></button>
+              <button type="button" class="btn btn-outline-gold profile-card-action profile-view-action" style="border-color:var(--maroon-800); color:var(--maroon-800);" data-open-profile-id="<%= p.id %>" aria-label="<%= t('dashboard.viewDetails') %>: <%= p.full_name %>" title="<%= t('dashboard.viewDetails') %>"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
               <form action="/profile/<%= p.id %>/<%= state.is_interested ? 'withdraw-interest' : 'express-interest' %>" method="POST" class="profile-interest-action" style="flex:1;"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="btn btn-gold profile-card-action <%= state.is_interested ? 'is-selected' : '' %>" style="width:100%;" aria-label="<%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %>" aria-pressed="<%= state.is_interested ? 'true' : 'false' %>"><i class="fa-<%= state.is_interested ? 'solid' : 'regular' %> fa-heart" aria-hidden="true"></i> <span class="profile-action-text" data-action-text><%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %></span></button>
+                <button type="submit" class="btn btn-gold profile-card-action <%= state.is_interested ? 'is-selected' : '' %>" style="width:100%;" aria-label="<%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %>" title="<%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %>" aria-pressed="<%= state.is_interested ? 'true' : 'false' %>"><i class="fa-<%= state.is_interested ? 'solid' : 'regular' %> fa-heart" aria-hidden="true"></i><span class="sr-only profile-action-text" data-action-text><%= state.is_interested ? t('Unlike') : t('dashboard.expressInterest') %></span></button>
               </form>
               <form action="/profile/<%= p.id %>/<%= state.is_saved ? 'unsave' : 'save' %>" method="POST" class="profile-save-action"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="btn btn-outline-gold profile-card-action <%= state.is_saved ? 'is-selected' : '' %>" aria-label="<%= state.is_saved ? t('Unsave') : t('Save') %>" aria-pressed="<%= state.is_saved ? 'true' : 'false' %>"><i class="fa-<%= state.is_saved ? 'solid' : 'regular' %> fa-bookmark" aria-hidden="true"></i> <span class="profile-action-text" data-action-text><%= state.is_saved ? t('Unsave') : t('Save') %></span></button>
+                <button type="submit" class="btn btn-outline-gold profile-card-action <%= state.is_saved ? 'is-selected' : '' %>" aria-label="<%= state.is_saved ? t('Unsave') : t('Save') %>" title="<%= state.is_saved ? t('Unsave') : t('Save') %>" aria-pressed="<%= state.is_saved ? 'true' : 'false' %>"><i class="fa-<%= state.is_saved ? 'solid' : 'regular' %> fa-bookmark" aria-hidden="true"></i><span class="sr-only profile-action-text" data-action-text><%= state.is_saved ? t('Unsave') : t('Save') %></span></button>
               </form>
               <button
                 type="button"
@@ -261,7 +261,7 @@
                 data-share-occupation="<%= t(p.occupation) %>"
                 aria-label="<%= t("Share profile") %>"
                 title="<%= t("Share profile") %>"
-              ><i class="fa-solid fa-share-nodes"></i><span class="profile-action-text"><%= t("Share") %></span></button>
+              ><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
             </div>
           </div>
         <% }) %>
@@ -296,12 +296,8 @@
       function syncFilterSheetState() {
         document.body.classList.toggle('filter-sheet-open', Boolean(filterControls && filterControls.open && mobileViewport.matches));
       }
-      function syncFilterDisclosure(event) {
-        if (filterControls) filterControls.open = !event.matches;
-        syncFilterSheetState();
-      }
-      syncFilterDisclosure(mobileViewport);
-      mobileViewport.addEventListener('change', syncFilterDisclosure);
+      syncFilterSheetState();
+      mobileViewport.addEventListener('change', syncFilterSheetState);
       if (filterControls) {
         filterControls.addEventListener('toggle', syncFilterSheetState);
         filterControls.querySelectorAll('[data-close-filters]').forEach(function (button) {

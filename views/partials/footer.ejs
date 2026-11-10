@@ -2,12 +2,16 @@
   <div class="footer-col">
     <h4>Kalpavruksha Kalyana</h4>
     <div><%= t("Matrimony service exclusively for Lingayats") %></div>
+     <%= t("Created by") %>
+    <a href="https://www.linkedin.com/in/santhosh-m-86724035a" target="_blank" rel="noopener noreferrer">
+      Santhosh M <i class="fa-brands fa-linkedin" aria-hidden="true"></i>
+    </a>
     <div style="margin-top:10px; color:#a08a6a;">&copy; <%= new Date().getFullYear() %> <%= t("All rights reserved.") %></div>
   </div>
   <div class="footer-col">
     <h4><%= t("Speak With Us") %></h4>
-    <div><i class="fa-solid fa-phone"></i> <%= t("Admin Desk:") %> <a href="tel:+918012345678">+91 80123 45678</a></div>
-    <div><i class="fa-brands fa-whatsapp"></i> <a href="https://wa.me/918012345678" target="_blank" rel="noopener"><%= t("WhatsApp Support") %></a></div>
+    <div><i class="fa-solid fa-phone"></i> <%= t("Admin Desk:") %> <a href="tel:+919611365055">+91 96113 65055</a></div>
+    <div><i class="fa-brands fa-whatsapp"></i> <a href="https://wa.me/919611365055" target="_blank" rel="noopener"><%= t("WhatsApp Support") %></a></div>
   </div>
   <div class="footer-col">
     <h4><%= t("Legal") %></h4>
@@ -16,12 +20,7 @@
     <div><a href="/cookie-policy"><%= t("Cookie Policy") %></a></div>
     <div><a href="/cookie-policy" data-cookie-settings><%= t("Cookie Settings") %></a></div>
   </div>
-  <div class="footer-col footer-credit">
-    <%= t("Created by") %>
-    <a href="https://www.linkedin.com/in/santhosh-m-86724035a" target="_blank" rel="noopener noreferrer">
-      Santhosh M <i class="fa-brands fa-linkedin" aria-hidden="true"></i>
-    </a>
-  </div>
+ 
 </footer>
 
 <%- include('cookie-consent') %>

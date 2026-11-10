@@ -1,7 +1,6 @@
-// Pluggable file-storage layer. Every driver exposes the exact same
-// interface: { BUCKETS, uploadFile(bucketKey, file), getPublicUrl(bucketKey,
-// filename), deleteFile(bucketKey, filename) } — so switching providers is a
-// one-line env var change with no code changes anywhere else in the app.
+// Pluggable file-storage layer. Drivers expose upload, URL, retrieval, and
+// delete operations; profile images use private delivery, while ad images stay
+// public across providers.
 //
 // STORAGE_PROVIDER=s3         — any S3-compatible provider: AWS S3, Cloudflare
 //                               R2, Backblaze B2, DigitalOcean Spaces, Wasabi,
@@ -9,8 +8,9 @@
 //                               its env vars)
 // STORAGE_PROVIDER=local     — save to this server's own disk under
 //                              public/uploads/ (see localDriver.js for caveats)
-// STORAGE_PROVIDER=hostinger-ftp — send public images to Hostinger over FTPS.
-//                                  Private PDFs use PRIVATE_STORAGE_PROVIDER.
+// STORAGE_PROVIDER=hostinger-ftp — send images to Hostinger over FTPS.
+//                                  Profile delivery is authenticated; PDFs use
+//                                  PRIVATE_STORAGE_PROVIDER.
 //
 // Each driver file only requires its own SDK/config when it's actually the
 // active provider, so e.g. you don't need AWS credentials set just because
@@ -42,9 +42,19 @@ function withPrivateStorage(publicDriver) {
     uploadBuffer: (bucketKey, filename, buffer, contentType) =>
       selectDriver(bucketKey).uploadBuffer(bucketKey, filename, buffer, contentType),
     getPublicUrl: (bucketKey, filename) => {
-      if (!privateBuckets.has(bucketKey) && typeof filename === 'string' && /^https:\/\//i.test(filename)) return filename;
+      if (!privateBuckets.has(bucketKey) && bucketKey !== 'profiles' &&
+          typeof filename === 'string' && /^https:\/\//i.test(filename)) return filename;
       return selectDriver(bucketKey).getPublicUrl(bucketKey, filename);
     },
+    getFile: (bucketKey, filename) => {
+      if (typeof publicDriver.getFile === 'function' && bucketKey === 'profiles') {
+        return publicDriver.getFile(bucketKey, filename);
+      }
+      return privateDriver.getFile(bucketKey, filename);
+    },
+    protectProfileFiles: () => typeof publicDriver.protectProfileFiles === 'function'
+      ? publicDriver.protectProfileFiles()
+      : Promise.resolve(),
     getFilePath: (bucketKey, filename) => {
       if (typeof privateDriver.getFilePath !== 'function') throw new Error('Private file serving is not supported by this storage provider.');
       return privateDriver.getFilePath(bucketKey, filename);
@@ -77,9 +87,19 @@ switch (provider) {
 module.exports = {
   ...driver,
   getPublicUrl: (bucketKey, filename) => {
-    if (!privateBuckets.has(bucketKey) && typeof filename === 'string' && /^https:\/\//i.test(filename)) return filename;
+    if (!privateBuckets.has(bucketKey) && bucketKey !== 'profiles' &&
+        typeof filename === 'string' && /^https:\/\//i.test(filename)) return filename;
     return driver.getPublicUrl(bucketKey, filename);
   },
+  getFile: (bucketKey, filename) => {
+    if (typeof driver.getFile !== 'function') {
+      throw new Error('Private profile image retrieval is not supported by this storage provider.');
+    }
+    return driver.getFile(bucketKey, filename);
+  },
+  protectProfileFiles: () => typeof driver.protectProfileFiles === 'function'
+    ? driver.protectProfileFiles()
+    : Promise.resolve(),
   getPrivateFilePath: (bucketKey, filename) => {
     if (!privateBuckets.has(bucketKey) || typeof driver.getFilePath !== 'function') {
       throw new Error('Private file serving is not supported for this bucket.');

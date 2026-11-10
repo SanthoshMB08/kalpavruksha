@@ -2037,9 +2037,8 @@ input[type="file"] { width: 100%; }
 
 /* ==========================================================================
    Member search console  (views/user-dashboard.ejs)
-   Replaces the old hidden "Filters" dropdown. Everything is on screen: four
-   real dropdowns, a typeable language box, a dual-thumb age slider, and a chip
-   row for removing whatever is currently narrowing the results.
+   Compact match search with filters revealed on demand. The filter grid and
+   active-filter chips stay available without taking over the profile feed.
    Self-contained and prefixed `fc-` so the admin portal's own search bar,
    which reuses .search-bar / .filter-panel, is untouched.
    ========================================================================== */

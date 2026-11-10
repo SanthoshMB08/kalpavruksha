@@ -3,6 +3,9 @@ node_modules/
 .env.test
 public/uploads/**/*
 !public/uploads/**/.gitkeep
+!public/uploads/profiles/
+public/uploads/profiles/*
+!public/uploads/profiles/.htaccess
 private-uploads/
 coverage/
 

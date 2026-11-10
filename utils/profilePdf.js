@@ -1,24 +1,9 @@
-const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { getTranslator } = require('./i18n');
 const PDFDocument = require('pdfkit');
-const { getPublicUrl } = require('./storage');
+const { getFile } = require('./storage');
 const { MARITAL_STATUS_OPTIONS, RELIGION_OPTIONS, EMPLOYED_IN_OPTIONS } = require('./profileOptions');
-
-// Downloads a profile photo into a Buffer so it can be embedded in the PDF.
-async function fetchAsBuffer(url) {
-  if (url.startsWith('/uploads/')) {
-    const root = path.resolve(__dirname, '../public/uploads');
-    const target = path.resolve(__dirname, '../public', '.' + url);
-    if (!target.startsWith(root + path.sep)) throw new Error('Invalid upload path');
-    return fs.promises.readFile(target);
-  }
-  const res = await fetch(url, {signal:AbortSignal.timeout(10000)});
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  const arrayBuffer = await res.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-}
 
 const GOLD = '#b8860b';
 const TEAL = '#0a3835';
@@ -77,13 +62,11 @@ async function streamProfilePdf(res, profile) {
   doc.font('KK-Regular').fontSize(10).fillColor(GOLD).text(doc.t('Matrimony Profile'), { align: 'center' });
   doc.moveDown(1);
 
-  const photoUrl = profile.image_name ? getPublicUrl('profiles', profile.image_name) : null;
   const topY = doc.y;
-  if (photoUrl) {
-    try {
-      const photoBuffer = await sharp(await fetchAsBuffer(photoUrl)).png().toBuffer();
-      doc.image(photoBuffer, 40, topY, { width: 130, height: 150, fit: [130, 150] });
-    } catch { /* missing/corrupt/unsupported image — skip silently */ }
+  if (profile.image_name) {
+    const file = await getFile('profiles', profile.image_name);
+    const photoBuffer = await sharp(file.buffer).png().toBuffer();
+    doc.image(photoBuffer, 40, topY, { width: 130, height: 150, fit: [130, 150] });
   }
 
   const infoX = 190;

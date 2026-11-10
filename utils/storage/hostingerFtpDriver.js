@@ -1,6 +1,6 @@
 const { randomUUID } = require('crypto');
 const path = require('path');
-const { Readable } = require('stream');
+const { Readable, Writable } = require('stream');
 const { Client } = require('basic-ftp');
 const logger = require('../logger');
 
@@ -16,6 +16,17 @@ const MIME_EXTENSIONS = Object.freeze({
 });
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const FTP_TIMEOUT_MS = 30000;
+const MAX_PROFILE_IMAGE_BYTES = 10 * 1024 * 1024;
+const PROFILE_ACCESS_RULES = [
+  '<IfModule mod_authz_core.c>',
+  'Require all denied',
+  '</IfModule>',
+  '<IfModule !mod_authz_core.c>',
+  'Order allow,deny',
+  'Deny from all',
+  '</IfModule>',
+  ''
+].join('\n');
 
 function configuration() {
   const host = (process.env.HOSTINGER_FTP_HOST || '').trim();
@@ -114,6 +125,7 @@ async function withClient(bucketKey, work) {
     await client.ensureDir(remoteDirectory);
     return await work(client, config, remoteDirectory);
   } catch (err) {
+    if (['ENOENT', 'FILE_TOO_LARGE'].includes(err.code)) throw err;
     logger.error({ err, bucketKey, remoteDirectory }, 'Hostinger FTPS storage operation failed');
     const error = new Error('Hostinger FTPS operation failed. Verify the FTPS connection and public_html upload permissions.');
     error.code = 'HOSTINGER_FTPS_ERROR';
@@ -181,10 +193,59 @@ async function uploadFile(bucketKey, file) {
 function getPublicUrl(bucketKey, filename) {
   const folder = folderFor(bucketKey);
   if (!filename) return null;
+  if (bucketKey === 'profiles') {
+    validateFilename(filename);
+    return `/media/profiles/${encodeURIComponent(filename)}`;
+  }
   if (typeof filename === 'string' && /^https:\/\//i.test(filename)) return filename;
   validateFilename(filename);
   const { publicBase } = configuration();
   return `${publicBase}/uploads/${folder}/${encodeURIComponent(filename)}`;
+}
+
+async function getFile(bucketKey, filename) {
+  if (bucketKey !== 'profiles' || !/^[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i.test(filename || '')) {
+    const error = new Error('Invalid profile image filename.');
+    error.code = 'INVALID_FILE_TYPE';
+    throw error;
+  }
+  const buffer = await withClient(bucketKey, async client => {
+    const chunks = [];
+    let totalBytes = 0;
+    const output = new Writable({
+      write(chunk, encoding, callback) {
+        totalBytes += chunk.length;
+        if (totalBytes > MAX_PROFILE_IMAGE_BYTES) {
+          const error = new Error('Stored profile image exceeds the allowed size.');
+          error.code = 'FILE_TOO_LARGE';
+          callback(error);
+          return;
+        }
+        chunks.push(Buffer.from(chunk));
+        callback();
+      }
+    });
+    try {
+      await client.downloadTo(output, filename);
+    } catch (error) {
+      if (error.code === 550 || /\b550\b/.test(error.message || '')) {
+        const missing = new Error('Stored profile image is unavailable.');
+        missing.code = 'ENOENT';
+        throw missing;
+      }
+      throw error;
+    }
+    return Buffer.concat(chunks, totalBytes);
+  });
+  const extension = path.extname(filename).toLowerCase();
+  const contentType = extension === '.png' ? 'image/png' : extension === '.webp' ? 'image/webp' : 'image/jpeg';
+  return { buffer, contentType };
+}
+
+async function protectProfileFiles() {
+  return withClient('profiles', async client => {
+    await client.uploadFrom(Readable.from([Buffer.from(PROFILE_ACCESS_RULES)]), '.htaccess');
+  });
 }
 
 async function deleteFile(bucketKey, filename) {
@@ -195,4 +256,6 @@ async function deleteFile(bucketKey, filename) {
   });
 }
 
-module.exports = { BUCKETS, uploadFile, uploadFiles, uploadBuffer, getPublicUrl, deleteFile };
+module.exports = {
+  BUCKETS, uploadFile, uploadFiles, uploadBuffer, getPublicUrl, getFile, protectProfileFiles, deleteFile
+};

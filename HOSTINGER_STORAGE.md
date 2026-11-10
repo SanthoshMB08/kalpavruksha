@@ -1,6 +1,6 @@
 # Hostinger image storage
 
-The Express application can run locally at `http://localhost:3000` while its public images are uploaded directly to Hostinger over verified explicit FTPS. FTP credentials are read only by the backend.
+The Express application can run locally at `http://localhost:3000` while images are uploaded directly to Hostinger over verified explicit FTPS. FTP credentials are read only by the backend. Profile photos are private: Express serves them only to approved signed-in members or staff, and startup installs an access-deny `.htaccess` in the legacy public profile-photo folder.
 
 ## Configure
 
@@ -30,13 +30,17 @@ FTPS and certificate verification are mandatory. The application rejects `HOSTIN
 
 ## Uploads and frontend URLs
 
-| App upload | Hostinger folder | Public URL |
+| App upload | Hostinger folder | Browser URL |
 |---|---|---|
-| Profile photos | `uploads/profiles/` | `<HOSTINGER_FTP_PUBLIC_URL>/uploads/profiles/<generated-name>` |
+| Profile photos | `uploads/profiles/` (legacy storage, blocked from direct web access) | `/media/profiles/<generated-name>` (approved sign-in required) |
 | Advertisement images | `uploads/advertisements/` | `<HOSTINGER_FTP_PUBLIC_URL>/uploads/advertisements/<generated-name>` |
 | Success-story images (provider-ready; no current upload form) | `uploads/success-stories/` | `<HOSTINGER_FTP_PUBLIC_URL>/uploads/success-stories/<generated-name>` |
 
-The application validates image type and signature, limits images to 5 MB, generates random names, and uploads multiple images in one FTPS connection per bucket. Stored names are passed through the existing EJS image URL helper, so the browser loads them from your HTTPS site domain.
+The application validates image type and signature, limits uploads to 5 MB, generates random names, and uploads multiple images in one FTPS connection per bucket. Profile image requests check the signed-in account and profile visibility before retrieving the file from FTPS. Startup must successfully install the deny rule before Express begins listening; if protection fails, the server refuses to start.
+
+After deploying this change, restart the Node app and verify that the legacy `/uploads/profiles/<filename>` URLs return 403 or 404 directly from the website, while `/media/profiles/<filename>` returns an image only to an approved signed-in account. Purge any Hostinger/CDN cache for the old URLs. Existing copies remain in the FTP folder but the deny rule blocks web access; do not remove them until the authenticated route has been verified.
+
+For `STORAGE_PROVIDER=s3`, make the S3 bucket policy and any CDN private for the `profiles/` prefix before deployment. The app now uses the authenticated media route, but an existing public bucket/CDN policy can continue to serve old direct object URLs until you revoke it and invalidate cached objects.
 
 ## Private biodata and jathaka PDFs
 
@@ -59,8 +63,9 @@ To check your live Hostinger account, configure the environment and:
 1. Start the server with `npm run dev` and sign in to the local admin dashboard.
 2. Create or edit a profile and upload a profile photo. Create an advertisement and upload desktop/mobile images.
 3. Confirm each upload succeeds and its image displays in the local UI.
-4. Open the image URL in a browser. Confirm it uses `HOSTINGER_FTP_PUBLIC_URL` and returns the image over HTTPS.
-5. In Hostinger File Manager or FTP, confirm the generated file exists under the corresponding `public_html/uploads/...` folder.
-6. Attempt a non-image upload in an image field and an image larger than 5 MB; both should be rejected. Check that PDF uploads are not present in the Hostinger upload folders.
+4. Open a `/media/profiles/...` image URL in a signed-out browser; it must return 404. Sign in with an approved account and confirm it returns the photo.
+5. Try the matching legacy `/uploads/profiles/...` URL directly; it must return 403 or 404. Confirm the deny `.htaccess` exists in `public_html/uploads/profiles/` and purge any CDN cache for old photo URLs.
+6. In Hostinger File Manager or FTP, confirm profile files remain under `public_html/uploads/profiles/` and ad creatives under `public_html/uploads/advertisements/`.
+7. Attempt a non-image upload in an image field and an image larger than 5 MB; both should be rejected. Check that PDF uploads are not present in the Hostinger upload folders.
 
-To switch back to local public image storage, set `STORAGE_PROVIDER=local`. Before switching providers, migrate or otherwise verify referenced images because database records store filenames rather than provider-specific URLs.
+To switch back to local storage, set `STORAGE_PROVIDER=local`. Profile images remain private and are served through the authenticated route for both providers. Before switching providers, migrate or otherwise verify referenced images because database records store filenames rather than provider-specific URLs.

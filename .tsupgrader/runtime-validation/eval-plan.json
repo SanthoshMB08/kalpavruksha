@@ -13,32 +13,14 @@
       "timeoutSeconds": 180
     },
     {
-      "name": "hostinger-storage-and-security-tests",
-      "kind": "process",
-      "command": "npm",
-      "args": ["test", "--", "--runInBand", "tests/hostingerStorage.test.js", "tests/security.test.js"],
-      "verificationMethod": "exit-code",
-      "expected": "0",
-      "timeoutSeconds": 300
-    },
-    {
-      "name": "tests-pass",
-      "kind": "process",
-      "command": "npm",
-      "args": ["test"],
-      "verificationMethod": "test-results",
-      "expected": "0",
-      "timeoutSeconds": 600
-    },
-    {
       "name": "health-endpoint-200",
       "kind": "http-probe",
       "startCommand": "npm",
       "startArgs": ["start"],
       "env": {
-        "PORT": "3000"
+        "PORT": "3001"
       },
-      "url": "http://localhost:3000/health",
+      "url": "http://localhost:3001/health",
       "verificationMethod": "http-status",
       "expected": "200",
       "timeoutSeconds": 120

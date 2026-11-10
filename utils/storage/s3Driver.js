@@ -3,7 +3,8 @@ const path = require('path');
 const {
   S3Client,
   PutObjectCommand,
-  DeleteObjectCommand
+  DeleteObjectCommand,
+  GetObjectCommand
 } = require('@aws-sdk/client-s3');
 
 // Works with ANY S3-compatible provider — AWS S3, Cloudflare R2, Backblaze B2,
@@ -85,6 +86,14 @@ async function uploadFile(bucketKey, file) {
 
 function getPublicUrl(bucketKey, filename) {
   if (!filename) return null;
+  if (bucketKey === 'profiles') {
+    if (!/^[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i.test(filename)) {
+      const error = new Error('Invalid profile image filename.');
+      error.code = 'INVALID_FILE_TYPE';
+      throw error;
+    }
+    return `/media/profiles/${encodeURIComponent(filename)}`;
+  }
   const folder = BUCKETS[bucketKey];
   const key = `${folder}/${filename}`;
 
@@ -97,6 +106,25 @@ function getPublicUrl(bucketKey, filename) {
   }
   // Real AWS S3 virtual-hosted-style default
   return `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+}
+
+async function getFile(bucketKey, filename) {
+  if (bucketKey !== 'profiles' || !/^[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i.test(filename || '')) {
+    const error = new Error('Invalid profile image filename.');
+    error.code = 'INVALID_FILE_TYPE';
+    throw error;
+  }
+  const key = objectKey(bucketKey, filename);
+  const object = await getClient().send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }));
+  if (!Number.isFinite(object.ContentLength) || object.ContentLength < 0 || object.ContentLength > 10 * 1024 * 1024) {
+    const error = new Error('Stored profile image is unavailable.');
+    error.code = 'FILE_TOO_LARGE';
+    throw error;
+  }
+  const buffer = Buffer.from(await object.Body.transformToByteArray());
+  const extension = path.extname(filename).toLowerCase();
+  const contentType = extension === '.png' ? 'image/png' : extension === '.webp' ? 'image/webp' : 'image/jpeg';
+  return { buffer, contentType };
 }
 
 async function deleteFile(bucketKey, filename) {
@@ -123,4 +151,4 @@ async function uploadBuffer(bucketKey, filename, buffer, contentType) {
   return filename;
 }
 
-module.exports = { BUCKETS, uploadFile, uploadBuffer, getPublicUrl, deleteFile };
+module.exports = { BUCKETS, uploadFile, uploadBuffer, getPublicUrl, getFile, deleteFile };
